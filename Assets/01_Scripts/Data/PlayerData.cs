@@ -17,7 +17,6 @@ public static class PlayerData
 
     private const string NicknameKey = "Nickname";
 
-
     public static string Nickname { get; private set; }
 
     // 게임 시작 시 저장된 데이터 불러오기
