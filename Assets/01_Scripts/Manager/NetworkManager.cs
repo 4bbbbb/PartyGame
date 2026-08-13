@@ -103,6 +103,33 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
+    public bool IsHost
+    {
+        get
+        {
+            return runner != null && runner.IsServer;
+        }
+    }
+
+    public async void StartGameCountdown()
+    {
+        if (runner == null)
+            return;
+
+        if (!runner.IsServer)
+            return;
+
+        Debug.Log("게임 시작 카운트다운 시작");
+
+        await System.Threading.Tasks.Task.Delay(3000);
+
+        Debug.Log("게임 씬 이동");
+
+        SceneRef scene = SceneRef.FromIndex(GAME_SCENE_INDEX);
+
+        await runner.LoadScene(scene);
+    }
+
     public void OnConnectedToServer(NetworkRunner runner)
     {
         Debug.Log("서버 연결 성공");
@@ -128,12 +155,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             LobbyManager.Instance.PlayerJoined(runner, player);
         }
-    }
-
-    //public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
-    //{
-    //    Debug.Log($"Player Left : {player}");
-    //}
+    }    
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
@@ -193,6 +215,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         Debug.Log("===== OnDisconnectedFromServer 호출 =====");
         Debug.Log($"Disconnect Reason : {reason}");
     }
+    
 
     public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {

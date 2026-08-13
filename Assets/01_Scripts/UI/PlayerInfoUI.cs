@@ -1,5 +1,6 @@
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 
 /// <summary>
@@ -14,6 +15,7 @@ public class PlayerInfoUI : MonoBehaviour
 {
     [SerializeField] private GameObject root;
     [SerializeField] private TMP_Text nicknameText;
+    [SerializeField] private Image checkImage;
 
     public void SetPlayer(string nickname)
     {
@@ -23,9 +25,15 @@ public class PlayerInfoUI : MonoBehaviour
         nicknameText.text = nickname;
     }
 
+    public void SetReady(bool ready)
+    {
+        checkImage.gameObject.SetActive(ready);
+    }
+
     public void Clear()
     {
         root.SetActive(false);
         nicknameText.text = "";
+        checkImage.gameObject.SetActive(false);
     }
 }

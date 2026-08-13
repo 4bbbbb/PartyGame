@@ -101,6 +101,7 @@ public class LobbyManager : MonoBehaviour
         for (int i = 0; i < players.Count && i < 4; i++)
         {
             string nickname = players[i].Nickname.ToString();
+            bool ready = players[i].IsReady;
 
             Debug.Log(
                 $"슬롯 {i + 1} : " +
@@ -112,23 +113,64 @@ public class LobbyManager : MonoBehaviour
             {
                 case 0:
                     hostSlot.SetPlayer(nickname);
+                    hostSlot.SetReady(ready);
                     break;
 
                 case 1:
                     player2Slot.SetPlayer(nickname);
+                    player2Slot.SetReady(ready);
                     break;
 
                 case 2:
                     player3Slot.SetPlayer(nickname);
+                    player3Slot.SetReady(ready);
                     break;
 
                 case 3:
                     player4Slot.SetPlayer(nickname);
+                    player4Slot.SetReady(ready);
                     break;
             }
         }
 
         UpdatePlayerCount();
+    }
+
+    public bool AreAllPlayersReady()
+    {
+        if (NetworkManager.Instance == null)
+            return false;
+
+        NetworkRunner runner = NetworkManager.Instance.GetRunner();
+
+        if (runner == null)
+            return false;
+
+        PlayerNetwork[] allPlayers = FindObjectsByType<PlayerNetwork>(
+            FindObjectsInactive.Exclude,
+            FindObjectsSortMode.None
+        );
+
+        HashSet<PlayerRef> activePlayers = runner.ActivePlayers.ToHashSet();
+
+        List<PlayerNetwork> players = allPlayers
+            .Where(player => activePlayers.Contains(player.PlayerRef))
+            .ToList();
+
+        // 플레이어가 한 명도 없으면 Start 불가
+        if (players.Count == 0)
+            return false;
+
+        // 현재 들어와 있는 모든 플레이어가 Ready인지 확인
+        foreach (PlayerNetwork player in players)
+        {
+            if (!player.IsReady)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private void UpdatePlayerCount()

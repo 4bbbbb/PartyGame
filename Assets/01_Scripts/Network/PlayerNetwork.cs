@@ -10,6 +10,12 @@ public class PlayerNetwork : NetworkBehaviour
     public NetworkString<_16> Nickname { get; set; }
 
 
+    [Networked, OnChangedRender(nameof(OnReadyChanged))]
+    public NetworkBool IsReady { get; set; }
+
+
+
+    #region < Spawn >
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
@@ -26,7 +32,9 @@ public class PlayerNetwork : NetworkBehaviour
             RPC_SetNickname(PlayerData.Nickname);
         }
     }
+    #endregion
 
+    #region < Nickname >
 
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_SetNickname(string nickname)
@@ -48,4 +56,45 @@ public class PlayerNetwork : NetworkBehaviour
             LobbyManager.Instance.RefreshPlayerList(Runner);
         }
     }
+    #endregion
+
+    #region < Ready >
+
+    public void ToggleReady()
+    {
+        RPC_SetReady(!IsReady);
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_SetReady(bool ready)
+    {
+        IsReady = ready;
+
+        Debug.Log(
+            $"Ready 상태 변경 : " +
+            $"Player = {PlayerRef}, " +
+            $"Ready = {IsReady}"
+        );
+    }
+
+    private void OnReadyChanged()
+    {
+        Debug.Log(
+            $"Ready 변경 : {PlayerRef} / {IsReady}"
+        );
+
+        if (LobbyManager.Instance != null && Runner != null)
+        {
+            LobbyManager.Instance.RefreshPlayerList(Runner);
+        }
+
+        if (LobbyUIManager.Instance != null)
+        {
+            LobbyUIManager.Instance.UpdateStartButton();
+        }
+    }
+
+
+
+    #endregion
 }
