@@ -97,4 +97,39 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     #endregion
+
+    #region < Tag Card >
+
+    public void SelectTagCard(int cardIndex)
+    {
+        RPC_SelectTagCard(cardIndex);
+    }
+
+    [Rpc(
+        RpcSources.InputAuthority,
+        RpcTargets.StateAuthority,
+        HostMode = RpcHostMode.SourceIsHostPlayer
+    )]
+    private void RPC_SelectTagCard(
+        int cardIndex,
+        RpcInfo info = default)
+    {
+        PlayerRef selectingPlayer = Object.InputAuthority;
+
+        Debug.Log(
+            $"===== TAG 카드 선택 RPC =====\n" +
+            $"선택한 플레이어 : {selectingPlayer}\n" +
+            $"카드 : {cardIndex}"
+        );
+
+        if (TagManager.Instance != null)
+        {
+            TagManager.Instance.ServerSelectCard(
+                cardIndex,
+                selectingPlayer
+            );
+        }
+    }
+
+    #endregion
 }
