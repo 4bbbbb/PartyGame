@@ -16,6 +16,7 @@ public class PlayerNetwork : NetworkBehaviour
 
 
     #region < Spawn >
+
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
@@ -32,7 +33,9 @@ public class PlayerNetwork : NetworkBehaviour
             RPC_SetNickname(PlayerData.Nickname);
         }
     }
+
     #endregion
+
 
     #region < Nickname >
 
@@ -55,8 +58,15 @@ public class PlayerNetwork : NetworkBehaviour
         {
             LobbyManager.Instance.RefreshPlayerList(Runner);
         }
+
+        if (TagManager.Instance != null)
+        {
+            TagManager.Instance.SetupTagUI();
+        }
     }
+
     #endregion
+
 
     #region < Ready >
 
@@ -91,43 +101,6 @@ public class PlayerNetwork : NetworkBehaviour
         if (LobbyUIManager.Instance != null)
         {
             LobbyUIManager.Instance.UpdateStartButton();
-        }
-    }
-
-
-
-    #endregion
-
-    #region < Tag Card >
-
-    public void SelectTagCard(int cardIndex)
-    {
-        RPC_SelectTagCard(cardIndex);
-    }
-
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.StateAuthority,
-        HostMode = RpcHostMode.SourceIsHostPlayer
-    )]
-    private void RPC_SelectTagCard(
-        int cardIndex,
-        RpcInfo info = default)
-    {
-        PlayerRef selectingPlayer = Object.InputAuthority;
-
-        Debug.Log(
-            $"===== TAG 카드 선택 RPC =====\n" +
-            $"선택한 플레이어 : {selectingPlayer}\n" +
-            $"카드 : {cardIndex}"
-        );
-
-        if (TagManager.Instance != null)
-        {
-            TagManager.Instance.ServerSelectCard(
-                cardIndex,
-                selectingPlayer
-            );
         }
     }
 

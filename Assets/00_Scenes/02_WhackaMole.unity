@@ -1607,7 +1607,6 @@ GameObject:
   m_Component:
   - component: {fileID: 392768977}
   - component: {fileID: 392768978}
-  - component: {fileID: 392768981}
   m_Layer: 5
   m_Name: Card1
   m_TagString: Untagged
@@ -1656,14 +1655,6 @@ MonoBehaviour:
   selectedImage: {fileID: 1200137610}
   tagImage: {fileID: 1022504905}
   normalImage: {fileID: 1189904066}
---- !u!222 &392768981
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 392768976}
-  m_CullTransparentMesh: 1
 --- !u!1 &394010291
 GameObject:
   m_ObjectHideFlags: 0
@@ -3785,9 +3776,9 @@ MonoBehaviour:
   threePlayerPanel: {fileID: 1220869002}
   fourPlayerPanel: {fileID: 1162097374}
   threePlayerCards:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 392768978}
+  - {fileID: 41665225}
+  - {fileID: 2109585357}
   fourPlayerCards:
   - {fileID: 1552436177}
   - {fileID: 367961099}

@@ -17,7 +17,8 @@ public class TagManager : NetworkBehaviour
     [SerializeField] private TagCardUI[] threePlayerCards;
     [SerializeField] private TagCardUI[] fourPlayerCards;
 
-   
+
+    // 카드마다 어떤 Player가 선택했는지
     [Networked, Capacity(4)]
     private NetworkArray<PlayerRef> SelectedCards => default;
 
@@ -42,6 +43,7 @@ public class TagManager : NetworkBehaviour
     [Networked]
     public NetworkBool IsRevealComplete { get; private set; }
 
+
     private TagCardUI[] currentCards;
 
 
@@ -55,6 +57,7 @@ public class TagManager : NetworkBehaviour
 
         Instance = this;
     }
+
 
     private void Start()
     {
@@ -74,7 +77,9 @@ public class TagManager : NetworkBehaviour
             return;
         }
 
-        Debug.Log($"현재 플레이어 수 : {runner.ActivePlayers.Count()}");
+        Debug.Log(
+            $"현재 플레이어 수 : {runner.ActivePlayers.Count()}"
+        );
     }
 
 
@@ -82,10 +87,6 @@ public class TagManager : NetworkBehaviour
     {
         Debug.Log("===== TagManager Spawned =====");
 
-        SetupUI();
-
-
-        // Host만 TAG 카드를 랜덤 결정
         if (Runner.IsServer)
         {
             InitializeTagCard();
@@ -94,6 +95,14 @@ public class TagManager : NetworkBehaviour
 
 
     #region < Setup >
+
+    public void SetupTagUI()
+    {
+        Debug.Log("===== Tag UI Setup =====");
+
+        SetupUI();
+    }
+
 
     private void SetupUI()
     {
@@ -146,42 +155,35 @@ public class TagManager : NetworkBehaviour
             .ToList();
 
 
+        Debug.Log("===== SetupCards =====");
+        Debug.Log($"플레이어 수 : {players.Count}");
+
+
         for (int i = 0; i < cards.Length; i++)
         {
-            if (i < players.Count)
-            {
-                PlayerRef player = players[i];
-
-                PlayerNetwork playerNetwork = FindPlayerNetwork(player);
-
-
-                if (playerNetwork != null)
-                {
-                    cards[i].SetPlayer(
-                        i,
-                        player,
-                        playerNetwork.Nickname.ToString()
-                    );
-                }
-            }
-            else
+            // 플레이어보다 카드가 많으면 나머지 카드 제거
+            if (i >= players.Count)
             {
                 cards[i].Clear();
+                continue;
             }
-        }
-    }
 
 
-    private PlayerNetwork FindPlayerNetwork(PlayerRef playerRef)
-    {
-        PlayerNetwork[] players =
-            FindObjectsByType<PlayerNetwork>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None
+            PlayerRef playerRef = players[i];
+
+
+            Debug.Log(
+                $"카드 {i} 설정 / " +
+                $"PlayerRef = {playerRef}"
             );
 
 
-        return players.FirstOrDefault(player => player.PlayerRef == playerRef);
+            // 닉네임 없이 PlayerRef만 전달
+            cards[i].SetPlayer(
+                i,
+                playerRef
+            );
+        }
     }
 
     #endregion
@@ -189,7 +191,7 @@ public class TagManager : NetworkBehaviour
 
     #region < Initialize TAG >
 
-    // Host가 카드 하나를 랜덤으로 TAG로 지정    
+    // Host가 카드 하나를 랜덤으로 TAG로 지정
     private void InitializeTagCard()
     {
         int playerCount = Runner.ActivePlayers.Count();
@@ -223,16 +225,36 @@ public class TagManager : NetworkBehaviour
 
     #region < Select Card >
 
-    // 카드 버튼을 눌렀을 때 호출   
-    public void ServerSelectCard(int cardIndex, PlayerRef selectingPlayer)
+    public void SelectCard(int cardIndex)
     {
-        if (!Runner.IsServer)
-            return;
-
         if (IsSelectionComplete)
             return;
 
+
+        Debug.Log(
+            $"카드 선택 요청 : {cardIndex}"
+        );
+
+
+        RPC_SelectCard(cardIndex);
+    }
+
+
+    [Rpc(
+        RpcSources.All,
+        RpcTargets.StateAuthority,
+        HostMode = RpcHostMode.SourceIsHostPlayer
+    )]
+    private void RPC_SelectCard(
+        int cardIndex,
+        RpcInfo info = default)
+    {
+        // 실제로 카드를 클릭한 플레이어
+        PlayerRef selectingPlayer = info.Source;
+
+
         int playerCount = Runner.ActivePlayers.Count();
+
 
         Debug.Log(
             $"===== 카드 선택 요청 =====\n" +
@@ -244,16 +266,20 @@ public class TagManager : NetworkBehaviour
         // 카드 번호 확인
         if (cardIndex < 0 || cardIndex >= playerCount)
         {
-            Debug.LogWarning($"잘못된 카드 번호 : {cardIndex}");
+            Debug.LogWarning(
+                $"잘못된 카드 번호 : {cardIndex}"
+            );
 
             return;
         }
 
 
-        // 이미 카드를 고른 플레이어인지 확인
+        // 이미 카드를 선택한 플레이어인지 확인
         if (HasPlayerAlreadySelected(selectingPlayer))
         {
-            Debug.Log($"{selectingPlayer}는 이미 카드를 선택했습니다.");
+            Debug.Log(
+                $"{selectingPlayer}는 이미 카드를 선택했습니다."
+            );
 
             return;
         }
@@ -262,14 +288,19 @@ public class TagManager : NetworkBehaviour
         // 이미 다른 사람이 선택한 카드인지 확인
         if (SelectedCards[cardIndex] != default)
         {
-            Debug.Log($"Card {cardIndex}는 이미 선택됐습니다.");
+            Debug.Log(
+                $"Card {cardIndex}는 이미 선택됐습니다."
+            );
 
             return;
         }
 
 
         // 카드 선택 기록
-        SelectedCards.Set(cardIndex, selectingPlayer);
+        SelectedCards.Set(
+            cardIndex,
+            selectingPlayer
+        );
 
 
         Debug.Log(
@@ -279,7 +310,10 @@ public class TagManager : NetworkBehaviour
 
 
         // 모든 클라이언트 UI 갱신
-        RPC_UpdateCardUI(cardIndex, selectingPlayer);
+        RPC_UpdateCardUI(
+            cardIndex,
+            selectingPlayer
+        );
 
 
         // 모두 선택했는지 확인
@@ -287,7 +321,8 @@ public class TagManager : NetworkBehaviour
     }
 
 
-    private bool HasPlayerAlreadySelected(PlayerRef player)
+    private bool HasPlayerAlreadySelected(
+        PlayerRef player)
     {
         for (int i = 0; i < 4; i++)
         {
@@ -306,17 +341,21 @@ public class TagManager : NetworkBehaviour
     #region < Card UI >
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_UpdateCardUI(int cardIndex, PlayerRef selectingPlayer)
+    private void RPC_UpdateCardUI(
+        int cardIndex,
+        PlayerRef selectingPlayer)
     {
         if (currentCards == null)
             return;
 
 
-        if (cardIndex < 0 || cardIndex >= currentCards.Length)
+        if (cardIndex < 0 ||
+            cardIndex >= currentCards.Length)
             return;
 
 
-        TagCardUI card = currentCards[cardIndex];
+        TagCardUI card =
+            currentCards[cardIndex];
 
 
         // 선택된 카드 잠금
@@ -335,7 +374,8 @@ public class TagManager : NetworkBehaviour
 
     #region < Selection Complete >
 
-    private void CheckSelectionComplete(int playerCount)
+    private void CheckSelectionComplete(
+        int playerCount)
     {
         int selectedCount = 0;
 
@@ -349,14 +389,19 @@ public class TagManager : NetworkBehaviour
         }
 
 
-        Debug.Log($"현재 카드 선택 : " +  $"{selectedCount} / {playerCount}");
+        Debug.Log(
+            $"현재 카드 선택 : " +
+            $"{selectedCount} / {playerCount}"
+        );
 
 
         if (selectedCount >= playerCount)
         {
             IsSelectionComplete = true;
 
-            Debug.Log("===== 모든 플레이어 선택 완료 =====");
+            Debug.Log(
+                "===== 모든 플레이어 선택 완료 ====="
+            );
 
             RPC_RevealCards();
         }
@@ -370,7 +415,9 @@ public class TagManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_RevealCards()
     {
-        Debug.Log("===== 카드 뒤집기 시작 =====");
+        Debug.Log(
+            "===== 카드 뒤집기 시작 ====="
+        );
 
 
         if (currentCards == null)
@@ -385,7 +432,6 @@ public class TagManager : NetworkBehaviour
 
 
         // 현재는 테스트를 위해 바로 결과 공개
-        // 나중에 카드 뒤집기 애니메이션이 끝난 뒤 호출하도록 변경
         RevealResults();
     }
 
@@ -403,15 +449,20 @@ public class TagManager : NetworkBehaviour
         IsRevealComplete = true;
 
 
-        int playerCount = Runner.ActivePlayers.Count();
+        int playerCount =
+            Runner.ActivePlayers.Count();
 
 
         // TAG 카드 찾기
-        for (int cardIndex = 0; cardIndex < playerCount; cardIndex++)
+        for (
+            int cardIndex = 0;
+            cardIndex < playerCount;
+            cardIndex++)
         {
             if (CardIsTag[cardIndex])
             {
-                TagPlayer = SelectedCards[cardIndex];
+                TagPlayer =
+                    SelectedCards[cardIndex];
 
 
                 Debug.Log(
@@ -421,7 +472,11 @@ public class TagManager : NetworkBehaviour
                 );
 
 
-                RPC_ShowResults(cardIndex, TagPlayer);
+                RPC_ShowResults(
+                    cardIndex,
+                    TagPlayer
+                );
+
 
                 break;
             }
@@ -430,7 +485,9 @@ public class TagManager : NetworkBehaviour
 
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_ShowResults(int tagCardIndex, PlayerRef tagPlayer)
+    private void RPC_ShowResults(
+        int tagCardIndex,
+        PlayerRef tagPlayer)
     {
         Debug.Log(
             $"===== 카드 결과 공개 =====\n" +
@@ -443,7 +500,11 @@ public class TagManager : NetworkBehaviour
             return;
 
 
-        for (int i = 0; i < currentCards.Length; i++)
+        // 모든 카드 결과 표시
+        for (
+            int i = 0;
+            i < currentCards.Length;
+            i++)
         {
             currentCards[i].ShowResult(
                 i == tagCardIndex
@@ -451,8 +512,7 @@ public class TagManager : NetworkBehaviour
         }
 
 
-        // 여기까지 오면 TagPlayer가 확정됨
-        // 나중에 WhackaMoleManager 시작
+        // 여기까지 오면 TagPlayer 확정
     }
 
     #endregion

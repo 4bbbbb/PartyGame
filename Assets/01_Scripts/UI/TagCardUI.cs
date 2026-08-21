@@ -1,19 +1,15 @@
 using Fusion;
-using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class TagCardUI : MonoBehaviour
 {
-    [Header("<< UI >>")]
-    [SerializeField] private TMP_Text nicknameText;
+    [Header("<< Button >>")]
     [SerializeField] private Button cardButton;
-
 
     [Header("<< Card >>")]
     [SerializeField] private GameObject front;
     [SerializeField] private GameObject back;
-
 
     [Header("<< Result >>")]
     [SerializeField] private GameObject selectedImage;
@@ -23,7 +19,6 @@ public class TagCardUI : MonoBehaviour
     private int cardIndex;
     private PlayerRef playerRef;
 
-
     public PlayerRef PlayerRef => playerRef;
     public int CardIndex => cardIndex;
 
@@ -31,12 +26,17 @@ public class TagCardUI : MonoBehaviour
     #region < Setup >
 
     // TagManager가 카드에 플레이어 정보를 넣어주는 함수
-    public void SetPlayer(int index, PlayerRef player, string nickname)
+    public void SetPlayer(int index, PlayerRef player)
     {
         cardIndex = index;
         playerRef = player;
 
-        nicknameText.text = nickname;
+        Debug.Log(
+            $"[SET PLAYER] " +
+            $"Object={gameObject.name} / " +
+            $"Index={index} / " +
+            $"Player={player}"
+        );
 
         gameObject.SetActive(true);
 
@@ -45,7 +45,7 @@ public class TagCardUI : MonoBehaviour
         // 초기 상태
         // --------------------------------
 
-        // 처음에는 카드 뒷면을 보여준다.
+        // 처음에는 카드 뒷면
         back.SetActive(true);
         front.SetActive(false);
 
@@ -56,10 +56,8 @@ public class TagCardUI : MonoBehaviour
         tagImage.SetActive(false);
         normalImage.SetActive(false);
 
-
         // 카드 선택 가능
         cardButton.interactable = true;
-
 
         // 기존 이벤트 제거
         cardButton.onClick.RemoveAllListeners();
@@ -75,19 +73,14 @@ public class TagCardUI : MonoBehaviour
         cardIndex = -1;
         playerRef = default;
 
-        nicknameText.text = "";
-
-
         selectedImage.SetActive(false);
 
         tagImage.SetActive(false);
         normalImage.SetActive(false);
 
-
         // 초기 상태 = Back
         back.SetActive(true);
         front.SetActive(false);
-
 
         // 비활성화
         cardButton.interactable = false;
@@ -102,43 +95,22 @@ public class TagCardUI : MonoBehaviour
 
     #region < Card Click >
 
-    // 카드 클릭
     public void OnClickCard()
     {
         Debug.Log(
-            $"카드 클릭 : " +
-            $"Card = {cardIndex}, " +
-            $"Card Player = {playerRef}"
+            $"===== CLICK =====\n" +
+            $"GameObject : {gameObject.name}\n" +
+            $"CardIndex : {cardIndex}\n" +
+            $"PlayerRef : {playerRef}"
         );
 
-        PlayerNetwork myPlayer = FindMyPlayer();
-
-        if (myPlayer == null)
+        if (TagManager.Instance == null)
         {
-            Debug.LogError("내 PlayerNetwork를 찾을 수 없습니다.");
+            Debug.LogError("TagManager가 없습니다.");
             return;
         }
 
-        myPlayer.SelectTagCard(cardIndex);
-    }
-
-    private PlayerNetwork FindMyPlayer()
-    {
-        PlayerNetwork[] players =
-            FindObjectsByType<PlayerNetwork>(
-                FindObjectsInactive.Exclude,
-                FindObjectsSortMode.None
-            );
-
-        foreach (PlayerNetwork player in players)
-        {
-            if (player.Object.HasInputAuthority)
-            {
-                return player;
-            }
-        }
-
-        return null;
+        TagManager.Instance.SelectCard(cardIndex);
     }
 
     #endregion
@@ -151,12 +123,9 @@ public class TagCardUI : MonoBehaviour
     {
         Debug.Log($"카드 선택 표시 : Card {cardIndex}");
 
-
-        // Back 상태에서 Selected 표시
         selectedImage.SetActive(true);
 
-
-        // 이미 선택된 카드는 다시 선택 불가
+        // 다시 선택 불가
         cardButton.interactable = false;
     }
 
@@ -177,16 +146,13 @@ public class TagCardUI : MonoBehaviour
     {
         Debug.Log($"카드 뒤집기 : Card {cardIndex}");
 
-
         // Back OFF
         back.SetActive(false);
-
 
         // Front ON
         front.SetActive(true);
 
-
-        // 더 이상 클릭 불가
+        // 클릭 불가
         cardButton.interactable = false;
     }
 

@@ -148,6 +148,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
                 player
             );
 
+            runner.SetPlayerObject(player, playerObject);
+
             Debug.Log($"Player Spawn 완료 : {playerObject}");
         }
 
@@ -155,7 +157,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             LobbyManager.Instance.PlayerJoined(runner, player);
         }
-    }    
+    }
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
@@ -171,31 +173,31 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     public async void LeaveRoom()
-{
-    if (runner == null)
     {
-        Debug.Log("나갈 Fusion 방이 없습니다.");
+        if (runner == null)
+        {
+            Debug.Log("나갈 Fusion 방이 없습니다.");
+
+            SceneManager.LoadScene(TITLE_SCENE_INDEX);
+            return;
+        }
+
+        Debug.Log("방 나가기 시작");
+
+        NetworkRunner currentRunner = runner;
+
+        runner = null;
+
+        await currentRunner.Shutdown();
+
+        Debug.Log("Fusion 방 나가기 완료");
+
+        Destroy(currentRunner);
 
         SceneManager.LoadScene(TITLE_SCENE_INDEX);
-        return;
+
+        Debug.Log("Title 씬 이동");
     }
-
-    Debug.Log("방 나가기 시작");
-
-    NetworkRunner currentRunner = runner;
-
-    runner = null;
-
-    await currentRunner.Shutdown();
-
-    Debug.Log("Fusion 방 나가기 완료");
-
-    Destroy(currentRunner);
-
-    SceneManager.LoadScene(TITLE_SCENE_INDEX);
-
-    Debug.Log("Title 씬 이동");
-}
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
     {
@@ -209,29 +211,46 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     }
 
     public void OnDisconnectedFromServer(
-    NetworkRunner runner,
-    NetDisconnectReason reason)
+        NetworkRunner runner,
+        NetDisconnectReason reason)
     {
         Debug.Log("===== OnDisconnectedFromServer 호출 =====");
         Debug.Log($"Disconnect Reason : {reason}");
     }
-    
 
-    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
+
+    public void OnConnectFailed(
+        NetworkRunner runner,
+        NetAddress remoteAddress,
+        NetConnectFailedReason reason)
     {
         Debug.LogError($"Connect Failed : {reason}");
     }
 
-    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token)
+    public void OnConnectRequest(
+        NetworkRunner runner,
+        NetworkRunnerCallbackArgs.ConnectRequest request,
+        byte[] token)
     {
         request.Accept();
     }
 
-    public void OnInput(NetworkRunner runner, NetworkInput input) { }
+    public void OnInput(
+        NetworkRunner runner,
+        NetworkInput input)
+    {
+    }
 
-    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
+    public void OnInputMissing(
+        NetworkRunner runner,
+        PlayerRef player,
+        NetworkInput input)
+    {
+    }
 
-    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
+    public void OnSessionListUpdated(
+        NetworkRunner runner,
+        List<SessionInfo> sessionList)
     {
         Debug.Log($"세션 개수 : {sessionList.Count}");
 
@@ -240,13 +259,34 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log($"세션 : {session.Name}");
         }
     }
-    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
 
-    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
+    public void OnCustomAuthenticationResponse(
+        NetworkRunner runner,
+        Dictionary<string, object> data)
+    {
+    }
 
-    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ReadOnlySpan<byte> data) { }
+    public void OnHostMigration(
+        NetworkRunner runner,
+        HostMigrationToken hostMigrationToken)
+    {
+    }
 
-    public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
+    public void OnReliableDataReceived(
+        NetworkRunner runner,
+        PlayerRef player,
+        ReliableKey key,
+        ReadOnlySpan<byte> data)
+    {
+    }
+
+    public void OnReliableDataProgress(
+        NetworkRunner runner,
+        PlayerRef player,
+        ReliableKey key,
+        float progress)
+    {
+    }
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
@@ -256,11 +296,30 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     public void OnSceneLoadDone(NetworkRunner runner)
     {
         Debug.Log("Scene Load Done");
+
+        if (TagManager.Instance != null)
+        {
+            TagManager.Instance.SetupTagUI();
+        }
     }
 
-    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    public void OnObjectEnterAOI(
+        NetworkRunner runner,
+        NetworkObject obj,
+        PlayerRef player)
+    {
+    }
 
-    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    public void OnObjectExitAOI(
+        NetworkRunner runner,
+        NetworkObject obj,
+        PlayerRef player)
+    {
+    }
 
-    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
+    public void OnUserSimulationMessage(
+        NetworkRunner runner,
+        SimulationMessagePtr message)
+    {
+    }
 }
