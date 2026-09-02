@@ -7,7 +7,7 @@ public class PlayerNetwork : NetworkBehaviour
     public PlayerRef PlayerRef { get; set; }
 
     [Networked, OnChangedRender(nameof(OnNicknameChanged))]
-    public NetworkString<_16> Nickname { get; set; }
+    public NetworkString<_32> Nickname { get; set; }
 
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; set; } = -1;

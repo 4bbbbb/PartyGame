@@ -15,15 +15,27 @@ public class PlayerInfoUI : MonoBehaviour
 {
     [SerializeField] private GameObject root;
     [SerializeField] private TMP_Text nicknameText;
+    [SerializeField] private TMP_Text characterNameText;
     [SerializeField] private Image checkImage;
+    [SerializeField] private Image characterImage;
 
-    public void SetPlayer(string nickname)
+
+    public void SetPlayer(string nickname, CharacterData characterData)
     {
-        Debug.Log($"SetPlayer : {nickname}");
-
         root.SetActive(true);
         nicknameText.text = nickname;
-    }
+
+        if (characterData != null)
+        {
+            characterNameText.text = characterData.characterName;
+            characterImage.color = characterData.characterColor;
+        }
+        else
+        {
+            characterNameText.text = "";
+            characterImage.color = Color.white;
+        }
+    }    
 
     public void SetReady(bool ready)
     {
@@ -34,6 +46,8 @@ public class PlayerInfoUI : MonoBehaviour
     {
         root.SetActive(false);
         nicknameText.text = "";
+        characterNameText.text = "";
+        characterImage.color = Color.white;
         checkImage.gameObject.SetActive(false);
     }
 }

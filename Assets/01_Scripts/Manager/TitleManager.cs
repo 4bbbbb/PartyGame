@@ -16,8 +16,6 @@ public class TitleManager : MonoBehaviour
     [SerializeField] private GameObject nicknamePanel;
     [SerializeField] private TMP_InputField nicknameInput;
 
-    private const string NicknameKey = "Nickname";
-
     private void Start()
     {
         PlayerData.Load();

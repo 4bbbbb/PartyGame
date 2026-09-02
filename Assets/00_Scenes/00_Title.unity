@@ -1631,7 +1631,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uC0C8 \uB2C9\uB124\uC784 \uC785\uB825"
+  m_text: "\uB2C9\uB124\uC784 \uC785\uB825 (8\uC790 \uC774\uB0B4 \uAC00\uB2A5)"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 7cf5123e4a6a1ed49a3930ab5fcb5b60, type: 2}
   m_sharedMaterial: {fileID: 2701422232512209061, guid: 7cf5123e4a6a1ed49a3930ab5fcb5b60, type: 2}
@@ -2278,7 +2278,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 18, y: -77}
+  m_AnchoredPosition: {x: 18, y: -62}
   m_SizeDelta: {x: 500, y: 65}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1882302958
@@ -2339,7 +2339,7 @@ MonoBehaviour:
   m_CharacterValidation: 0
   m_RegexValue: 
   m_GlobalPointSize: 14
-  m_CharacterLimit: 0
+  m_CharacterLimit: 8
   m_OnEndEdit:
     m_PersistentCalls:
       m_Calls: []

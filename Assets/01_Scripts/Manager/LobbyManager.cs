@@ -15,6 +15,9 @@ public class LobbyManager : MonoBehaviour
 {
     public static LobbyManager Instance { get; private set; }
 
+    [Header("<< Character >>")]
+    [SerializeField] private CharacterDatabase characterDatabase;
+
     [Header("<< Player Slots >>")]
     [SerializeField] private PlayerInfoUI hostSlot;
     [SerializeField] private PlayerInfoUI player2Slot;
@@ -100,34 +103,44 @@ public class LobbyManager : MonoBehaviour
 
         for (int i = 0; i < players.Count && i < 4; i++)
         {
-            string nickname = players[i].Nickname.ToString();
-            bool ready = players[i].IsReady;
+            PlayerNetwork player = players[i];
+
+            string nickname = player.Nickname.ToString();
+            bool ready = player.IsReady;
+
+            CharacterData characterData = null;
+
+            if (player.CharacterIndex >= 0)
+            {
+                characterData = characterDatabase.characters[player.CharacterIndex];
+            }
 
             Debug.Log(
                 $"½½·Ô {i + 1} : " +
-                $"PlayerRef = {players[i].PlayerRef}, " +
-                $"Nickname = {nickname}"
+                $"PlayerRef = {player.PlayerRef}, " +
+                $"Nickname = {nickname}, " +
+                $"CharacterIndex = {player.CharacterIndex}"
             );
 
             switch (i)
             {
                 case 0:
-                    hostSlot.SetPlayer(nickname);
+                    hostSlot.SetPlayer(nickname, characterData);
                     hostSlot.SetReady(ready);
                     break;
 
                 case 1:
-                    player2Slot.SetPlayer(nickname);
+                    player2Slot.SetPlayer(nickname, characterData);
                     player2Slot.SetReady(ready);
                     break;
 
                 case 2:
-                    player3Slot.SetPlayer(nickname);
+                    player3Slot.SetPlayer(nickname, characterData);
                     player3Slot.SetReady(ready);
                     break;
 
                 case 3:
-                    player4Slot.SetPlayer(nickname);
+                    player4Slot.SetPlayer(nickname, characterData);
                     player4Slot.SetReady(ready);
                     break;
             }

@@ -17,6 +17,7 @@ public class CharacterSelectUI : MonoBehaviour
     [SerializeField] private Button leftButton;
     [SerializeField] private Button rightButton;
     [SerializeField] private Button selectButton;
+    [SerializeField] private Image selectButtonImage;
 
     [Header("<< Dots >>")]
     [SerializeField] private GameObject[] pinkDots;
@@ -158,6 +159,10 @@ public class CharacterSelectUI : MonoBehaviour
 
         // 이름 변경
         characterNameText.text = data.characterName;
+
+        // 색상 변경
+        selectButtonImage.color = data.characterColor;
+        characterNameText.color = data.characterColor;
 
         // Dot 변경
         UpdateDots();
