@@ -20,6 +20,8 @@ public class PlayerNetwork : NetworkBehaviour
 
     public override void Spawned()
     {
+        DontDestroyOnLoad(gameObject);
+
         if (Object.HasStateAuthority)
         {
             PlayerRef = Object.InputAuthority;

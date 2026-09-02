@@ -1,6 +1,7 @@
 ﻿using Fusion;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
 using UnityEngine;
 
 public class TagManager : NetworkBehaviour
@@ -9,6 +10,7 @@ public class TagManager : NetworkBehaviour
 
 
     [Header("<< Panel >>")]
+    [SerializeField] private GameObject tagPanel;
     [SerializeField] private GameObject threePlayerPanel;
     [SerializeField] private GameObject fourPlayerPanel;
 
@@ -17,6 +19,11 @@ public class TagManager : NetworkBehaviour
     [SerializeField] private TagCardUI[] threePlayerCards;
     [SerializeField] private TagCardUI[] fourPlayerCards;
 
+    [Header("<< Result >>")]
+    [SerializeField] private TMP_Text tagResultText;
+
+    [Header("<< Mini Game >>")]
+    [SerializeField] private WhackAMoleManager whackAMoleManager;
 
     // 카드마다 어떤 Player가 선택했는지
     [Networked, Capacity(4)]
@@ -97,9 +104,7 @@ public class TagManager : NetworkBehaviour
     #region < Setup >
 
     public void SetupTagUI()
-    {
-        Debug.Log("===== Tag UI Setup =====");
-
+    {     
         SetupUI();
     }
 
@@ -108,14 +113,14 @@ public class TagManager : NetworkBehaviour
     {
         int playerCount = Runner.ActivePlayers.Count();
 
-        Debug.Log(
-            $"TagManager 플레이어 수 : {playerCount}"
-        );
+        Debug.Log($"TagManager 플레이어 수 : {playerCount}");
 
 
-        // 일단 둘 다 끄기
+        tagPanel.SetActive(true);
+
         threePlayerPanel.SetActive(false);
         fourPlayerPanel.SetActive(false);
+        tagResultText.gameObject.SetActive(false);
 
 
         if (playerCount == 3)
@@ -341,24 +346,18 @@ public class TagManager : NetworkBehaviour
     #region < Card UI >
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_UpdateCardUI(
-        int cardIndex,
-        PlayerRef selectingPlayer)
+    private void RPC_UpdateCardUI(int cardIndex, PlayerRef selectingPlayer)
     {
         if (currentCards == null)
             return;
-
 
         if (cardIndex < 0 ||
             cardIndex >= currentCards.Length)
             return;
 
-
         TagCardUI card =
             currentCards[cardIndex];
 
-
-        // 선택된 카드 잠금
         card.SetSelected();
 
 
@@ -415,9 +414,7 @@ public class TagManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_RevealCards()
     {
-        Debug.Log(
-            "===== 카드 뒤집기 시작 ====="
-        );
+        Debug.Log("===== 카드 뒤집기 시작 =====");
 
 
         if (currentCards == null)
@@ -449,45 +446,38 @@ public class TagManager : NetworkBehaviour
         IsRevealComplete = true;
 
 
-        int playerCount =
-            Runner.ActivePlayers.Count();
+        int playerCount = Runner.ActivePlayers.Count();
 
 
         // TAG 카드 찾기
-        for (
-            int cardIndex = 0;
-            cardIndex < playerCount;
-            cardIndex++)
+        for (int cardIndex = 0; cardIndex < playerCount; cardIndex++)
         {
-            if (CardIsTag[cardIndex])
+            if (!CardIsTag[cardIndex])
+                continue;
+
+            TagPlayer = SelectedCards[cardIndex];
+
+            Debug.Log(
+                $"===== TAG PLAYER =====\n" +
+                $"TAG Card : {cardIndex}\n" +
+                $"TAG Player : {TagPlayer}"
+            );
+
+            // WhackAMoleManager에 술래 전달
+            if (whackAMoleManager != null)
             {
-                TagPlayer =
-                    SelectedCards[cardIndex];
-
-
-                Debug.Log(
-                    $"===== TAG PLAYER =====\n" +
-                    $"TAG Card : {cardIndex}\n" +
-                    $"TAG Player : {TagPlayer}"
-                );
-
-
-                RPC_ShowResults(
-                    cardIndex,
-                    TagPlayer
-                );
-
-
-                break;
+                whackAMoleManager.SetTagPlayer(TagPlayer);
             }
+
+            RPC_ShowResults(cardIndex, TagPlayer);
+
+            break;
         }
     }
 
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_ShowResults(
-        int tagCardIndex,
-        PlayerRef tagPlayer)
+    private void RPC_ShowResults(int tagCardIndex, PlayerRef tagPlayer)
     {
         Debug.Log(
             $"===== 카드 결과 공개 =====\n" +
@@ -500,19 +490,79 @@ public class TagManager : NetworkBehaviour
             return;
 
 
-        // 모든 카드 결과 표시
-        for (
-            int i = 0;
-            i < currentCards.Length;
-            i++)
+        StartCoroutine(ShowTagResultSequence(tagCardIndex, tagPlayer));
+    }
+
+    private System.Collections.IEnumerator ShowTagResultSequence(int tagCardIndex, PlayerRef tagPlayer)
+    {
+        for (int i = 0; i < currentCards.Length; i++)
         {
             currentCards[i].ShowResult(
                 i == tagCardIndex
             );
         }
 
+        yield return new WaitForSeconds(1.5f);
 
-        // 여기까지 오면 TagPlayer 확정
+        for (int i = 0; i < currentCards.Length; i++)
+        {
+            currentCards[i].gameObject.SetActive(false);
+        }
+
+        tagResultText.text = $"두더지는 Player {tagPlayer.PlayerId}입니다!";
+
+        tagResultText.gameObject.SetActive(true);
+
+        yield return new WaitForSeconds(2f);
+
+        tagPanel.SetActive(false);
+
+
+        if (Object.HasStateAuthority)
+        {
+            whackAMoleManager.StartGame();
+        }
+    }
+    #endregion
+
+    #region < Reset >
+    public void ResetTag()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        Debug.Log("===== TagManager Reset 시작 =====");
+
+        IsSelectionComplete = false;
+        IsRevealComplete = false;
+        TagPlayer = default;
+
+        for (int i = 0; i < 4; i++)
+        {
+            SelectedCards.Set(i, default);
+            CardIsTag.Set(i, false);
+        }
+
+        if (currentCards != null)
+        {
+            for (int i = 0; i < currentCards.Length; i++)
+            {
+                currentCards[i].ResetCard();
+            }
+        }
+
+        tagResultText.text = "";
+        tagResultText.gameObject.SetActive(false);
+
+        tagPanel.SetActive(true);
+        threePlayerPanel.SetActive(false);
+        fourPlayerPanel.SetActive(false);
+
+        SetupUI();
+
+        InitializeTagCard();
+
+        Debug.Log("===== TagManager Reset 완료 =====");
     }
 
     #endregion

@@ -23,6 +23,7 @@ public class TagCardUI : MonoBehaviour
     public int CardIndex => cardIndex;
 
 
+
     #region < Setup >
 
     // TagManager가 카드에 플레이어 정보를 넣어주는 함수
@@ -174,6 +175,29 @@ public class TagCardUI : MonoBehaviour
             tagImage.SetActive(false);
             normalImage.SetActive(true);
         }
+    }
+
+    #endregion
+
+    #region < Reset >
+
+    public void ResetCard()
+    {
+        Debug.Log($"카드 초기화 : Card {cardIndex}");
+
+        selectedImage.SetActive(false);
+
+        tagImage.SetActive(false);
+        normalImage.SetActive(false);
+
+        back.SetActive(true);
+        front.SetActive(false);
+
+        cardButton.interactable = true;
+
+        cardButton.onClick.RemoveAllListeners();
+
+        cardButton.onClick.AddListener(OnClickCard);
     }
 
     #endregion
