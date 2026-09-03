@@ -1,0 +1,95 @@
+{
+    "version": 1,
+    "name": "WhackAMoleInputActions",
+    "maps": [
+        {
+            "name": "WhackAMole",
+            "id": "2959179e-4767-443d-9c01-363bfa296c7a",
+            "actions": [
+                {
+                    "name": "SelectW",
+                    "type": "Button",
+                    "id": "49c42b32-8d38-4008-a92b-0c95f587f781",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SelectA",
+                    "type": "Button",
+                    "id": "0c1cc8b4-491e-4a1d-b225-2f1a93c79606",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SelectS",
+                    "type": "Button",
+                    "id": "8a054ede-20d5-4e05-999e-ba237c346bfe",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "SelectD",
+                    "type": "Button",
+                    "id": "a480e23f-0e2b-4f74-94ce-a17ac49a3a6b",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "1b9cfff9-8bad-4594-9f79-7cc91293fe18",
+                    "path": "<Keyboard>/w",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectW",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "3b37bb81-903a-4fe2-bcec-b60019666d45",
+                    "path": "<Keyboard>/a",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectA",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "77f1efb8-9d7e-482f-9469-3ff4f08a0b3a",
+                    "path": "<Keyboard>/s",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectS",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "6aff4f88-8284-4d77-aa10-3488c0dfbda2",
+                    "path": "<Keyboard>/d",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "SelectD",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

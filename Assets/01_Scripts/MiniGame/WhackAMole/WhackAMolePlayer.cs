@@ -11,6 +11,8 @@ public class WhackAMolePlayer : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; private set; }
 
+    [Header("<< Animation >>")]
+    [SerializeField] private Animator animator;
 
     public override void Spawned()
     {
@@ -58,18 +60,14 @@ public class WhackAMolePlayer : NetworkBehaviour
 
         if (characterDatabase == null)
         {
-            Debug.LogError(
-                "CharacterDatabase가 연결되지 않았습니다."
-            );
+            Debug.LogError("CharacterDatabase가 연결되지 않았습니다.");
 
             return;
         }
 
         if (CharacterIndex >= characterDatabase.characters.Length)
         {
-            Debug.LogError(
-                $"잘못된 CharacterIndex : {CharacterIndex}"
-            );
+            Debug.LogError($"잘못된 CharacterIndex : {CharacterIndex}");
 
             return;
         }
@@ -89,9 +87,7 @@ public class WhackAMolePlayer : NetworkBehaviour
 
         if (characterRenderer == null)
         {
-            Debug.LogError(
-                "Character Renderer가 연결되지 않았습니다."
-            );
+            Debug.LogError("Character Renderer가 연결되지 않았습니다.");
 
             return;
         }
@@ -102,6 +98,27 @@ public class WhackAMolePlayer : NetworkBehaviour
         Debug.Log(
             $"게임 캐릭터 설정 : " +
             $"{characterData.characterName}"
+        );
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    public void RPC_PlayGreeting()
+    {
+        if (animator == null)
+        {
+            Debug.LogWarning(
+                $"Animator가 연결되지 않았습니다. " +
+                $"PlayerRef = {Object.InputAuthority}"
+            );
+
+            return;
+        }
+
+        animator.SetTrigger("Greeting");
+
+        Debug.Log(
+            $"===== Greeting 애니메이션 재생 =====\n" +
+            $"PlayerRef : {Object.InputAuthority}"
         );
     }
 }

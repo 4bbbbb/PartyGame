@@ -23,6 +23,10 @@ public class WhackAMoleManager : NetworkBehaviour
     [Header("<< Tag Holes >>")]
     [SerializeField] private Transform[] tagHolePoints;
 
+    [Header("<< UI >>")]
+    [SerializeField] private TagHoleSelectUI tagHoleSelectUI;
+    [SerializeField] private PlayerHoleSelectUI playerHoleSelectUI;
+
     #endregion
 
 
@@ -41,29 +45,26 @@ public class WhackAMoleManager : NetworkBehaviour
 
     #region < Networked Data >
 
-    // 현재 라운드
     [Networked]
     public int CurrentRound { get; private set; }
 
-    // 술래의 현재 목숨
     [Networked]
     public int TagHP { get; private set; }
 
-    // 술래
     [Networked]
     public PlayerRef TagPlayer { get; private set; }
 
-    // 현재 게임 상태
     [Networked]
     public WhackAMoleState State { get; private set; }
 
-    // 술래가 선택한 구멍
     [Networked]
     private HoleType TagHole { get; set; }
 
-    // 일반 플레이어들의 선택
     [Networked, Capacity(4)]
     private NetworkArray<HoleType> PlayerChoices => default;
+
+    [Networked, Capacity(4)]
+    private NetworkArray<NetworkBool> PlayerChoiceCompleted => default;
 
     #endregion
 
@@ -71,8 +72,7 @@ public class WhackAMoleManager : NetworkBehaviour
     #region < Local Data >
 
     // 실제 게임에 Spawn된 캐릭터
-    private Dictionary<PlayerRef, WhackAMolePlayer> spawnedPlayers =
-        new Dictionary<PlayerRef, WhackAMolePlayer>();
+    private Dictionary<PlayerRef, WhackAMolePlayer> spawnedPlayers = new Dictionary<PlayerRef, WhackAMolePlayer>();
 
     #endregion
 
@@ -101,8 +101,7 @@ public class WhackAMoleManager : NetworkBehaviour
                 continue;
             }
 
-            PlayerNetwork playerNetwork =
-                playerObject.GetComponent<PlayerNetwork>();
+            PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
             if (playerNetwork == null)
             {
@@ -117,9 +116,7 @@ public class WhackAMoleManager : NetworkBehaviour
             players.Add(playerNetwork);
         }
 
-        return players
-            .OrderBy(player => player.PlayerRef.RawEncoded)
-            .ToList();
+        return players.OrderBy(player => player.PlayerRef.RawEncoded).ToList();
     }
 
     #endregion
@@ -154,17 +151,13 @@ public class WhackAMoleManager : NetworkBehaviour
 
         if (playerPrefab == null)
         {
-            Debug.LogError(
-                "WhackAMole Player Prefab이 연결되지 않았습니다."
-            );
+            Debug.LogError("WhackAMole Player Prefab이 연결되지 않았습니다.");
             return;
         }
 
         if (characterDatabase == null)
         {
-            Debug.LogError(
-                "CharacterDatabase가 연결되지 않았습니다."
-            );
+            Debug.LogError("CharacterDatabase가 연결되지 않았습니다.");
             return;
         }
 
@@ -174,9 +167,7 @@ public class WhackAMoleManager : NetworkBehaviour
 
         if (players.Count == 0)
         {
-            Debug.LogError(
-                "PlayerNetwork를 하나도 찾지 못했습니다."
-            );
+            Debug.LogError("PlayerNetwork를 하나도 찾지 못했습니다.");
             return;
         }
 
@@ -225,11 +216,9 @@ public class WhackAMoleManager : NetworkBehaviour
             else
             {
                 // 일반 플레이어
-                int normalPlayerIndex =
-                    GetNormalPlayerIndex(players, player);
+                int normalPlayerIndex = GetNormalPlayerIndex(players, player);
 
-                if (normalPlayerIndex < 0 ||
-                    normalPlayerIndex >= playerSpawnPoints.Length)
+                if (normalPlayerIndex < 0 || normalPlayerIndex >= playerSpawnPoints.Length)
                 {
                     Debug.LogError(
                         $"일반 플레이어 Spawn Point가 부족합니다. " +
@@ -239,8 +228,7 @@ public class WhackAMoleManager : NetworkBehaviour
                     continue;
                 }
 
-                spawnPoint =
-                    playerSpawnPoints[normalPlayerIndex];
+                spawnPoint = playerSpawnPoints[normalPlayerIndex];
 
                 Debug.Log(
                     $"일반 플레이어 Spawn : " +
@@ -271,50 +259,20 @@ public class WhackAMoleManager : NetworkBehaviour
                 continue;
             }
 
+            playerObject.transform.localScale = spawnPoint.lossyScale;           
 
-            // -----------------------------
-            // Spawn Point Scale 적용
-            // -----------------------------
-
-            playerObject.transform.localScale =
-                spawnPoint.lossyScale;
-
-
-            // -----------------------------
-            // WhackAMolePlayer 확인
-            // -----------------------------
-
-            WhackAMolePlayer whackAMolePlayer =
-                playerObject.GetComponent<WhackAMolePlayer>();
+            WhackAMolePlayer whackAMolePlayer = playerObject.GetComponent<WhackAMolePlayer>();
 
             if (whackAMolePlayer == null)
             {
-                Debug.LogError(
-                    "WhackAMolePlayer 컴포넌트를 찾을 수 없습니다."
-                );
+                Debug.LogError( "WhackAMolePlayer 컴포넌트를 찾을 수 없습니다.");
 
                 continue;
             }
 
+            whackAMolePlayer.SetCharacterIndex(player.CharacterIndex);
 
-            // -----------------------------
-            // 캐릭터 설정
-            // -----------------------------
-
-            whackAMolePlayer.SetCharacterIndex(
-                player.CharacterIndex
-            );
-
-
-            // -----------------------------
-            // 로컬 Dictionary 저장
-            // -----------------------------
-
-            spawnedPlayers.Add(
-                player.PlayerRef,
-                whackAMolePlayer
-            );
-
+            spawnedPlayers.Add(player.PlayerRef, whackAMolePlayer);
 
             Debug.Log(
                 $"게임 플레이어 Spawn 완료 : " +
@@ -322,7 +280,6 @@ public class WhackAMoleManager : NetworkBehaviour
                 $"CharacterIndex = {player.CharacterIndex}"
             );
         }
-
 
         Debug.Log(
             $"===== WhackAMole 플레이어 Spawn 완료 =====\n" +
@@ -335,9 +292,7 @@ public class WhackAMoleManager : NetworkBehaviour
     /// 일반 플레이어 중 몇 번째인지 찾는다.
     /// TAG는 제외한다.
     /// </summary>
-    private int GetNormalPlayerIndex(
-        List<PlayerNetwork> players,
-        PlayerNetwork targetPlayer)
+    private int GetNormalPlayerIndex(List<PlayerNetwork> players, PlayerNetwork targetPlayer)
     {
         int index = 0;
 
@@ -364,9 +319,7 @@ public class WhackAMoleManager : NetworkBehaviour
     {
         if (gameData == null)
         {
-            Debug.LogError(
-                "WhackAMoleData가 연결되지 않았습니다."
-            );
+            Debug.LogError("WhackAMoleData가 연결되지 않았습니다.");
             return;
         }
 
@@ -407,9 +360,7 @@ public class WhackAMoleManager : NetworkBehaviour
 
         if (TagPlayer == default)
         {
-            Debug.LogWarning(
-                "TagPlayer가 설정되지 않았습니다."
-            );
+            Debug.LogWarning("TagPlayer가 설정되지 않았습니다.");
             return;
         }
 
@@ -423,7 +374,272 @@ public class WhackAMoleManager : NetworkBehaviour
         );
 
         SpawnPlayers();
+
+        StartCoroutine(StartTagSelectionSequence());
     }
 
+    private System.Collections.IEnumerator StartTagSelectionSequence()
+    {
+        // 캐릭터가 Spawn될 시간
+        yield return new WaitForSeconds(0.5f);
+
+        Debug.Log("===== TAG 인사 시작 =====");
+
+        // TAG 인사 애니메이션
+        PlayTagGreeting();
+
+        // 인사 애니메이션 시간
+        yield return new WaitForSeconds(2.0f);
+
+        Debug.Log("===== TAG 선택 패널 표시 =====");
+
+        // 모든 플레이어에게 선택 패널 표시
+        RPC_ShowTagHoleSelectUI();
+    }
+
+    private void PlayTagGreeting()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!spawnedPlayers.TryGetValue(
+                TagPlayer,
+                out WhackAMolePlayer tagPlayer))
+        {
+            Debug.LogWarning(
+                $"TAG 캐릭터를 찾을 수 없습니다. " +
+                $"PlayerRef = {TagPlayer}"
+            );
+
+            return;
+        }
+
+        tagPlayer.RPC_PlayGreeting();
+    }
+
+    #endregion
+
+
+    #region < Tag Select >
+    public void SelectTagHole(HoleType hole)
+    {
+        if (Runner == null)
+            return;
+
+        if (Runner.LocalPlayer != TagPlayer)
+            return;
+
+        if (State != WhackAMoleState.TagSelecting)
+            return;
+
+        RPC_SelectTagHole(hole);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowTagHoleSelectUI()
+    {
+        if (tagHoleSelectUI == null)
+        {
+            Debug.LogWarning(
+                "TagHoleSelectUI가 연결되지 않았습니다."
+            );
+
+            return;
+        }
+
+        tagHoleSelectUI.Show();
+    }
+
+    [Rpc(
+    RpcSources.All,
+    RpcTargets.StateAuthority,
+    HostMode = RpcHostMode.SourceIsHostPlayer
+)]
+    private void RPC_SelectTagHole(
+    HoleType hole,
+    RpcInfo info = default)
+    {
+        if (State != WhackAMoleState.TagSelecting)
+            return;
+
+        if (info.Source != TagPlayer)
+            return;
+
+        TagHole = hole;
+
+        Debug.Log(
+            $"===== TAG 위치 선택 완료 =====\n" +
+            $"TAG : {TagPlayer}\n" +
+            $"선택 : {TagHole}"
+        );
+
+        StartCoroutine(TagSelectionCompleteSequence());
+    }
+
+    private System.Collections.IEnumerator TagSelectionCompleteSequence()
+    {
+        RPC_ShowTagSelectComplete();
+
+        yield return new WaitForSeconds(1.5f);
+
+        RPC_HideTagSelectUI();
+
+        State = WhackAMoleState.PlayerSelecting;
+
+        RPC_ShowPlayerSelectUI();
+
+        Debug.Log("===== 일반 플레이어 선택 시작 =====");
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_HideTagSelectUI()
+    {
+        if (tagHoleSelectUI == null)
+            return;
+
+        tagHoleSelectUI.Hide();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowPlayerSelectUI()
+    {
+        if (playerHoleSelectUI == null)
+            return;
+
+        playerHoleSelectUI.Show();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowTagSelectComplete()
+    {
+        if (tagHoleSelectUI == null)
+            return;
+
+        tagHoleSelectUI.ShowComplete();
+    }
+
+    #endregion
+
+    #region < Player Select >
+    public void SelectPlayerHole(HoleType hole)
+    {
+        if (Runner == null)
+            return;
+
+        // 일반 플레이어 선택 상태가 아니면 무시
+        if (State != WhackAMoleState.PlayerSelecting)
+            return;
+
+        // TAG는 선택할 수 없음
+        if (Runner.LocalPlayer == TagPlayer)
+            return;
+
+        RPC_SelectPlayerHole(hole);
+    }
+
+    [Rpc(RpcSources.All,RpcTargets.StateAuthority,HostMode = RpcHostMode.SourceIsHostPlayer)]
+    private void RPC_SelectPlayerHole(HoleType hole, RpcInfo info = default)
+    {
+        if (State != WhackAMoleState.PlayerSelecting)
+            return;
+
+        // TAG는 선택 불가능
+        if (info.Source == TagPlayer)
+            return;
+
+        List<PlayerNetwork> players = GetActivePlayers();
+
+        int playerIndex = -1;
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            if (players[i].PlayerRef == info.Source)
+            {
+                playerIndex = i;
+                break;
+            }
+        }
+
+        if (playerIndex < 0)
+            return;
+
+        PlayerChoices.Set(playerIndex, hole);
+        PlayerChoiceCompleted.Set(playerIndex, true);
+
+        Debug.Log(
+            $"플레이어 선택 완료 : " +
+            $"Player = {info.Source}, " +
+            $"Hole = {hole}"
+        );
+
+        CheckPlayerSelectionComplete();
+    }
+
+    private void CheckPlayerSelectionComplete()
+    {
+        List<PlayerNetwork> players = GetActivePlayers();
+
+        int normalPlayerCount = 0;
+        int completedCount = 0;
+
+        for (int i = 0; i < players.Count; i++)
+        {
+            PlayerNetwork player = players[i];
+
+            if (player.PlayerRef == TagPlayer)
+                continue;
+
+            normalPlayerCount++;
+
+            if (PlayerChoiceCompleted[i])
+                completedCount++;
+        }
+
+        Debug.Log(
+            $"일반 플레이어 선택 : " +
+            $"{completedCount} / {normalPlayerCount}"
+        );
+
+        if (completedCount >= normalPlayerCount)
+        {
+            StartCoroutine(PlayerSelectionCompleteSequence());
+        }
+    }
+
+    private System.Collections.IEnumerator PlayerSelectionCompleteSequence()
+    {
+        Debug.Log("===== 모든 플레이어 선택 완료 =====");
+
+        // 모든 플레이어에게 선택 완료 배너
+        RPC_ShowPlayerSelectComplete();
+
+        yield return new WaitForSeconds(1.5f);
+
+        // 일반 플레이어 SelectPanel OFF
+        RPC_HidePlayerSelectUI();
+
+        Debug.Log("===== 일반 플레이어 선택 종료 =====");
+
+        // 여기서 일단 멈춤
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowPlayerSelectComplete()
+    {
+        if (playerHoleSelectUI == null)
+            return;
+
+        playerHoleSelectUI.ShowComplete();
+    }
+
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_HidePlayerSelectUI()
+    {
+        if (playerHoleSelectUI == null)
+            return;
+
+        playerHoleSelectUI.Hide();
+    }
     #endregion
 }

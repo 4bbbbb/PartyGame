@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 6446904970109586690}
   - component: {fileID: 2945921889613203513}
   - component: {fileID: 3482656200193675169}
+  - component: {fileID: -5448743253686757365}
   m_Layer: 0
   m_Name: Character_Player
   m_TagString: Untagged
@@ -50,6 +51,7 @@ MonoBehaviour:
   characterRenderer: {fileID: 3177272018085431200}
   characterDatabase: {fileID: 11400000, guid: eb93ae62e79069a49bc6f1b16311cd75, type: 2}
   _CharacterIndex: 0
+  animator: {fileID: -5448743253686757365}
 --- !u!114 &2945921889613203513
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -111,6 +113,28 @@ MonoBehaviour:
     MinImpactfulCollisionAlignment: 0.3
     ImpactStartCorrectionTime: 0.1
     ImpactCorrectionTimeComplete: 0.3
+--- !u!95 &-5448743253686757365
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2016233058806099763}
+  m_Enabled: 1
+  m_Avatar: {fileID: 9000000, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
+  m_Controller: {fileID: 9100000, guid: 8ceaca870eb14c84c801ea22d9dcca03, type: 2}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1001 &1126030875767771847
 PrefabInstance:
   m_ObjectHideFlags: 0
