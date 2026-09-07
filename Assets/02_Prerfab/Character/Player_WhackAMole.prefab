@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3482656200193675169}
   - component: {fileID: -5448743253686757365}
   m_Layer: 0
-  m_Name: Character_Player
+  m_Name: Player_WhackAMole
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -52,6 +52,8 @@ MonoBehaviour:
   characterDatabase: {fileID: 11400000, guid: eb93ae62e79069a49bc6f1b16311cd75, type: 2}
   _CharacterIndex: 0
   animator: {fileID: -5448743253686757365}
+  face1Material: {fileID: 2100000, guid: d4231979e96369647afbc6817ccbc907, type: 2}
+  face2Material: {fileID: 2100000, guid: c48192fdd80c97449903d053505aa750, type: 2}
 --- !u!114 &2945921889613203513
 MonoBehaviour:
   m_ObjectHideFlags: 0

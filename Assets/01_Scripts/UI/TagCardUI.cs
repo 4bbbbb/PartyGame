@@ -1,9 +1,14 @@
 using Fusion;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
 public class TagCardUI : MonoBehaviour
 {
+    [Header("<< Profile >>")]
+    [SerializeField] private Image profileImage;
+    [SerializeField] private TMP_Text nicknameText;
+
     [Header("<< Button >>")]
     [SerializeField] private Button cardButton;
 
@@ -12,16 +17,24 @@ public class TagCardUI : MonoBehaviour
     [SerializeField] private GameObject back;
 
     [Header("<< Result >>")]
-    [SerializeField] private GameObject selectedImage;
     [SerializeField] private GameObject tagImage;
     [SerializeField] private GameObject normalImage;
 
     private int cardIndex;
+
     private PlayerRef playerRef;
 
     public PlayerRef PlayerRef => playerRef;
+
     public int CardIndex => cardIndex;
 
+    #region < Awake >
+    private void Awake()
+    {
+        profileImage.gameObject.SetActive(false);
+        nicknameText.gameObject.SetActive(false);
+    }
+    #endregion
 
 
     #region < Setup >
@@ -48,10 +61,7 @@ public class TagCardUI : MonoBehaviour
 
         // 처음에는 카드 뒷면
         back.SetActive(true);
-        front.SetActive(false);
-
-        // 선택 표시 제거
-        selectedImage.SetActive(false);
+        front.SetActive(false);        
 
         // 결과 표시 제거
         tagImage.SetActive(false);
@@ -73,8 +83,6 @@ public class TagCardUI : MonoBehaviour
     {
         cardIndex = -1;
         playerRef = default;
-
-        selectedImage.SetActive(false);
 
         tagImage.SetActive(false);
         normalImage.SetActive(false);
@@ -120,14 +128,23 @@ public class TagCardUI : MonoBehaviour
     #region < Selection >
 
     // 내가 선택한 카드
-    public void SetSelected()
+    public void SetSelected(string nickname, Color characterColor)
     {
-        Debug.Log($"카드 선택 표시 : Card {cardIndex}");
+        // 닉네임
+        nicknameText.text = nickname;
 
-        selectedImage.SetActive(true);
+        // 캐릭터 색상
+        profileImage.color = characterColor;
 
-        // 다시 선택 불가
-        cardButton.interactable = false;
+        // 프로필 + 이름 표시
+        profileImage.gameObject.SetActive(true);
+        nicknameText.gameObject.SetActive(true);
+
+        Debug.Log(
+            $"카드 선택 정보 표시 : " +
+            $"Nickname = {nickname} / " +
+            $"Color = {characterColor}"
+        );
     }
 
 
@@ -185,7 +202,8 @@ public class TagCardUI : MonoBehaviour
     {
         Debug.Log($"카드 초기화 : Card {cardIndex}");
 
-        selectedImage.SetActive(false);
+        profileImage.gameObject.SetActive(false);
+        nicknameText.gameObject.SetActive(false);
 
         tagImage.SetActive(false);
         normalImage.SetActive(false);

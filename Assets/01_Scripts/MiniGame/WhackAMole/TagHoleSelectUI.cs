@@ -35,19 +35,19 @@ public class TagHoleSelectUI : MonoBehaviour
 
     private void OnEnable()
     {
-        inputActions.WhackAMole.SelectW.performed += OnSelectW;
-        inputActions.WhackAMole.SelectA.performed += OnSelectA;
-        inputActions.WhackAMole.SelectS.performed += OnSelectS;
-        inputActions.WhackAMole.SelectD.performed += OnSelectD;
+        inputActions.WhackAMole.Select1.performed += OnSelect1;
+        inputActions.WhackAMole.Select2.performed += OnSelect2;
+        inputActions.WhackAMole.Select3.performed += OnSelect3;
+        inputActions.WhackAMole.Select4.performed += OnSelect4;
     }
 
 
     private void OnDisable()
     {
-        inputActions.WhackAMole.SelectW.performed -= OnSelectW;
-        inputActions.WhackAMole.SelectA.performed -= OnSelectA;
-        inputActions.WhackAMole.SelectS.performed -= OnSelectS;
-        inputActions.WhackAMole.SelectD.performed -= OnSelectD;
+        inputActions.WhackAMole.Select1.performed -= OnSelect1;
+        inputActions.WhackAMole.Select2.performed -= OnSelect2;
+        inputActions.WhackAMole.Select3.performed -= OnSelect3;
+        inputActions.WhackAMole.Select4.performed -= OnSelect4;
 
         inputActions.WhackAMole.Disable();
     }
@@ -106,39 +106,39 @@ public class TagHoleSelectUI : MonoBehaviour
 
     #region < Keyboard >
 
-    private void OnSelectW(InputAction.CallbackContext context)
+    private void OnSelect1(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.W);
+        Select(WhackAMoleManager.HoleType.Hole1);
     }
 
 
-    private void OnSelectA(InputAction.CallbackContext context)
+    private void OnSelect2(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.A);
+        Select(WhackAMoleManager.HoleType.Hole2);
     }
 
 
-    private void OnSelectS(InputAction.CallbackContext context)
+    private void OnSelect3(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.S);
+        Select(WhackAMoleManager.HoleType.Hole3);
     }
 
 
-    private void OnSelectD(InputAction.CallbackContext context)
+    private void OnSelect4(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.D);
+        Select(WhackAMoleManager.HoleType.Hole4);
     }
 
     #endregion
@@ -146,39 +146,39 @@ public class TagHoleSelectUI : MonoBehaviour
 
     #region < Button >
 
-    public void OnClickW()
+    public void OnClick1()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.W);
+        Select(WhackAMoleManager.HoleType.Hole1);
     }
 
 
-    public void OnClickA()
+    public void OnClick2()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.A);
+        Select(WhackAMoleManager.HoleType.Hole2);
     }
 
 
-    public void OnClickS()
+    public void OnClick3()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.S);
+        Select(WhackAMoleManager.HoleType.Hole3);
     }
 
 
-    public void OnClickD()
+    public void OnClick4()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.D);
+        Select(WhackAMoleManager.HoleType.Hole4);
     }
 
     #endregion

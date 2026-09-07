@@ -8,19 +8,17 @@ public class TagManager : NetworkBehaviour
 {
     public static TagManager Instance { get; private set; }
 
+    [Header("<< Character >>")]
+    [SerializeField] private CharacterDatabase characterDatabase;
 
     [Header("<< Panel >>")]
     [SerializeField] private GameObject tagPanel;
     [SerializeField] private GameObject threePlayerPanel;
     [SerializeField] private GameObject fourPlayerPanel;
 
-
     [Header("<< Cards >>")]
     [SerializeField] private TagCardUI[] threePlayerCards;
-    [SerializeField] private TagCardUI[] fourPlayerCards;
-
-    [Header("<< Result >>")]
-    [SerializeField] private TMP_Text tagResultText;
+    [SerializeField] private TagCardUI[] fourPlayerCards;    
 
     [Header("<< Mini Game >>")]
     [SerializeField] private WhackAMoleManager whackAMoleManager;
@@ -120,7 +118,6 @@ public class TagManager : NetworkBehaviour
 
         threePlayerPanel.SetActive(false);
         fourPlayerPanel.SetActive(false);
-        tagResultText.gameObject.SetActive(false);
 
 
         if (playerCount == 3)
@@ -351,21 +348,70 @@ public class TagManager : NetworkBehaviour
         if (currentCards == null)
             return;
 
-        if (cardIndex < 0 ||
-            cardIndex >= currentCards.Length)
+        if (cardIndex < 0 || cardIndex >= currentCards.Length)
             return;
 
-        TagCardUI card =
-            currentCards[cardIndex];
 
-        card.SetSelected();
+        PlayerNetwork playerNetwork = FindPlayerNetwork(selectingPlayer);
+
+
+        if (playerNetwork == null)
+        {
+            Debug.LogWarning(
+                $"PlayerNetwork를 찾을 수 없습니다. " +
+                $"PlayerRef = {selectingPlayer}"
+            );
+
+            return;
+        }
+
+
+        string nickname = playerNetwork.Nickname.ToString();
+
+
+        int characterIndex = playerNetwork.CharacterIndex;
+
+
+        if (characterIndex < 0 || characterIndex >= characterDatabase.characters.Length)
+        {
+            Debug.LogWarning($"잘못된 CharacterIndex : {characterIndex}");
+
+            return;
+        }
+
+        CharacterData characterData = characterDatabase.characters[characterIndex];
+
+        TagCardUI card = currentCards[cardIndex];
+
+
+        card.SetSelected(nickname, characterData.characterColor);
 
 
         Debug.Log(
             $"카드 UI 갱신 : " +
-            $"Card {cardIndex} / " +
-            $"Player {selectingPlayer}"
+            $"Card = {cardIndex} / " +
+            $"Nickname = {nickname} / " +
+            $"Character = {characterData.characterName}"
         );
+    }
+
+    private PlayerNetwork FindPlayerNetwork(PlayerRef playerRef)
+    {
+        PlayerNetwork[] players =
+            FindObjectsByType<PlayerNetwork>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None
+            );
+
+        foreach (PlayerNetwork player in players)
+        {
+            if (player.PlayerRef == playerRef)
+            {
+                return player;
+            }
+        }
+
+        return null;
     }
 
     #endregion
@@ -497,9 +543,7 @@ public class TagManager : NetworkBehaviour
     {
         for (int i = 0; i < currentCards.Length; i++)
         {
-            currentCards[i].ShowResult(
-                i == tagCardIndex
-            );
+            currentCards[i].ShowResult(i == tagCardIndex);
         }
 
         yield return new WaitForSeconds(1.5f);
@@ -508,12 +552,6 @@ public class TagManager : NetworkBehaviour
         {
             currentCards[i].gameObject.SetActive(false);
         }
-
-        tagResultText.text = $"두더지는 Player {tagPlayer.PlayerId}입니다!";
-
-        tagResultText.gameObject.SetActive(true);
-
-        yield return new WaitForSeconds(2f);
 
         tagPanel.SetActive(false);
 
@@ -524,6 +562,7 @@ public class TagManager : NetworkBehaviour
         }
     }
     #endregion
+
 
     #region < Reset >
     public void ResetTag()
@@ -549,10 +588,7 @@ public class TagManager : NetworkBehaviour
             {
                 currentCards[i].ResetCard();
             }
-        }
-
-        tagResultText.text = "";
-        tagResultText.gameObject.SetActive(false);
+        }       
 
         tagPanel.SetActive(true);
         threePlayerPanel.SetActive(false);

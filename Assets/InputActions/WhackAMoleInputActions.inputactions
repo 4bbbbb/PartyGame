@@ -7,7 +7,7 @@
             "id": "2959179e-4767-443d-9c01-363bfa296c7a",
             "actions": [
                 {
-                    "name": "SelectW",
+                    "name": "Select1",
                     "type": "Button",
                     "id": "49c42b32-8d38-4008-a92b-0c95f587f781",
                     "expectedControlType": "",
@@ -16,7 +16,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SelectA",
+                    "name": "Select2",
                     "type": "Button",
                     "id": "0c1cc8b4-491e-4a1d-b225-2f1a93c79606",
                     "expectedControlType": "",
@@ -25,7 +25,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SelectS",
+                    "name": "Select3",
                     "type": "Button",
                     "id": "8a054ede-20d5-4e05-999e-ba237c346bfe",
                     "expectedControlType": "",
@@ -34,7 +34,7 @@
                     "initialStateCheck": false
                 },
                 {
-                    "name": "SelectD",
+                    "name": "Select4",
                     "type": "Button",
                     "id": "a480e23f-0e2b-4f74-94ce-a17ac49a3a6b",
                     "expectedControlType": "",
@@ -47,44 +47,44 @@
                 {
                     "name": "",
                     "id": "1b9cfff9-8bad-4594-9f79-7cc91293fe18",
-                    "path": "<Keyboard>/w",
+                    "path": "<Keyboard>/1",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "SelectW",
+                    "action": "Select1",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "3b37bb81-903a-4fe2-bcec-b60019666d45",
-                    "path": "<Keyboard>/a",
+                    "path": "<Keyboard>/2",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "SelectA",
+                    "action": "Select2",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "77f1efb8-9d7e-482f-9469-3ff4f08a0b3a",
-                    "path": "<Keyboard>/s",
+                    "path": "<Keyboard>/3",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "SelectS",
+                    "action": "Select3",
                     "isComposite": false,
                     "isPartOfComposite": false
                 },
                 {
                     "name": "",
                     "id": "6aff4f88-8284-4d77-aa10-3488c0dfbda2",
-                    "path": "<Keyboard>/d",
+                    "path": "<Keyboard>/4",
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "SelectD",
+                    "action": "Select4",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

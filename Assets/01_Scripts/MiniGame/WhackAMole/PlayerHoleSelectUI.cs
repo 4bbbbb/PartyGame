@@ -1,3 +1,4 @@
+using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -9,8 +10,11 @@ public class PlayerHoleSelectUI : MonoBehaviour
     [Header("<< Panel >>")]
     [SerializeField] private GameObject panel;
 
+    [Header("<< Player Select >>")]
+    [SerializeField] private TMP_Text[] playerSelectTexts;
+
     [Header("<< Selected >>")]
-    [SerializeField] private GameObject selectedObject;
+    [SerializeField] private GameObject selectedObject;   
 
     private WhackAMoleInputActions inputActions;
 
@@ -25,24 +29,33 @@ public class PlayerHoleSelectUI : MonoBehaviour
 
         if (selectedObject != null)
             selectedObject.SetActive(false);
+
+        if (playerSelectTexts != null)
+        {
+            foreach (TMP_Text text in playerSelectTexts)
+            {
+                if (text != null)
+                    text.gameObject.SetActive(false);
+            }
+        }
     }
 
 
     private void OnEnable()
     {
-        inputActions.WhackAMole.SelectW.performed += OnSelectW;
-        inputActions.WhackAMole.SelectA.performed += OnSelectA;
-        inputActions.WhackAMole.SelectS.performed += OnSelectS;
-        inputActions.WhackAMole.SelectD.performed += OnSelectD;
+        inputActions.WhackAMole.Select1.performed += OnSelect1;
+        inputActions.WhackAMole.Select2.performed += OnSelect2;
+        inputActions.WhackAMole.Select3.performed += OnSelect3;
+        inputActions.WhackAMole.Select4.performed += OnSelect4;
     }
 
 
     private void OnDisable()
     {
-        inputActions.WhackAMole.SelectW.performed -= OnSelectW;
-        inputActions.WhackAMole.SelectA.performed -= OnSelectA;
-        inputActions.WhackAMole.SelectS.performed -= OnSelectS;
-        inputActions.WhackAMole.SelectD.performed -= OnSelectD;
+        inputActions.WhackAMole.Select1.performed -= OnSelect1;
+        inputActions.WhackAMole.Select2.performed -= OnSelect2;
+        inputActions.WhackAMole.Select3.performed -= OnSelect3;
+        inputActions.WhackAMole.Select4.performed -= OnSelect4;
 
         inputActions.WhackAMole.Disable();
     }
@@ -55,10 +68,12 @@ public class PlayerHoleSelectUI : MonoBehaviour
         if (panel == null)
             return;
 
-        panel.SetActive(false);
+        panel.SetActive(true);
 
         if (selectedObject != null)
             selectedObject.SetActive(false);
+
+        HidePlayerSelectTexts();
 
         isSelecting = false;
 
@@ -68,18 +83,12 @@ public class PlayerHoleSelectUI : MonoBehaviour
         if (whackAMoleManager.Runner == null)
             return;
 
-        // TAG는 이 UI를 사용하지 않음
-        bool isTag =
-            whackAMoleManager.Runner.LocalPlayer ==
-            whackAMoleManager.TagPlayer;
+        bool isTag = whackAMoleManager.Runner.LocalPlayer == whackAMoleManager.TagPlayer;
 
         if (isTag)
             return;
 
-        panel.SetActive(true);
-
         isSelecting = true;
-
         inputActions.WhackAMole.Enable();
     }
 
@@ -99,39 +108,39 @@ public class PlayerHoleSelectUI : MonoBehaviour
 
     #region < Keyboard >
 
-    private void OnSelectW(InputAction.CallbackContext context)
+    private void OnSelect1(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.W);
+        Select(WhackAMoleManager.HoleType.Hole1);
     }
 
 
-    private void OnSelectA(InputAction.CallbackContext context)
+    private void OnSelect2(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.A);
+        Select(WhackAMoleManager.HoleType.Hole2);
     }
 
 
-    private void OnSelectS(InputAction.CallbackContext context)
+    private void OnSelect3(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.S);
+        Select(WhackAMoleManager.HoleType.Hole3);
     }
 
 
-    private void OnSelectD(InputAction.CallbackContext context)
+    private void OnSelect4(InputAction.CallbackContext context)
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.D);
+        Select(WhackAMoleManager.HoleType.Hole4);
     }
 
     #endregion
@@ -139,39 +148,39 @@ public class PlayerHoleSelectUI : MonoBehaviour
 
     #region < Button >
 
-    public void OnClickW()
+    public void OnClick1()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.W);
+        Select(WhackAMoleManager.HoleType.Hole1);
     }
 
 
-    public void OnClickA()
+    public void OnClick2()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.A);
+        Select(WhackAMoleManager.HoleType.Hole2);
     }
 
 
-    public void OnClickS()
+    public void OnClick3()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.S);
+        Select(WhackAMoleManager.HoleType.Hole3);
     }
 
 
-    public void OnClickD()
+    public void OnClick4()
     {
         if (!isSelecting)
             return;
 
-        Select(WhackAMoleManager.HoleType.D);
+        Select(WhackAMoleManager.HoleType.Hole4);
     }
 
     #endregion
@@ -179,8 +188,7 @@ public class PlayerHoleSelectUI : MonoBehaviour
 
     #region < Select >
 
-    private void Select(
-        WhackAMoleManager.HoleType hole)
+    private void Select(WhackAMoleManager.HoleType hole)
     {
         if (!isSelecting)
             return;
@@ -193,11 +201,43 @@ public class PlayerHoleSelectUI : MonoBehaviour
         // 중복 입력 방지
         isSelecting = false;
 
-        inputActions.WhackAMole.Disable();
+        inputActions.WhackAMole.Disable();        
+    }
 
-        // 선택 완료 표시
-        if (selectedObject != null)
-            selectedObject.SetActive(true);
+    #endregion
+
+
+    #region < Player Select Text >
+
+    public void ShowPlayerSelected(int playerIndex)
+    {
+        if (playerSelectTexts == null)
+            return;
+
+        if (playerIndex < 0 || playerIndex >= playerSelectTexts.Length)
+            return;
+
+        TMP_Text text = playerSelectTexts[playerIndex];
+
+        if (text == null)
+            return;
+
+        text.text = "선택 완료";
+
+        text.gameObject.SetActive(true);
+    }
+
+
+    public void HidePlayerSelectTexts()
+    {
+        if (playerSelectTexts == null)
+            return;
+
+        foreach (TMP_Text text in playerSelectTexts)
+        {
+            if (text != null)
+                text.gameObject.SetActive(false);
+        }
     }
 
     #endregion
@@ -212,7 +252,15 @@ public class PlayerHoleSelectUI : MonoBehaviour
         if (panel != null)
             panel.SetActive(false);
 
+        HidePlayerSelectTexts();
+
         if (selectedObject != null)
             selectedObject.SetActive(true);
+    }
+
+    public void HideComplete()
+    {
+        if (selectedObject != null)
+            selectedObject.SetActive(false);
     }
 }

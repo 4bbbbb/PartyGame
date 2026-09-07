@@ -93,7 +93,7 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
             ""id"": ""2959179e-4767-443d-9c01-363bfa296c7a"",
             ""actions"": [
                 {
-                    ""name"": ""SelectW"",
+                    ""name"": ""Select1"",
                     ""type"": ""Button"",
                     ""id"": ""49c42b32-8d38-4008-a92b-0c95f587f781"",
                     ""expectedControlType"": """",
@@ -102,7 +102,7 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""SelectA"",
+                    ""name"": ""Select2"",
                     ""type"": ""Button"",
                     ""id"": ""0c1cc8b4-491e-4a1d-b225-2f1a93c79606"",
                     ""expectedControlType"": """",
@@ -111,7 +111,7 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""SelectS"",
+                    ""name"": ""Select3"",
                     ""type"": ""Button"",
                     ""id"": ""8a054ede-20d5-4e05-999e-ba237c346bfe"",
                     ""expectedControlType"": """",
@@ -120,7 +120,7 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
                     ""initialStateCheck"": false
                 },
                 {
-                    ""name"": ""SelectD"",
+                    ""name"": ""Select4"",
                     ""type"": ""Button"",
                     ""id"": ""a480e23f-0e2b-4f74-94ce-a17ac49a3a6b"",
                     ""expectedControlType"": """",
@@ -133,44 +133,44 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
                 {
                     ""name"": """",
                     ""id"": ""1b9cfff9-8bad-4594-9f79-7cc91293fe18"",
-                    ""path"": ""<Keyboard>/w"",
+                    ""path"": ""<Keyboard>/1"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""SelectW"",
+                    ""action"": ""Select1"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
                     ""id"": ""3b37bb81-903a-4fe2-bcec-b60019666d45"",
-                    ""path"": ""<Keyboard>/a"",
+                    ""path"": ""<Keyboard>/2"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""SelectA"",
+                    ""action"": ""Select2"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
                     ""id"": ""77f1efb8-9d7e-482f-9469-3ff4f08a0b3a"",
-                    ""path"": ""<Keyboard>/s"",
+                    ""path"": ""<Keyboard>/3"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""SelectS"",
+                    ""action"": ""Select3"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 },
                 {
                     ""name"": """",
                     ""id"": ""6aff4f88-8284-4d77-aa10-3488c0dfbda2"",
-                    ""path"": ""<Keyboard>/d"",
+                    ""path"": ""<Keyboard>/4"",
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""SelectD"",
+                    ""action"": ""Select4"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -181,10 +181,10 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
 }");
         // WhackAMole
         m_WhackAMole = asset.FindActionMap("WhackAMole", throwIfNotFound: true);
-        m_WhackAMole_SelectW = m_WhackAMole.FindAction("SelectW", throwIfNotFound: true);
-        m_WhackAMole_SelectA = m_WhackAMole.FindAction("SelectA", throwIfNotFound: true);
-        m_WhackAMole_SelectS = m_WhackAMole.FindAction("SelectS", throwIfNotFound: true);
-        m_WhackAMole_SelectD = m_WhackAMole.FindAction("SelectD", throwIfNotFound: true);
+        m_WhackAMole_Select1 = m_WhackAMole.FindAction("Select1", throwIfNotFound: true);
+        m_WhackAMole_Select2 = m_WhackAMole.FindAction("Select2", throwIfNotFound: true);
+        m_WhackAMole_Select3 = m_WhackAMole.FindAction("Select3", throwIfNotFound: true);
+        m_WhackAMole_Select4 = m_WhackAMole.FindAction("Select4", throwIfNotFound: true);
     }
 
     ~@WhackAMoleInputActions()
@@ -265,10 +265,10 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
     // WhackAMole
     private readonly InputActionMap m_WhackAMole;
     private List<IWhackAMoleActions> m_WhackAMoleActionsCallbackInterfaces = new List<IWhackAMoleActions>();
-    private readonly InputAction m_WhackAMole_SelectW;
-    private readonly InputAction m_WhackAMole_SelectA;
-    private readonly InputAction m_WhackAMole_SelectS;
-    private readonly InputAction m_WhackAMole_SelectD;
+    private readonly InputAction m_WhackAMole_Select1;
+    private readonly InputAction m_WhackAMole_Select2;
+    private readonly InputAction m_WhackAMole_Select3;
+    private readonly InputAction m_WhackAMole_Select4;
     /// <summary>
     /// Provides access to input actions defined in input action map "WhackAMole".
     /// </summary>
@@ -281,21 +281,21 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
         /// </summary>
         public WhackAMoleActions(@WhackAMoleInputActions wrapper) { m_Wrapper = wrapper; }
         /// <summary>
-        /// Provides access to the underlying input action "WhackAMole/SelectW".
+        /// Provides access to the underlying input action "WhackAMole/Select1".
         /// </summary>
-        public InputAction @SelectW => m_Wrapper.m_WhackAMole_SelectW;
+        public InputAction @Select1 => m_Wrapper.m_WhackAMole_Select1;
         /// <summary>
-        /// Provides access to the underlying input action "WhackAMole/SelectA".
+        /// Provides access to the underlying input action "WhackAMole/Select2".
         /// </summary>
-        public InputAction @SelectA => m_Wrapper.m_WhackAMole_SelectA;
+        public InputAction @Select2 => m_Wrapper.m_WhackAMole_Select2;
         /// <summary>
-        /// Provides access to the underlying input action "WhackAMole/SelectS".
+        /// Provides access to the underlying input action "WhackAMole/Select3".
         /// </summary>
-        public InputAction @SelectS => m_Wrapper.m_WhackAMole_SelectS;
+        public InputAction @Select3 => m_Wrapper.m_WhackAMole_Select3;
         /// <summary>
-        /// Provides access to the underlying input action "WhackAMole/SelectD".
+        /// Provides access to the underlying input action "WhackAMole/Select4".
         /// </summary>
-        public InputAction @SelectD => m_Wrapper.m_WhackAMole_SelectD;
+        public InputAction @Select4 => m_Wrapper.m_WhackAMole_Select4;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -322,18 +322,18 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
         {
             if (instance == null || m_Wrapper.m_WhackAMoleActionsCallbackInterfaces.Contains(instance)) return;
             m_Wrapper.m_WhackAMoleActionsCallbackInterfaces.Add(instance);
-            @SelectW.started += instance.OnSelectW;
-            @SelectW.performed += instance.OnSelectW;
-            @SelectW.canceled += instance.OnSelectW;
-            @SelectA.started += instance.OnSelectA;
-            @SelectA.performed += instance.OnSelectA;
-            @SelectA.canceled += instance.OnSelectA;
-            @SelectS.started += instance.OnSelectS;
-            @SelectS.performed += instance.OnSelectS;
-            @SelectS.canceled += instance.OnSelectS;
-            @SelectD.started += instance.OnSelectD;
-            @SelectD.performed += instance.OnSelectD;
-            @SelectD.canceled += instance.OnSelectD;
+            @Select1.started += instance.OnSelect1;
+            @Select1.performed += instance.OnSelect1;
+            @Select1.canceled += instance.OnSelect1;
+            @Select2.started += instance.OnSelect2;
+            @Select2.performed += instance.OnSelect2;
+            @Select2.canceled += instance.OnSelect2;
+            @Select3.started += instance.OnSelect3;
+            @Select3.performed += instance.OnSelect3;
+            @Select3.canceled += instance.OnSelect3;
+            @Select4.started += instance.OnSelect4;
+            @Select4.performed += instance.OnSelect4;
+            @Select4.canceled += instance.OnSelect4;
         }
 
         /// <summary>
@@ -345,18 +345,18 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
         /// <seealso cref="WhackAMoleActions" />
         private void UnregisterCallbacks(IWhackAMoleActions instance)
         {
-            @SelectW.started -= instance.OnSelectW;
-            @SelectW.performed -= instance.OnSelectW;
-            @SelectW.canceled -= instance.OnSelectW;
-            @SelectA.started -= instance.OnSelectA;
-            @SelectA.performed -= instance.OnSelectA;
-            @SelectA.canceled -= instance.OnSelectA;
-            @SelectS.started -= instance.OnSelectS;
-            @SelectS.performed -= instance.OnSelectS;
-            @SelectS.canceled -= instance.OnSelectS;
-            @SelectD.started -= instance.OnSelectD;
-            @SelectD.performed -= instance.OnSelectD;
-            @SelectD.canceled -= instance.OnSelectD;
+            @Select1.started -= instance.OnSelect1;
+            @Select1.performed -= instance.OnSelect1;
+            @Select1.canceled -= instance.OnSelect1;
+            @Select2.started -= instance.OnSelect2;
+            @Select2.performed -= instance.OnSelect2;
+            @Select2.canceled -= instance.OnSelect2;
+            @Select3.started -= instance.OnSelect3;
+            @Select3.performed -= instance.OnSelect3;
+            @Select3.canceled -= instance.OnSelect3;
+            @Select4.started -= instance.OnSelect4;
+            @Select4.performed -= instance.OnSelect4;
+            @Select4.canceled -= instance.OnSelect4;
         }
 
         /// <summary>
@@ -398,32 +398,32 @@ public partial class @WhackAMoleInputActions: IInputActionCollection2, IDisposab
     public interface IWhackAMoleActions
     {
         /// <summary>
-        /// Method invoked when associated input action "SelectW" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Select1" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSelectW(InputAction.CallbackContext context);
+        void OnSelect1(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "SelectA" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Select2" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSelectA(InputAction.CallbackContext context);
+        void OnSelect2(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "SelectS" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Select3" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSelectS(InputAction.CallbackContext context);
+        void OnSelect3(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "SelectD" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "Select4" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnSelectD(InputAction.CallbackContext context);
+        void OnSelect4(InputAction.CallbackContext context);
     }
 }
