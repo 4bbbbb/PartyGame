@@ -18,6 +18,9 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static NetworkManager Instance { get; private set; }
 
+    [SerializeField] private NetworkPrefabRef playerPrefab;
+    [SerializeField] private NetworkPrefabRef scoreManagerPrefab;
+
     private const int TITLE_SCENE_INDEX = 1;
     private const int LOBBY_SCENE_INDEX = 2;
     private const int GAME_SCENE_INDEX = 3;
@@ -25,14 +28,12 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     private const string ROOM_NAME = "LobbyRoom";
 
     private NetworkRunner runner;
+    private NetworkObject scoreManagerObject;
 
     public NetworkRunner GetRunner()
     {
         return runner;
-    }
-
-    [SerializeField] private NetworkPrefabRef playerPrefab;
-
+    }    
 
     private void Awake()
     {
@@ -148,9 +149,18 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
                 player
             );
 
-            runner.SetPlayerObject(player, playerObject);
+            runner.SetPlayerObject(player, playerObject);            
+        }
 
-            Debug.Log($"Player Spawn 완료 : {playerObject}");
+        if (scoreManagerObject == null)
+        {
+            scoreManagerObject = runner.Spawn(
+                scoreManagerPrefab,
+                Vector3.zero,
+                Quaternion.identity
+            );
+
+            Debug.Log($"ScoreManager Spawn 완료 : {scoreManagerObject}");
         }
 
         if (LobbyManager.Instance != null)

@@ -58,26 +58,24 @@ public class WhackAMoleManager : NetworkBehaviour
 
     #region < Networked Data >
 
-    [Networked]
-    public int CurrentRound { get; private set; }
+    [Networked] public int CurrentRound { get; private set; }
 
-    [Networked]
-    public int TagHP { get; private set; }
+    [Networked] public int TagHP { get; private set; }
 
-    [Networked]
-    public PlayerRef TagPlayer { get; private set; }
+    [Networked] public PlayerRef TagPlayer { get; private set; }
 
-    [Networked]
-    public WhackAMoleState State { get; private set; }
+    [Networked] public WhackAMoleState State { get; private set; }
 
-    [Networked]
-    private HoleType TagHole { get; set; }
+    [Networked] private HoleType TagHole { get; set; }
 
     [Networked, Capacity(4)]
     private NetworkArray<HoleType> PlayerChoices => default;
 
     [Networked, Capacity(4)]
     private NetworkArray<NetworkBool> PlayerChoiceCompleted => default;
+
+    [Networked, Capacity(4)]
+    private NetworkArray<int> PlayerHitCounts => default;
 
     #endregion
 
@@ -86,6 +84,11 @@ public class WhackAMoleManager : NetworkBehaviour
 
     // 실제 게임에 Spawn된 캐릭터
     private readonly Dictionary<PlayerRef, WhackAMolePlayer> spawnedPlayers = new();
+
+    private ScoreManager GetScoreManager()
+    {
+        return FindFirstObjectByType<ScoreManager>();
+    }
 
     #endregion
 
@@ -255,6 +258,12 @@ public class WhackAMoleManager : NetworkBehaviour
         CurrentRound = 1;
         TagHP = gameData.TagHP;
         State = WhackAMoleState.Waiting;
+
+        for (int i = 0; i < 4; i++)
+        {
+            PlayerHitCounts.Set(i, 0);
+
+        }
     }
 
     #endregion
@@ -440,12 +449,14 @@ public class WhackAMoleManager : NetworkBehaviour
 
         if (TagHP <= 0)
         {
+            GiveGameScores();
             StartGameResult();
             yield break;
         }
 
         if (CurrentRound >= 3)
         {
+            GiveGameScores();
             StartGameResult();
             yield break;
         }
@@ -878,6 +889,9 @@ public class WhackAMoleManager : NetworkBehaviour
 
             if (isHit)
             {
+                PlayerHitCounts.Set(playerIndex, PlayerHitCounts[playerIndex] + 1);
+                Debug.Log($"Hit : {player.PlayerRef} / 누적 Hit : {PlayerHitCounts[playerIndex]}");
+
                 TagHP--;
                 RPC_UpdateTagProfileHP(TagHP);
             }
@@ -1022,6 +1036,81 @@ public class WhackAMoleManager : NetworkBehaviour
             return;
 
         endUI.Hide();
+    }
+
+    #endregion
+
+
+    #region < Score >
+
+    private Dictionary<PlayerRef, int> CalculateGameScores()
+    {
+        Dictionary<PlayerRef, int> scores = new();
+
+        if (TagHP > 0)
+        {
+            scores[TagPlayer] = 3;
+            return scores;
+        }
+
+        List<PlayerNetwork> players = GetNormalPlayers();
+
+        players = players
+            .OrderByDescending(player => PlayerHitCounts[GetPlayerIndex(player.PlayerRef)])
+            .ToList();
+
+        if (players.Count == 0)
+            return scores;
+
+        int firstHitCount = PlayerHitCounts[GetPlayerIndex(players[0].PlayerRef)];
+        int secondHitCount = players.Count > 1 ? PlayerHitCounts[GetPlayerIndex(players[1].PlayerRef)] : -1;
+
+        bool firstPlaceTie = firstHitCount == secondHitCount;
+
+        if (firstPlaceTie)
+        {
+            foreach (PlayerNetwork player in players)
+            {
+                int hitCount = PlayerHitCounts[GetPlayerIndex(player.PlayerRef)];
+
+                if (hitCount == firstHitCount)
+                    scores[player.PlayerRef] = 2;
+                else
+                    scores[player.PlayerRef] = 1;
+            }
+
+            return scores;
+        }
+
+        scores[players[0].PlayerRef] = 3;
+
+        for (int i = 1; i < players.Count; i++)
+            scores[players[i].PlayerRef] = 2;
+
+        if (players.Count >= 3)
+            scores[players[2].PlayerRef] = 1;
+
+        return scores;
+    }
+
+    private void GiveGameScores()
+    {
+        ScoreManager scoreManager = GetScoreManager();
+
+        if (scoreManager == null)
+        {
+            Debug.LogWarning("ScoreManager를 찾을 수 없습니다.");
+            return;
+        }
+
+        Dictionary<PlayerRef, int> scores = CalculateGameScores();
+
+        foreach (KeyValuePair<PlayerRef, int> score in scores)
+        {
+            scoreManager.AddScore(score.Key, score.Value);
+
+            Debug.Log($"===== WhackAMole 점수 지급 =====\nPlayer : {score.Key}\n점수 : +{score.Value}");
+        }
     }
 
     #endregion

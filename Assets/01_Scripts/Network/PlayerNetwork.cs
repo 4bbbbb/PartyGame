@@ -32,9 +32,7 @@ public class PlayerNetwork : NetworkBehaviour
         Debug.Log($"PlayerNetwork Spawned : {Object.InputAuthority}");
 
         if (Object.HasInputAuthority)
-        {
-            Debug.Log($"내 닉네임 전달 : {PlayerData.Nickname}");
-
+        {           
             RPC_SetNickname(PlayerData.Nickname);
         }
     }
@@ -55,10 +53,6 @@ public class PlayerNetwork : NetworkBehaviour
 
     private void OnNicknameChanged()
     {
-        Debug.Log("===== 닉네임 변경 감지 =====");
-        Debug.Log($"Player : {PlayerRef}");
-        Debug.Log($"Nickname : {Nickname}");
-
         if (LobbyManager.Instance != null && Runner != null)
         {
             LobbyManager.Instance.RefreshPlayerList(Runner);
@@ -79,12 +73,6 @@ public class PlayerNetwork : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     public void RPC_RequestCharacterSelect(int characterIndex, RpcInfo info = default)
     {
-        Debug.Log(
-            $"캐릭터 선택 요청 : " +
-            $"Player = {PlayerRef}, " +
-            $"CharacterIndex = {characterIndex}"
-        );
-
         // 다른 플레이어가 이미 선택했는지 검사
         PlayerNetwork[] players =
             FindObjectsByType<PlayerNetwork>(
@@ -112,13 +100,7 @@ public class PlayerNetwork : NetworkBehaviour
         }
 
         // 선택 성공
-        CharacterIndex = characterIndex;
-
-        Debug.Log(
-            $"캐릭터 선택 성공 : " +
-            $"Player = {PlayerRef}, " +
-            $"CharacterIndex = {CharacterIndex}"
-        );
+        CharacterIndex = characterIndex;       
 
         RPC_CharacterSelectResult(true, characterIndex);
     }
@@ -193,26 +175,14 @@ public class PlayerNetwork : NetworkBehaviour
     public void RPC_SetReady(bool ready)
     {
         if (CharacterIndex < 0)
-        {
-            Debug.Log($"Ready 실패 : 캐릭터 미선택 / Player = {PlayerRef}");
-
             return;
-        }
-
+        
         IsReady = ready;
-
-        Debug.Log(
-            $"Ready 상태 변경 : " +
-            $"Player = {PlayerRef}, " +
-            $"Ready = {IsReady}"
-        );
     }
 
 
     private void OnReadyChanged()
     {
-        Debug.Log($"Ready 변경 : {PlayerRef} / {IsReady}");
-
         if (LobbyManager.Instance != null && Runner != null)
         {
             LobbyManager.Instance.RefreshPlayerList(Runner);
