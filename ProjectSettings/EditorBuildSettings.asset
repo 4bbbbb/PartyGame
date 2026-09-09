@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/00_Scenes/02_WhackaMole.unity
     guid: 6d2c273da43531f4c84625b8b10889d4
+  - enabled: 1
+    path: Assets/00_Scenes/03_Score.unity
+    guid: f1583af569db1334bb43d94fc9cb625b
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 7a9f3ecf97e9e374eb29b69177250a05, type: 3}
   m_UseUCBPForAssetBundles: 0

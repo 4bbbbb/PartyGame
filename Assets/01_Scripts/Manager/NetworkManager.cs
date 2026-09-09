@@ -18,8 +18,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static NetworkManager Instance { get; private set; }
 
-    [SerializeField] private NetworkPrefabRef playerPrefab;
-    [SerializeField] private NetworkPrefabRef scoreManagerPrefab;
+    [SerializeField] private NetworkPrefabRef playerPrefab;    
 
     private const int TITLE_SCENE_INDEX = 1;
     private const int LOBBY_SCENE_INDEX = 2;
@@ -27,8 +26,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private const string ROOM_NAME = "LobbyRoom";
 
-    private NetworkRunner runner;
-    private NetworkObject scoreManagerObject;
+    private NetworkRunner runner;    
 
     public NetworkRunner GetRunner()
     {
@@ -52,7 +50,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         SceneManager.LoadScene("00_Title");
     }
 
-    // UI의 Play 버튼에서 호출
     public void Play()
     {
         StartGame(GameMode.AutoHostOrClient);
@@ -142,6 +139,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner.IsServer)
         {
+            // 플레이어 Spawn
             NetworkObject playerObject = runner.Spawn(
                 playerPrefab,
                 Vector3.zero,
@@ -152,16 +150,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             runner.SetPlayerObject(player, playerObject);            
         }
 
-        if (scoreManagerObject == null)
-        {
-            scoreManagerObject = runner.Spawn(
-                scoreManagerPrefab,
-                Vector3.zero,
-                Quaternion.identity
-            );
 
-            Debug.Log($"ScoreManager Spawn 완료 : {scoreManagerObject}");
-        }
+
 
         if (LobbyManager.Instance != null)
         {
@@ -245,11 +235,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         request.Accept();
     }
 
-    public void OnInput(
-        NetworkRunner runner,
-        NetworkInput input)
-    {
-    }
+    public void OnInput(NetworkRunner runner, NetworkInput input){}
 
     public void OnInputMissing(
         NetworkRunner runner,
@@ -313,23 +299,15 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public void OnObjectEnterAOI(
-        NetworkRunner runner,
-        NetworkObject obj,
-        PlayerRef player)
+    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
     }
 
-    public void OnObjectExitAOI(
-        NetworkRunner runner,
-        NetworkObject obj,
-        PlayerRef player)
+    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player)
     {
     }
 
-    public void OnUserSimulationMessage(
-        NetworkRunner runner,
-        SimulationMessagePtr message)
+    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message)
     {
     }
 }

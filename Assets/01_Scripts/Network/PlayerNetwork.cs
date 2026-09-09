@@ -15,6 +15,9 @@ public class PlayerNetwork : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnReadyChanged))]
     public NetworkBool IsReady { get; set; }
 
+    [Networked]
+    public int Score { get; set; }
+
 
     #region < Spawn >
 
@@ -194,5 +197,16 @@ public class PlayerNetwork : NetworkBehaviour
         }
     }
 
+    #endregion
+
+
+    #region < Score >
+    public void AddScore(int score)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        Score += score;
+    }
     #endregion
 }

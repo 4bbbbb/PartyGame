@@ -84,12 +84,7 @@ public class WhackAMoleManager : NetworkBehaviour
 
     // 실제 게임에 Spawn된 캐릭터
     private readonly Dictionary<PlayerRef, WhackAMolePlayer> spawnedPlayers = new();
-
-    private ScoreManager GetScoreManager()
-    {
-        return FindFirstObjectByType<ScoreManager>();
-    }
-
+   
     #endregion
 
 
@@ -842,7 +837,6 @@ public class WhackAMoleManager : NetworkBehaviour
             .ToList();
     }
 
-
     private IEnumerator StartResultSequence()
     {
         if (!Object.HasStateAuthority)
@@ -1016,6 +1010,21 @@ public class WhackAMoleManager : NetworkBehaviour
 
         RPC_HideResultUI();
         RPC_ShowEndUI();
+
+        StartCoroutine(GoToScoreSceneSequence());
+    }
+
+    private IEnumerator GoToScoreSceneSequence()
+    {
+        if (!Object.HasStateAuthority)
+            yield break;
+
+        // End UI 보여주는 시간
+        yield return new WaitForSeconds(2f);
+
+        const int SCORE_SCENE_INDEX = 4;
+
+        Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
     }
 
 
@@ -1026,17 +1035,7 @@ public class WhackAMoleManager : NetworkBehaviour
             return;
 
         endUI.Show();
-    }
-
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_HideEndUI()
-    {
-        if (endUI == null)
-            return;
-
-        endUI.Hide();
-    }
+    }   
 
     #endregion
 
@@ -1095,21 +1094,30 @@ public class WhackAMoleManager : NetworkBehaviour
 
     private void GiveGameScores()
     {
-        ScoreManager scoreManager = GetScoreManager();
-
-        if (scoreManager == null)
-        {
-            Debug.LogWarning("ScoreManager를 찾을 수 없습니다.");
-            return;
-        }
-
         Dictionary<PlayerRef, int> scores = CalculateGameScores();
+
+        List<PlayerNetwork> players = GetActivePlayers();
 
         foreach (KeyValuePair<PlayerRef, int> score in scores)
         {
-            scoreManager.AddScore(score.Key, score.Value);
+            PlayerNetwork player = players
+                .FirstOrDefault(p => p.PlayerRef == score.Key);
 
-            Debug.Log($"===== WhackAMole 점수 지급 =====\nPlayer : {score.Key}\n점수 : +{score.Value}");
+            if (player == null)
+            {
+                Debug.LogWarning($"점수를 지급할 PlayerNetwork를 찾을 수 없습니다. PlayerRef = {score.Key}");
+
+                continue;
+            }
+
+            player.AddScore(score.Value);
+
+            Debug.Log(
+                $"===== WhackAMole 점수 지급 =====\n" +
+                $"Player : {score.Key}\n" +
+                $"점수 : +{score.Value}\n" +
+                $"누적 점수 : {player.Score}"
+            );
         }
     }
 
