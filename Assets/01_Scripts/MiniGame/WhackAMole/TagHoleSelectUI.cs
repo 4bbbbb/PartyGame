@@ -17,14 +17,14 @@ public class TagHoleSelectUI : MonoBehaviour
     [Header("<< Buttons >>")]
     [SerializeField] private Button[] holeButtons;
 
-    private WhackAMoleInputActions inputActions;
+    private Player_InputActions inputActions;
 
     private bool isSelecting;
 
 
     private void Awake()
     {
-        inputActions = new WhackAMoleInputActions();
+        inputActions = new Player_InputActions();
 
         panel.SetActive(false);
 

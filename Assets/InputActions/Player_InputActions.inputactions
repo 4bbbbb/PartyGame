@@ -1,6 +1,6 @@
 {
     "version": 1,
-    "name": "WhackAMoleInputActions",
+    "name": "Player_InputActions",
     "maps": [
         {
             "name": "WhackAMole",
@@ -85,6 +85,45 @@
                     "processors": "",
                     "groups": "",
                     "action": "Select4",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        },
+        {
+            "name": "Baseball",
+            "id": "d35911f2-eaaa-4154-b8f8-db3e08c52d49",
+            "actions": [
+                {
+                    "name": "Hit",
+                    "type": "Button",
+                    "id": "35b2d511-44da-4199-a93d-cd55efdde7c1",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "aa079ce0-3e8d-4a37-95f4-e897d71fc01d",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Hit",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "9a9e8bb8-fa83-429f-9f1a-5e631f4607d0",
+                    "path": "<Mouse>/leftButton",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Hit",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }

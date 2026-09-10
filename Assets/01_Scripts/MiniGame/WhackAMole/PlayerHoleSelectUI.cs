@@ -16,14 +16,14 @@ public class PlayerHoleSelectUI : MonoBehaviour
     [Header("<< Selected >>")]
     [SerializeField] private GameObject selectedObject;   
 
-    private WhackAMoleInputActions inputActions;
+    private Player_InputActions inputActions;
 
     private bool isSelecting;
 
 
     private void Awake()
     {
-        inputActions = new WhackAMoleInputActions();
+        inputActions = new Player_InputActions();
 
         panel.SetActive(false);
 
