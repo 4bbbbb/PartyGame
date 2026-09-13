@@ -22,6 +22,8 @@ public class Ball : MonoBehaviour
     private Vector3 hitPosition;
     private Vector3 horizontalDirection;
 
+    public Vector3 HitDirection => -horizontalDirection;
+
     // 포물선
     // y = ax² + bx + c
     private float a;
@@ -44,14 +46,21 @@ public class Ball : MonoBehaviour
     private float currentRotationSpeed;
     private Vector3 rotationAxis;
 
+
     private bool isFlying;
 
 
-    public void Initialize(
-        Vector3 startPosition,
-        Vector3 hitPosition,
-        float duration,
-        float height)
+    public bool IsFlying => isFlying;
+    public float HitTimeError
+    {
+        get
+        {
+            return moveTime - hitTime;
+        }
+    }
+
+
+    public void Initialize(Vector3 startPosition, Vector3 hitPosition, float duration, float height)
     {
         this.startPosition = startPosition;
         this.hitPosition = hitPosition;
@@ -62,8 +71,7 @@ public class Ball : MonoBehaviour
         // Start → Hit 수평 방향
         // --------------------------------
 
-        Vector3 horizontal =
-            hitPosition - startPosition;
+        Vector3 horizontal = hitPosition - startPosition;
 
         horizontal.y = 0f;
 
@@ -75,8 +83,7 @@ public class Ball : MonoBehaviour
             return;
         }
 
-        horizontalDirection =
-            horizontal.normalized;
+        horizontalDirection = horizontal.normalized;
 
 
         // --------------------------------
@@ -108,13 +115,9 @@ public class Ball : MonoBehaviour
         // 회전
         // --------------------------------
 
-        currentRotationSpeed =
-            Random.Range(
-                minRotationSpeed,
-                maxRotationSpeed);
+        currentRotationSpeed = Random.Range(minRotationSpeed, maxRotationSpeed);
 
-        rotationAxis =
-            Random.onUnitSphere;
+        rotationAxis = Random.onUnitSphere;
     }
 
 
@@ -197,8 +200,7 @@ public class Ball : MonoBehaviour
          * 을 풀어서 Ground의 X 위치를 구한다.
          */
 
-        float discriminant =
-            b * b - 4f * a * c;
+        float discriminant = b * b - 4f * a * c;
 
         if (discriminant < 0f)
         {
@@ -224,8 +226,7 @@ public class Ball : MonoBehaviour
             groundDistance = root1;
 
         if (root2 > hitDistance &&
-            (groundDistance < 0f ||
-             root2 < groundDistance))
+            (groundDistance < 0f || root2 < groundDistance))
         {
             groundDistance = root2;
         }
@@ -295,9 +296,14 @@ public class Ball : MonoBehaviour
 
         if (position.y <= 0f)
         {
-            isFlying = false;
+            isFlying = false;           
 
             Destroy(gameObject);
         }
     }
+
+    public void StopFlying()
+    {
+        isFlying = false;
+    }    
 }

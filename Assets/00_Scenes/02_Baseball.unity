@@ -1399,7 +1399,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 2939707811911978273, guid: 6c51315a35eb2d94b83a5c9d2c83333b, type: 3}
       propertyPath: m_Name
-      value: SM_R_P8
+      value: Stadium
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

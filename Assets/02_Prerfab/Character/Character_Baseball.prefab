@@ -164,6 +164,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   animator: {fileID: 1496210939812076169}
+  batCollider: {fileID: 1094643056106645609}
+  excellentScore: 3
+  goodScore: 1
+  excellentTiming: 0.02
 --- !u!114 &1656893508778106668
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -299,6 +303,9 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a37a1819b9696074695aa1833532724e, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1094643056106645609}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: a37a1819b9696074695aa1833532724e, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 801999911834328981}
   m_SourcePrefab: {fileID: 100100000, guid: a37a1819b9696074695aa1833532724e, type: 3}
 --- !u!4 &7416060596278685127 stripped
 Transform:
@@ -329,5 +336,18 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 0.0014159807, y: 0.0014118608, z: 0.01899085}
-  m_Center: {x: 0.000027010012, y: 0.000027146285, z: -0.000018329836}
+  m_Size: {x: 0.0016351453, y: 0.0017004309, z: 0.01899085}
+  m_Center: {x: -0.00008257262, y: 0.00017143085, z: -0.00001832979}
+--- !u!114 &801999911834328981
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7899581471504349053}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1e799e592ed5f3b44bdca8b916c1d699, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  baseballPlayer: {fileID: 3469095610632211917}
