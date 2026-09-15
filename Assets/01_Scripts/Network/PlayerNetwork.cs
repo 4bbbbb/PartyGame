@@ -15,6 +15,10 @@ public class PlayerNetwork : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnReadyChanged))]
     public NetworkBool IsReady { get; set; }
 
+    // baseball
+    [Networked, OnChangedRender(nameof(OnBaseballCountChanged))]
+    public int BaseballCount { get; set; }
+
     [Networked]
     public int Score { get; set; }
 
@@ -65,6 +69,11 @@ public class PlayerNetwork : NetworkBehaviour
         {
             TagManager.Instance.SetupTagUI();
         }
+
+        if (BaseballUIManager.Instance != null)
+        {
+            BaseballUIManager.Instance.RefreshProfiles(Runner);
+        }
     }
 
     #endregion
@@ -90,12 +99,7 @@ public class PlayerNetwork : NetworkBehaviour
                 continue;
 
             if (player.CharacterIndex == characterIndex)
-            {
-                Debug.Log(
-                    $"캐릭터 선택 실패 : 이미 사용 중 " +
-                    $"CharacterIndex = {characterIndex}"
-                );
-
+            {                
                 RPC_CharacterSelectResult(false, characterIndex);
 
                 return;
@@ -121,15 +125,11 @@ public class PlayerNetwork : NetworkBehaviour
 
         if (success)
         {
-            CharacterSelectUI.Instance.OnCharacterSelectSuccess(
-                characterIndex
-            );
+            CharacterSelectUI.Instance.OnCharacterSelectSuccess(characterIndex);
         }
         else
         {
-            CharacterSelectUI.Instance.OnCharacterSelectFailed(
-                characterIndex
-            );
+            CharacterSelectUI.Instance.OnCharacterSelectFailed(characterIndex);
         }
     }
 
@@ -141,19 +141,17 @@ public class PlayerNetwork : NetworkBehaviour
             $"Player = {PlayerRef}, " +
             $"CharacterIndex = {CharacterIndex}"
         );
-
-        // 다른 플레이어가 선택한 캐릭터를
-        // 현재 선택 화면에서 바로 반영할 수 있게 함
+       
         if (CharacterSelectUI.Instance != null)
         {
             CharacterSelectUI.Instance.RefreshAvailableCharacters();
         }
 
-        // 플레이어 리스트 갱신
         if (LobbyManager.Instance != null && Runner != null)
         {
             LobbyManager.Instance.RefreshPlayerList(Runner);
         }
+        
     }
 
     #endregion
@@ -194,6 +192,28 @@ public class PlayerNetwork : NetworkBehaviour
         if (LobbyUIManager.Instance != null)
         {
             LobbyUIManager.Instance.UpdateStartButton();
+        }
+    }
+
+    #endregion
+
+
+    #region < Baseball > 
+    public void AddBaseballCount(int amount)
+    {
+        if (!Object.HasStateAuthority)
+        {
+            return;
+        }
+
+        BaseballCount += amount;
+    }
+
+    private void OnBaseballCountChanged()
+    {
+        if (BaseballUIManager.Instance != null)
+        {
+            BaseballUIManager.Instance.RefreshProfiles(Runner);
         }
     }
 

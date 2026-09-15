@@ -21,143 +21,161 @@ public class BallHitMotion : MonoBehaviour
 
     private bool isHit;
 
+    private Ball ball;
+
+    private void Awake()
+    {
+        ball = GetComponent<Ball>();
+    }
+
+    #region < Excellent >
+
     public void PlayExcellentMotion()
     {
         if (isHit)
-            return;
-
-        isHit = true;
-
-        transform.DOKill();
-
-        Ball ball = GetComponent<Ball>();
-
-        if (ball == null)
         {
-            Debug.LogWarning("BallHitMotion : Ball 컴포넌트를 찾을 수 없습니다.");
-            Destroy(gameObject);
             return;
         }
 
-        Vector3 startPosition = transform.position;
+        isHit = true;
 
-        // 공이 날아왔던 방향의 반대쪽
-        Vector3 hitDirection = ball.HitDirection;
-
-        // 화면상 왼쪽 이동
-        Vector3 horizontalDirection =
-            Vector3.left * excellentDistance;
-
-        // 공이 날아온 반대 방향으로 깊이 이동
-        Vector3 depthDirection =
-            hitDirection * excellentDepthDistance;
-
-        Vector3 targetPosition =
-            startPosition +
-            horizontalDirection +
-            depthDirection;
-
-        targetPosition.y += excellentHeight;
-
-        transform.localScale = hitScale;
-
-        Sequence sequence = DOTween.Sequence();
-
-        sequence.Append(
-            transform.DOMove(
-                targetPosition,
-                excellentDuration
-            ).SetEase(Ease.OutQuad)
-        );
-
-        sequence.Join(
-            transform.DOScale(
-                endScale,
-                excellentDuration
-            ).SetEase(Ease.InQuad)
-        );
-
-        sequence.Join(
-            transform.DORotate(
-                new Vector3(720f, 0f, 0f),
-                excellentDuration,
-                RotateMode.FastBeyond360
-            )
-        );
-
-        sequence.OnComplete(() =>
+        if (ball == null)
         {
-            Destroy(gameObject);
-        });
+            ball = GetComponent<Ball>();
+        }
+
+        if (ball == null)
+        {
+            DespawnBall();
+            return;
+        }
+
+        PlayMotion(
+            distance: excellentDistance,
+            height: excellentHeight,
+            depthDistance: excellentDepthDistance,
+            duration: excellentDuration,
+            horizontalDirection: Vector3.left,
+            rotation: new Vector3(720f, 0f, 0f)
+        );
     }
+
+    #endregion
+
+    #region < Good >
 
     public void PlayGoodMotion()
     {
         if (isHit)
-            return;
-
-        isHit = true;
-
-        transform.DOKill();
-
-        Ball ball = GetComponent<Ball>();
-
-        if (ball == null)
         {
-            Debug.LogWarning("BallHitMotion : Ball 컴포넌트를 찾을 수 없습니다.");
-            Destroy(gameObject);
             return;
         }
 
+        isHit = true;
+
+        if (ball == null)
+        {
+            ball = GetComponent<Ball>();
+        }
+
+        if (ball == null)
+        {
+            DespawnBall();
+            return;
+        }
+
+        PlayMotion(
+            distance: goodDistance,
+            height: goodHeight,
+            depthDistance: goodDepthDistance,
+            duration: goodDuration,
+            horizontalDirection: Vector3.right,
+            rotation: new Vector3(180f, 0f, 0f)
+        );
+    }
+
+    #endregion
+
+    #region < Motion >
+
+    private void PlayMotion(
+        float distance,
+        float height,
+        float depthDistance,
+        float duration,
+        Vector3 horizontalDirection,
+        Vector3 rotation
+    )
+    {
+        transform.DOKill();
+
         Vector3 startPosition = transform.position;
 
-        // 공이 날아왔던 방향의 반대쪽
         Vector3 hitDirection = ball.HitDirection;
 
-        // 화면상 오른쪽 이동
-        Vector3 horizontalDirection =
-            Vector3.right * goodDistance;
-
-        // 공이 날아온 반대 방향으로 깊이 이동
-        Vector3 depthDirection =
-            hitDirection * goodDepthDistance;
+        Vector3 depthDirection = hitDirection * depthDistance;
 
         Vector3 targetPosition =
-            startPosition +
-            horizontalDirection +
-            depthDirection;
+            startPosition
+            + horizontalDirection * distance
+            + depthDirection;
 
-        targetPosition.y += goodHeight;
+        targetPosition.y += height;
 
         transform.localScale = hitScale;
 
         Sequence sequence = DOTween.Sequence();
 
         sequence.Append(
-            transform.DOMove(
-                targetPosition,
-                goodDuration
-            ).SetEase(Ease.OutQuad)
+            transform.DOMove(targetPosition, duration)
+                .SetEase(Ease.OutQuad)
         );
 
         sequence.Join(
-            transform.DOScale(
-                endScale,
-                goodDuration
-            ).SetEase(Ease.InQuad)
+            transform.DOScale(endScale, duration)
+                .SetEase(Ease.InQuad)
         );
 
         sequence.Join(
             transform.DORotate(
-                new Vector3(180f, 0f, 0f),
-                goodDuration,
+                rotation,
+                duration,
                 RotateMode.FastBeyond360
             )
         );
 
-        sequence.OnComplete(() =>
-        {
-            Destroy(gameObject);
-        });
+        sequence.OnComplete(DespawnBall);
     }
+
+    #endregion
+
+    #region < Despawn >
+
+    private void DespawnBall()
+    {
+        transform.DOKill();
+
+        if (ball == null)
+        {
+            ball = GetComponent<Ball>();
+        }
+
+        if (ball == null)
+        {
+            return;
+        }
+
+        /*
+         * 네트워크 공은 State Authority만 제거해야 한다.
+         * 호스트가 아닌 클라이언트에서는 직접 Despawn하지 않는다.
+         */
+        if (ball.Object != null &&
+            ball.Object.HasStateAuthority &&
+            ball.Runner != null)
+        {
+            ball.Runner.Despawn(ball.Object);
+        }
+    }
+
+    #endregion
 }

@@ -13,7 +13,6 @@ public class TagProfileUI : MonoBehaviour
 
     [Header("<< HP >>")]
     [SerializeField] private GameObject[] filledHearts;
-
     
 
     public void Show(string nickname, int hp, Color profileColor)

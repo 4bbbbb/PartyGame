@@ -15,6 +15,9 @@ EditorBuildSettings:
     path: Assets/00_Scenes/01_Lobby.unity
     guid: 976bf2d64b1ee294ebcf945b5e606273
   - enabled: 1
+    path: Assets/00_Scenes/02_Baseball.unity
+    guid: e8bc487ddbcc1c546bdc8b503633a25d
+  - enabled: 1
     path: Assets/00_Scenes/02_WhackaMole.unity
     guid: 6d2c273da43531f4c84625b8b10889d4
   - enabled: 1
