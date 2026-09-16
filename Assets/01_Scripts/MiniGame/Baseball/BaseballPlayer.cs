@@ -1,4 +1,4 @@
-using Fusion;
+ï»¿using Fusion;
 using UnityEngine;
 
 public class BaseballPlayer : NetworkBehaviour
@@ -12,34 +12,39 @@ public class BaseballPlayer : NetworkBehaviour
     [Header("<< Animator >>")]
     [SerializeField] private Animator animator;
 
-    [Header("<< Bat >>")]
-    [SerializeField] private Collider batCollider;
-    [SerializeField] private BatTrigger batTrigger;
-
     [Header("<< Score >>")]
     [SerializeField] private int excellentScore = 3;
     [SerializeField] private int goodScore = 1;
 
     [Header("<< Timing >>")]
     [SerializeField] private float excellentTiming = 0.1f;
+    [SerializeField] private float goodTiming = 0.2f;
 
 
-    // PlayerNetwork ¿¬°á
+    // =========================================================
+    // Player Network
+    // =========================================================
+
     private PlayerNetwork playerNetwork;
 
     public PlayerNetwork PlayerNetwork =>
         playerNetwork;
 
 
+    // =========================================================
+    // Networked
+    // =========================================================
+
     [Networked]
     public int PlayerIndex { get; set; }
-
 
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; set; } = -1;
 
 
-    #region < Player Network >
+    // =========================================================
+    // Spawn
+    // =========================================================
 
     public override void Spawned()
     {
@@ -60,14 +65,13 @@ public class BaseballPlayer : NetworkBehaviour
         PlayerNetwork playerNetwork
     )
     {
-        this.playerNetwork =
-            playerNetwork;
+        this.playerNetwork = playerNetwork;
     }
 
-    #endregion
 
-
-    #region < Player Index >
+    // =========================================================
+    // Player Index
+    // =========================================================
 
     public void SetPlayerIndex(int index)
     {
@@ -95,8 +99,7 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        CharacterIndex =
-            characterIndex;
+        CharacterIndex = characterIndex;
 
         Debug.Log(
             $"[BaseballPlayer SetCharacterIndex] " +
@@ -117,10 +120,10 @@ public class BaseballPlayer : NetworkBehaviour
         ApplyCharacter();
     }
 
-    #endregion
 
-
-    #region < Input >
+    // =========================================================
+    // Input
+    // =========================================================
 
     private void Update()
     {
@@ -132,7 +135,7 @@ public class BaseballPlayer : NetworkBehaviour
         if (Input.GetKeyDown(KeyCode.Space) ||
             Input.GetMouseButtonDown(0))
         {
-            // Space´Â ¹èÆ® ¾Ö´Ï¸ŞÀÌ¼Ç¸¸ ½ÇÇà
+            // ë°°íŠ¸ ì• ë‹ˆë©”ì´ì…˜ë§Œ ì‹¤í–‰
             RPC_PlayHit();
         }
     }
@@ -152,10 +155,10 @@ public class BaseballPlayer : NetworkBehaviour
         animator.SetTrigger("Hit");
     }
 
-    #endregion
 
-
-    #region < Character >
+    // =========================================================
+    // Character
+    // =========================================================
 
     private void ApplyCharacter()
     {
@@ -166,83 +169,94 @@ public class BaseballPlayer : NetworkBehaviour
             $"CharacterIndex = {CharacterIndex}"
         );
 
+
         int characterIndex =
             CharacterIndex;
+
 
         if (characterIndex < 0)
         {
             Debug.LogWarning(
-                $"CharacterIndex°¡ ¾ÆÁ÷ ¼³Á¤µÇÁö ¾Ê¾Ò½À´Ï´Ù. " +
+                $"CharacterIndexê°€ ì•„ì§ ì„¤ì •ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤. " +
                 $"PlayerRef = {Object.InputAuthority}"
             );
 
             return;
         }
 
+
         if (characterDatabase == null)
         {
             Debug.LogError(
-                "CharacterDatabase°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù."
+                "CharacterDatabaseê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤."
             );
 
             return;
         }
+
 
         if (characterDatabase.characters == null ||
             characterDatabase.characters.Length == 0)
         {
             Debug.LogError(
-                "CharacterDatabase¿¡ Ä³¸¯ÅÍ°¡ ¾ø½À´Ï´Ù."
+                "CharacterDatabaseì— ìºë¦­í„°ê°€ ì—†ìŠµë‹ˆë‹¤."
             );
 
             return;
         }
+
 
         if (characterIndex >=
             characterDatabase.characters.Length)
         {
             Debug.LogError(
-                $"Àß¸øµÈ CharacterIndex : {characterIndex}"
+                $"ì˜ëª»ëœ CharacterIndex : {characterIndex}"
             );
 
             return;
         }
+
 
         CharacterData characterData =
             characterDatabase.characters[
                 characterIndex
             ];
 
+
         if (characterData == null)
         {
             Debug.LogError(
-                $"CharacterData°¡ ¾ø½À´Ï´Ù. " +
+                $"CharacterDataê°€ ì—†ìŠµë‹ˆë‹¤. " +
                 $"Index = {characterIndex}"
             );
 
             return;
         }
 
+
         if (characterRenderer == null)
         {
             Debug.LogError(
-                "Character Renderer°¡ ¿¬°áµÇÁö ¾Ê¾Ò½À´Ï´Ù."
+                "Character Rendererê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤."
             );
 
             return;
         }
+
 
         Material[] materials =
             characterRenderer.materials;
 
+
         if (materials.Length < 2)
         {
             Debug.LogWarning(
-                "Character RendererÀÇ Material ½½·ÔÀÌ 2°³ ¹Ì¸¸ÀÔ´Ï´Ù."
+                "Character Rendererì˜ Material ìŠ¬ë¡¯ì´ 2ê°œ ë¯¸ë§Œì…ë‹ˆë‹¤."
             );
 
             return;
         }
+
 
         materials[0] =
             characterData.characterMaterial;
@@ -250,109 +264,305 @@ public class BaseballPlayer : NetworkBehaviour
         characterRenderer.materials =
             materials;
 
+
         Debug.Log(
-            $"°ÔÀÓ Ä³¸¯ÅÍ ¼³Á¤ ¿Ï·á : " +
+            $"ê²Œì„ ìºë¦­í„° ì„¤ì • ì™„ë£Œ : " +
             $"{characterData.characterName}, " +
             $"PlayerRef = {Object.InputAuthority}"
         );
     }
 
-    #endregion
+
+    // =========================================================
+    // Hit Request
+    // =========================================================
+
+    /// <summary>
+    /// BatTriggerì—ì„œ í˜¸ì¶œ.
+    /// ì¶©ëŒì„ ê°ì§€í•œ í”Œë ˆì´ì–´ê°€ Hostì—ê²Œ
+    /// "ì´ ê³µì„ ì³¤ë‹¤"ë¼ê³  ìš”ì²­í•œë‹¤.
+    /// </summary>
+    public void RequestHit(Ball targetBall)
+    {
+        if (targetBall == null)
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] RequestHit ì‹¤íŒ¨ : targetBall == null"
+            );
+
+            return;
+        }
 
 
-    #region < Hit >
+        if (!Object.HasInputAuthority)
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] RequestHit ì‹¤íŒ¨ : InputAuthority ì•„ë‹˜"
+            );
+
+            return;
+        }
+
+
+        if (targetBall.Object == null ||
+            !targetBall.Object.IsValid)
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] RequestHit ì‹¤íŒ¨ : Ball NetworkObjectê°€ ìœ íš¨í•˜ì§€ ì•ŠìŒ"
+            );
+
+            return;
+        }
+
+
+        Debug.Log(
+            $"[BaseballPlayer] â˜… Hit Request " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"Ball={targetBall.Object.Id}"
+        );
+
+
+        RPC_RequestHit(targetBall.Object.Id);
+    }
+
+
+    // =========================================================
+    // Hit RPC
+    // ========================================================
+
+    [Rpc(
+    RpcSources.InputAuthority,
+    RpcTargets.StateAuthority
+)]
+    private void RPC_RequestHit(
+    NetworkId ballId,
+    RpcInfo info = default
+)
+    {
+        Debug.Log(
+            $"[BaseballPlayer] â˜…â˜…â˜… RPC_RequestHit ë„ì°© â˜…â˜…â˜… " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"BallId={ballId}, " +
+            $"HasStateAuthority={Object.HasStateAuthority}"
+        );
+
+
+        if (!Object.HasStateAuthority)
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] RPC_RequestHitê°€ State Authorityê°€ ì•„ë‹Œ ê³³ì—ì„œ ì‹¤í–‰ë¨"
+            );
+
+            return;
+        }
+
+
+        NetworkObject ballObject =
+            Runner.FindObject(ballId);
+
+
+        if (ballObject == null)
+        {
+            Debug.LogError(
+                $"[BaseballPlayer] âŒ Ballì„ ì°¾ì§€ ëª»í•¨ " +
+                $"BallId={ballId}"
+            );
+
+            return;
+        }
+
+
+        Debug.Log(
+            $"[BaseballPlayer] â˜… Ball ì°¾ê¸° ì„±ê³µ " +
+            $"BallId={ballId}"
+        );
+
+
+        Ball targetBall =
+            ballObject.GetComponent<Ball>();
+
+
+        if (targetBall == null)
+        {
+            Debug.LogError(
+                $"[BaseballPlayer] âŒ Ball ì»´í¬ë„ŒíŠ¸ ì—†ìŒ " +
+                $"BallId={ballId}"
+            );
+
+            return;
+        }
+
+
+        Debug.Log(
+            $"[BaseballPlayer] â˜… CheckHitTiming í˜¸ì¶œ " +
+            $"PlayerIndex={PlayerIndex}"
+        );
+
+
+        CheckHitTiming(targetBall);
+    }
+
+
+    // =========================================================
+    // Hit
+    // =========================================================
 
     public void CheckHitTiming(Ball targetBall)
     {
-        // ½ÇÁ¦ TriggerEnter´Â
-        // State Authority¿¡¼­¸¸ ÆÇÁ¤
+        // -----------------------------------------------------
+        // ì‹¤ì œ íŒì •ì€ State Authorityë§Œ
+        // -----------------------------------------------------
+
         if (!Object.HasStateAuthority)
         {
             return;
         }
+
 
         if (targetBall == null)
         {
             return;
         }
 
-        // ÀÌ¹Ì ³¯¾Æ°¡Áö ¾Ê´Â °øÀÌ¸é ¹«½Ã
+
+        // -----------------------------------------------------
+        // ì´ë¯¸ íŒì •ëœ ê³µì¸ì§€ í™•ì¸
+        // -----------------------------------------------------
+
+        if (targetBall.HasScored)
+        {
+            return;
+        }
+
+
+        // -----------------------------------------------------
+        // í˜„ì¬ ë‚ ì•„ê°€ëŠ” ê³µì¸ì§€ í™•ì¸
+        // -----------------------------------------------------
+
         if (!targetBall.IsFlying)
         {
             return;
         }
 
-        // ³» °øÀÎÁö È®ÀÎ
+
+        // -----------------------------------------------------
+        // ë‚´ ê³µì¸ì§€ í™•ì¸
+        // -----------------------------------------------------
+
         if (targetBall.OwnerIndex != PlayerIndex)
         {
             return;
         }
 
 
-        // ÇöÀç ½ÇÁ¦ TriggerEnter°¡ ¹ß»ıÇÑ ¼ø°£ÀÇ
-        // HitPoint±îÁö ³²Àº ½Ã°£ ¿ÀÂ÷
+        // -----------------------------------------------------
+        // HitPoint ê¸°ì¤€ ì‹œê°„ ì˜¤ì°¨
+        // -----------------------------------------------------
+
         float error =
             Mathf.Abs(
-                targetBall.HitTimeError
+                targetBall.GetHitTimeError()
             );
 
 
         Debug.Log(
-            $"[BaseballPlayer] ¡Ú Hit ÆÇÁ¤! " +
+            $"[BaseballPlayer] â˜… Hit íŒì •! " +
             $"PlayerIndex={PlayerIndex}, " +
             $"Error={error:F4}, " +
-            $"ExcellentTiming={excellentTiming}"
+            $"Excellent={excellentTiming}, " +
+            $"Good={goodTiming}"
         );
 
 
-        // --------------------------------
+        // =====================================================
         // Excellent
-        // --------------------------------
+        // =====================================================
 
         if (error <= excellentTiming)
         {
             Debug.Log(
-                "[BaseballPlayer] ¡Ú EXCELLENT!"
+                "[BaseballPlayer] â˜… EXCELLENT!"
             );
+
 
             if (playerNetwork != null)
             {
                 playerNetwork.AddBaseballCount(
                     excellentScore
                 );
+
+                Debug.Log(
+                    $"[BaseballPlayer] " +
+                    $"BaseballCount +{excellentScore}"
+                );
             }
+            else
+            {
+                Debug.LogError(
+                    "[BaseballPlayer] PlayerNetworkê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤."
+                );
+            }
+
+
+            targetBall.HasScored = true;
 
             targetBall.StopFlying();
 
-            targetBall.PlayHitMotion(
-                true
-            );
+            targetBall.PlayExcellentMotion();
 
             return;
         }
 
 
-        // --------------------------------
+        // =====================================================
         // Good
-        // --------------------------------
+        // =====================================================
 
-        Debug.Log(
-            "[BaseballPlayer] ¡Ú GOOD!"
-        );
-
-        if (playerNetwork != null)
+        if (error <= goodTiming)
         {
-            playerNetwork.AddBaseballCount(
-                goodScore
+            Debug.Log(
+                "[BaseballPlayer] â˜… GOOD!"
             );
+
+
+            if (playerNetwork != null)
+            {
+                playerNetwork.AddBaseballCount(
+                    goodScore
+                );
+
+                Debug.Log(
+                    $"[BaseballPlayer] " +
+                    $"BaseballCount +{goodScore}"
+                );
+            }
+            else
+            {
+                Debug.LogError(
+                    "[BaseballPlayer] PlayerNetworkê°€ ì—°ê²°ë˜ì§€ ì•Šì•˜ìŠµë‹ˆë‹¤."
+                );
+            }
+
+
+            targetBall.HasScored = true;
+
+            targetBall.StopFlying();
+
+            targetBall.PlayGoodMotion();
+
+            return;
         }
 
-        targetBall.StopFlying();
 
-        targetBall.PlayHitMotion(
-            false
+        // =====================================================
+        // Miss
+        // =====================================================
+
+        Debug.Log(
+            "[BaseballPlayer] â˜… MISS!"
         );
-    }
 
-    #endregion
+        // MissëŠ” ì•„ë¬´ê²ƒë„ í•˜ì§€ ì•ŠëŠ”ë‹¤.
+        // ê³µì€ ê¸°ì¡´ í¬ë¬¼ì„  ê¶¤ì ì„ ê³„ì† ë”°ë¼ê°„ë‹¤.
+    }
 }

@@ -8,8 +8,7 @@ public class BatTrigger : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        Ball ball =
-            other.GetComponent<Ball>();
+        Ball ball = other.GetComponent<Ball>();
 
         if (ball == null)
         {
@@ -17,22 +16,27 @@ public class BatTrigger : MonoBehaviour
         }
 
 
+        // -----------------------------------------------------
         // 내 공인지 확인
-        if (ball.OwnerIndex !=
-            baseballPlayer.PlayerIndex)
+        // -----------------------------------------------------
+
+        if (ball.OwnerIndex != baseballPlayer.PlayerIndex)
         {
             return;
         }
 
 
         Debug.Log(
-            $"[BatTrigger] ★ 내 공 TriggerEnter 성공! " +
-            $"Ball={ball.name}, " +
-            $"OwnerIndex={ball.OwnerIndex}"
+            $"[BatTrigger] HIT REQUEST! " +
+            $"PlayerIndex={baseballPlayer.PlayerIndex}, " +
+            $"Ball={ball.Object.Id}"
         );
 
 
-        // ★ 실제 타격 판정
-        baseballPlayer.CheckHitTiming(ball);
+        // -----------------------------------------------------
+        // Host에게 타격 판정 요청
+        // -----------------------------------------------------
+
+        baseballPlayer.RequestHit(ball);
     }
 }

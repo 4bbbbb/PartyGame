@@ -14,9 +14,7 @@ GameObject:
   - component: {fileID: 4118790333060530225}
   - component: {fileID: 4455515982780770585}
   - component: {fileID: -1601888992144741380}
-  - component: {fileID: -7241570663071878147}
   - component: {fileID: -3236520284478785967}
-  - component: {fileID: -2469505662889259376}
   m_Layer: 0
   m_Name: Ball
   m_TagString: Untagged
@@ -54,7 +52,7 @@ MonoBehaviour:
   excellentDistance: 3
   excellentHeight: 6
   excellentDepthDistance: 20
-  excellentDuration: 0.8
+  excellentDuration: 2
   goodDistance: 2
   goodHeight: 4
   goodDepthDistance: 5
@@ -73,14 +71,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f6555e0041ec3ae42baf083806344131, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveDuration: 1
-  peakPosition: 0.55
   startScale: {x: 4.5, y: 4.5, z: 4.5}
-  hitScale: {x: 8, y: 8, z: 8}
+  hitScale: {x: 10, y: 10, z: 10}
   minRotationSpeed: 500
   maxRotationSpeed: 1000
+  peakPosition: 0.55
+  groundY: 0
   _OwnerIndex: -1
   _IsFlying:
+    RawValue: 0
+  _IsHitMotion:
     RawValue: 0
   _HasScored:
     RawValue: 0
@@ -158,33 +158,6 @@ SphereCollider:
   serializedVersion: 3
   m_Radius: 0.05
   m_Center: {x: 0, y: 0, z: 0}
---- !u!54 &-7241570663071878147
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6962850667574493167}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0
 --- !u!114 &-3236520284478785967
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -200,49 +173,8 @@ MonoBehaviour:
   SortKey: 3791811236
   SendPriority: 1
   EnableInterpolation: 1
-  Flags: 262402
+  Flags: 262146
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: -2469505662889259376}
   - {fileID: 4208551166315581768}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &-2469505662889259376
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6962850667574493167}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _stateAuthorityChangeErrorCorrectionDelta: 0
-  SyncScale: 0
-  SyncParent: 0
-  _autoAOIOverride: 1
-  ConfigFlags: 0
-  PhysicsSettings:
-    ForecastEnabled: 0
-    DebugPhysics: 0
-    GravityForecast: 2
-    MaxExtrapolationTime: 0.15
-    MinLinearDetectedError: 0.02
-    MinAngularDetectedError: 3
-    MaxLinearError: 0
-    MaxAngularError: 0
-    LowCorrectionProgressThreshold: 0.015
-    HighErrorSimilarityThreshold: 1
-    MaxErrorTotalTime: 0.5
-    MaxRemoteSleepIgnoreTime: 0.5
-    ErrorCorrectionType: 0
-    LinearVelCorrectionMul: 1
-    AngularVelCorrectionMul: 1
-    PositionCorrectionLerp: 0.15
-    RotationCorrectionLerp: 0.15
-    Spring: 75
-    Damper: 2
-    MinImpactfulCollisionAlignment: 0.3
-    ImpactStartCorrectionTime: 0.1
-    ImpactCorrectionTimeComplete: 0.3
