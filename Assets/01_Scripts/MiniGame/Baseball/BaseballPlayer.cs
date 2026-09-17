@@ -4,35 +4,38 @@ using UnityEngine;
 public class BaseballPlayer : NetworkBehaviour
 {
     [Header("<< Character >>")]
-    [SerializeField] private Renderer characterRenderer;
+    [SerializeField]
+    private Renderer characterRenderer;
 
     [Header("<< Character Database >>")]
-    [SerializeField] private CharacterDatabase characterDatabase;
+    [SerializeField]
+    private CharacterDatabase characterDatabase;
 
     [Header("<< Animator >>")]
-    [SerializeField] private Animator animator;
+    [SerializeField]
+    private Animator animator;
 
     [Header("<< Score >>")]
-    [SerializeField] private int excellentScore = 3;
-    [SerializeField] private int goodScore = 1;
+    [SerializeField]
+    private int excellentScore = 3;
+
+    [SerializeField]
+    private int goodScore = 1;
 
     [Header("<< Timing >>")]
-    [SerializeField] private float excellentTiming = 0.1f;
-    [SerializeField] private float goodTiming = 0.2f;
+    [SerializeField]
+    private float excellentTiming = 0.06f;
 
-
-    // =========================================================
-    // Player Network
-    // =========================================================
+    [SerializeField]
+    private float goodTiming = 0.2f;
 
     private PlayerNetwork playerNetwork;
 
     public PlayerNetwork PlayerNetwork =>
         playerNetwork;
 
-
     // =========================================================
-    // Networked
+    // NETWORKED
     // =========================================================
 
     [Networked]
@@ -41,9 +44,10 @@ public class BaseballPlayer : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; set; } = -1;
 
+    private int lastHitThrowId = -1;
 
     // =========================================================
-    // Spawn
+    // SPAWNED
     // =========================================================
 
     public override void Spawned()
@@ -60,27 +64,31 @@ public class BaseballPlayer : NetworkBehaviour
         ApplyCharacter();
     }
 
+    // =========================================================
+    // PLAYER NETWORK
+    // =========================================================
 
     public void SetPlayerNetwork(
         PlayerNetwork playerNetwork
     )
     {
-        this.playerNetwork = playerNetwork;
+        this.playerNetwork =
+            playerNetwork;
     }
 
-
     // =========================================================
-    // Player Index
+    // PLAYER INDEX
     // =========================================================
 
-    public void SetPlayerIndex(int index)
+    public void SetPlayerIndex(
+        int index
+    )
     {
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
 
-        PlayerIndex = index;
+        PlayerIndex =
+            index;
 
         Debug.Log(
             $"[BaseballPlayer SetPlayerIndex] " +
@@ -89,17 +97,19 @@ public class BaseballPlayer : NetworkBehaviour
         );
     }
 
+    // =========================================================
+    // CHARACTER INDEX
+    // =========================================================
 
     public void SetCharacterIndex(
         int characterIndex
     )
     {
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
 
-        CharacterIndex = characterIndex;
+        CharacterIndex =
+            characterIndex;
 
         Debug.Log(
             $"[BaseballPlayer SetCharacterIndex] " +
@@ -108,38 +118,138 @@ public class BaseballPlayer : NetworkBehaviour
         );
     }
 
-
-    private void OnCharacterIndexChanged()
-    {
-        Debug.Log(
-            $"[BaseballPlayer OnCharacterIndexChanged] " +
-            $"Object={Object.Id}, " +
-            $"CharacterIndex={CharacterIndex}"
-        );
-
-        ApplyCharacter();
-    }
-
-
     // =========================================================
-    // Input
+    // INPUT
     // =========================================================
 
     private void Update()
     {
         if (!Object.HasInputAuthority)
-        {
             return;
-        }
 
-        if (Input.GetKeyDown(KeyCode.Space) ||
-            Input.GetMouseButtonDown(0))
+        if (
+            Input.GetKeyDown(KeyCode.Space) ||
+            Input.GetMouseButtonDown(0)
+        )
         {
-            // 배트 애니메이션만 실행
             RPC_PlayHit();
         }
     }
 
+    // =========================================================
+    // ANIMATION EVENT
+    // =========================================================
+
+    public void OnBatHitPoint()
+    {
+        if (!Object.HasInputAuthority)
+            return;
+
+        Ball targetBall = FindBestBall();
+
+        if (targetBall == null)
+        {
+            Debug.Log(
+                $"[BaseballPlayer] " +
+                $"BAT HIT POINT - Ball 없음 | " +
+                $"PlayerIndex={PlayerIndex}"
+            );
+
+            return;
+        }
+
+        float visualHitTimeError =
+            targetBall.VisualHitTimeError;
+
+        NetworkId ballId =
+            targetBall.Object;
+
+        Debug.Log(
+            $"[BaseballPlayer] BAT HIT POINT | " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"BallIndex={targetBall.BallIndex}, " +
+            $"ThrowId={targetBall.ThrowId}, " +
+            $"Error={visualHitTimeError:F4}"
+        );
+
+        RPC_RequestHit(
+            ballId,
+            targetBall.ThrowId,
+            targetBall.BallIndex,
+            visualHitTimeError
+        );
+    }
+
+    // =========================================================
+    // FIND MY BALL
+    // =========================================================
+
+    private Ball FindBestBall()
+    {
+        Ball[] balls =
+            FindObjectsByType<Ball>(
+                FindObjectsSortMode.None
+            );
+
+        Ball bestBall =
+            null;
+
+        float bestError =
+            float.MaxValue;
+
+        foreach (
+            Ball ball in balls
+        )
+        {
+            if (ball == null)
+                continue;
+
+            if (
+                ball.Object == null ||
+                !ball.Object.IsValid
+            )
+            {
+                continue;
+            }
+
+            if (!ball.IsFlying)
+                continue;
+
+            // ⭐ 핵심
+            //
+            // 내 PlayerIndex와 같은 BallIndex만 사용
+            if (
+                ball.BallIndex !=
+                PlayerIndex
+            )
+            {
+                continue;
+            }
+
+            float error =
+                Mathf.Abs(
+                    ball.VisualHitTimeError
+                );
+
+            if (
+                error <
+                bestError
+            )
+            {
+                bestError =
+                    error;
+
+                bestBall =
+                    ball;
+            }
+        }
+
+        return bestBall;
+    }
+
+    // =========================================================
+    // HIT ANIMATION
+    // =========================================================
 
     [Rpc(
         RpcSources.InputAuthority,
@@ -148,187 +258,16 @@ public class BaseballPlayer : NetworkBehaviour
     private void RPC_PlayHit()
     {
         if (animator == null)
-        {
             return;
-        }
 
-        animator.SetTrigger("Hit");
-    }
-
-
-    // =========================================================
-    // Character
-    // =========================================================
-
-    private void ApplyCharacter()
-    {
-        Debug.Log(
-            $"[ApplyCharacter] " +
-            $"PlayerRef = {Object.InputAuthority}, " +
-            $"PlayerIndex = {PlayerIndex}, " +
-            $"CharacterIndex = {CharacterIndex}"
-        );
-
-
-        int characterIndex =
-            CharacterIndex;
-
-
-        if (characterIndex < 0)
-        {
-            Debug.LogWarning(
-                $"CharacterIndex가 아직 설정되지 않았습니다. " +
-                $"PlayerRef = {Object.InputAuthority}"
-            );
-
-            return;
-        }
-
-
-        if (characterDatabase == null)
-        {
-            Debug.LogError(
-                "CharacterDatabase가 연결되지 않았습니다."
-            );
-
-            return;
-        }
-
-
-        if (characterDatabase.characters == null ||
-            characterDatabase.characters.Length == 0)
-        {
-            Debug.LogError(
-                "CharacterDatabase에 캐릭터가 없습니다."
-            );
-
-            return;
-        }
-
-
-        if (characterIndex >=
-            characterDatabase.characters.Length)
-        {
-            Debug.LogError(
-                $"잘못된 CharacterIndex : {characterIndex}"
-            );
-
-            return;
-        }
-
-
-        CharacterData characterData =
-            characterDatabase.characters[
-                characterIndex
-            ];
-
-
-        if (characterData == null)
-        {
-            Debug.LogError(
-                $"CharacterData가 없습니다. " +
-                $"Index = {characterIndex}"
-            );
-
-            return;
-        }
-
-
-        if (characterRenderer == null)
-        {
-            Debug.LogError(
-                "Character Renderer가 연결되지 않았습니다."
-            );
-
-            return;
-        }
-
-
-        Material[] materials =
-            characterRenderer.materials;
-
-
-        if (materials.Length < 2)
-        {
-            Debug.LogWarning(
-                "Character Renderer의 Material 슬롯이 2개 미만입니다."
-            );
-
-            return;
-        }
-
-
-        materials[0] =
-            characterData.characterMaterial;
-
-        characterRenderer.materials =
-            materials;
-
-
-        Debug.Log(
-            $"게임 캐릭터 설정 완료 : " +
-            $"{characterData.characterName}, " +
-            $"PlayerRef = {Object.InputAuthority}"
+        animator.SetTrigger(
+            "Hit"
         );
     }
 
-
     // =========================================================
-    // Hit Request
+    // HIT REQUEST
     // =========================================================
-
-    /// <summary>
-    /// BatTrigger에서 호출.
-    /// 충돌을 감지한 플레이어가 Host에게
-    /// "이 공을 쳤다"라고 요청한다.
-    /// </summary>
-    public void RequestHit(Ball targetBall)
-    {
-        if (targetBall == null)
-        {
-            Debug.LogWarning(
-                "[BaseballPlayer] RequestHit 실패 : targetBall == null"
-            );
-
-            return;
-        }
-
-
-        if (!Object.HasInputAuthority)
-        {
-            Debug.LogWarning(
-                "[BaseballPlayer] RequestHit 실패 : InputAuthority 아님"
-            );
-
-            return;
-        }
-
-
-        if (targetBall.Object == null ||
-            !targetBall.Object.IsValid)
-        {
-            Debug.LogWarning(
-                "[BaseballPlayer] RequestHit 실패 : Ball NetworkObject가 유효하지 않음"
-            );
-
-            return;
-        }
-
-
-        Debug.Log(
-            $"[BaseballPlayer] ★ Hit Request " +
-            $"PlayerIndex={PlayerIndex}, " +
-            $"Ball={targetBall.Object.Id}"
-        );
-
-
-        RPC_RequestHit(targetBall.Object.Id);
-    }
-
-
-    // =========================================================
-    // Hit RPC
-    // ========================================================
 
     [Rpc(
     RpcSources.InputAuthority,
@@ -336,233 +275,418 @@ public class BaseballPlayer : NetworkBehaviour
 )]
     private void RPC_RequestHit(
     NetworkId ballId,
-    RpcInfo info = default
+    int throwId,
+    int ballIndex,
+    float visualHitTimeError
 )
     {
+        if (!Object.HasStateAuthority)
+            return;
+
         Debug.Log(
-            $"[BaseballPlayer] ★★★ RPC_RequestHit 도착 ★★★ " +
+            $"[BaseballPlayer] HIT RPC | " +
             $"PlayerIndex={PlayerIndex}, " +
-            $"BallId={ballId}, " +
-            $"HasStateAuthority={Object.HasStateAuthority}"
+            $"BallIndex={ballIndex}, " +
+            $"ThrowId={throwId}, " +
+            $"Error={visualHitTimeError:F4}"
         );
 
+        // =========================================================
+        // Player가 보낸 Ball Reference 확인
+        // =========================================================
 
-        if (!Object.HasStateAuthority)
+        if (!Runner.TryFindObject(
+        ballId,
+            out NetworkObject ballObject
+        ))
         {
             Debug.LogWarning(
-                "[BaseballPlayer] RPC_RequestHit가 State Authority가 아닌 곳에서 실행됨"
+                $"[BaseballPlayer] " +
+                $"RPC로 받은 Ball을 찾을 수 없음 | " +
+                $"PlayerIndex={PlayerIndex}, " +
+                $"BallIndex={ballIndex}, " +
+                $"ThrowId={throwId}"
             );
 
             return;
         }
 
-
-        NetworkObject ballObject =
-            Runner.FindObject(ballId);
-
-
-        if (ballObject == null)
-        {
-            Debug.LogError(
-                $"[BaseballPlayer] ❌ Ball을 찾지 못함 " +
-                $"BallId={ballId}"
-            );
-
-            return;
-        }
-
-
-        Debug.Log(
-            $"[BaseballPlayer] ★ Ball 찾기 성공 " +
-            $"BallId={ballId}"
-        );
-
-
-        Ball targetBall =
+        Ball ball =
             ballObject.GetComponent<Ball>();
 
-
-        if (targetBall == null)
+        if (ball == null)
         {
-            Debug.LogError(
-                $"[BaseballPlayer] ❌ Ball 컴포넌트 없음 " +
-                $"BallId={ballId}"
+            Debug.LogWarning(
+                "[BaseballPlayer] " +
+                "NetworkObject에 Ball 컴포넌트가 없습니다."
             );
 
             return;
         }
 
+        // =========================================================
+        // 안전 검증
+        // =========================================================
 
-        Debug.Log(
-            $"[BaseballPlayer] ★ CheckHitTiming 호출 " +
-            $"PlayerIndex={PlayerIndex}"
+        if (!ball.IsFlying)
+        {
+            Debug.Log(
+                $"[BaseballPlayer] " +
+                $"이미 종료된 Ball | " +
+                $"BallIndex={ball.BallIndex}, " +
+                $"ThrowId={ball.ThrowId}"
+            );
+
+            return;
+        }
+
+        if (ball.ThrowId != throwId)
+        {
+            Debug.LogWarning(
+                $"[BaseballPlayer] " +
+                $"ThrowId 불일치 | " +
+                $"RPC={throwId}, " +
+                $"Ball={ball.ThrowId}"
+            );
+
+            return;
+        }
+
+        if (ball.BallIndex != ballIndex)
+        {
+            Debug.LogWarning(
+                $"[BaseballPlayer] " +
+                $"BallIndex 불일치 | " +
+                $"RPC={ballIndex}, " +
+                $"Ball={ball.BallIndex}"
+            );
+
+            return;
+        }
+
+        if (ball.BallIndex != PlayerIndex)
+        {
+            Debug.LogWarning(
+                $"[BaseballPlayer] " +
+                $"PlayerIndex / BallIndex 불일치 | " +
+                $"PlayerIndex={PlayerIndex}, " +
+                $"BallIndex={ball.BallIndex}"
+            );
+
+            return;
+        }
+
+        // =========================================================
+        // 이미 이 Throw에서 성공했는지 확인
+        // =========================================================
+
+        if (lastHitThrowId == throwId)
+        {
+            Debug.Log(
+                $"[BaseballPlayer] " +
+                $"이미 성공한 Throw | " +
+                $"ThrowId={throwId}, " +
+                $"PlayerIndex={PlayerIndex}"
+            );
+
+            return;
+        }
+
+        // =========================================================
+        // 판정
+        // =========================================================
+
+        CheckHitTiming(
+            ball,
+            visualHitTimeError
         );
-
-
-        CheckHitTiming(targetBall);
     }
-
-
     // =========================================================
-    // Hit
+    // HIT CHECK
     // =========================================================
 
-    public void CheckHitTiming(Ball targetBall)
+    private void CheckHitTiming(
+      Ball targetBall,
+      float visualHitTimeError
+  )
     {
-        // -----------------------------------------------------
-        // 실제 판정은 State Authority만
-        // -----------------------------------------------------
-
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
-
-
-        if (targetBall == null)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // 이미 판정된 공인지 확인
-        // -----------------------------------------------------
-
-        if (targetBall.HasScored)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // 현재 날아가는 공인지 확인
-        // -----------------------------------------------------
-
-        if (!targetBall.IsFlying)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // 내 공인지 확인
-        // -----------------------------------------------------
-
-        if (targetBall.OwnerIndex != PlayerIndex)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // HitPoint 기준 시간 오차
-        // -----------------------------------------------------
 
         float error =
             Mathf.Abs(
-                targetBall.GetHitTimeError()
+                visualHitTimeError
             );
 
-
         Debug.Log(
-            $"[BaseballPlayer] ★ Hit 판정! " +
+            $"[BaseballPlayer] Hit 판정 | " +
             $"PlayerIndex={PlayerIndex}, " +
-            $"Error={error:F4}, " +
-            $"Excellent={excellentTiming}, " +
-            $"Good={goodTiming}"
+            $"BallIndex={targetBall.BallIndex}, " +
+            $"ThrowId={targetBall.ThrowId}, " +
+            $"Error={error:F4}"
         );
 
-
-        // =====================================================
-        // Excellent
-        // =====================================================
+        // =========================================================
+        // EXCELLENT
+        // =========================================================
 
         if (error <= excellentTiming)
         {
             Debug.Log(
-                "[BaseballPlayer] ★ EXCELLENT!"
+                $"[BaseballPlayer] " +
+                $"PLAYER {PlayerIndex} EXCELLENT!"
             );
 
+            AddScore(
+                excellentScore
+            );
 
-            if (playerNetwork != null)
-            {
-                playerNetwork.AddBaseballCount(
-                    excellentScore
-                );
+            lastHitThrowId =
+                targetBall.ThrowId;
 
-                Debug.Log(
-                    $"[BaseballPlayer] " +
-                    $"BaseballCount +{excellentScore}"
-                );
-            }
-            else
-            {
-                Debug.LogError(
-                    "[BaseballPlayer] PlayerNetwork가 연결되지 않았습니다."
-                );
-            }
-
-
-            targetBall.HasScored = true;
-
-            targetBall.StopFlying();
-
-            targetBall.PlayExcellentMotion();
+            DespawnPlayerBall(
+                targetBall,
+                BallHitEffect.HitResult.Excellent
+            );
 
             return;
         }
 
-
-        // =====================================================
-        // Good
-        // =====================================================
+        // =========================================================
+        // GOOD
+        // =========================================================
 
         if (error <= goodTiming)
         {
             Debug.Log(
-                "[BaseballPlayer] ★ GOOD!"
+                $"[BaseballPlayer] " +
+                $"PLAYER {PlayerIndex} GOOD!"
             );
 
+            AddScore(
+                goodScore
+            );
 
-            if (playerNetwork != null)
-            {
-                playerNetwork.AddBaseballCount(
-                    goodScore
-                );
+            lastHitThrowId =
+                targetBall.ThrowId;
 
-                Debug.Log(
-                    $"[BaseballPlayer] " +
-                    $"BaseballCount +{goodScore}"
-                );
-            }
-            else
-            {
-                Debug.LogError(
-                    "[BaseballPlayer] PlayerNetwork가 연결되지 않았습니다."
-                );
-            }
-
-
-            targetBall.HasScored = true;
-
-            targetBall.StopFlying();
-
-            targetBall.PlayGoodMotion();
+            DespawnPlayerBall(
+                targetBall,
+                BallHitEffect.HitResult.Good
+            );
 
             return;
         }
 
-
-        // =====================================================
-        // Miss
-        // =====================================================
+        // =========================================================
+        // MISS
+        // =========================================================
 
         Debug.Log(
-            "[BaseballPlayer] ★ MISS!"
+            $"[BaseballPlayer] " +
+            $"PLAYER {PlayerIndex} MISS!"
         );
 
-        // Miss는 아무것도 하지 않는다.
-        // 공은 기존 포물선 궤적을 계속 따라간다.
+        // MISS는 Ball을 제거하지 않는다.
+    }
+
+    // =========================================================
+    // DESPAWN MY BALL + SPAWN EFFECT
+    // =========================================================
+
+    private void DespawnPlayerBall(
+    Ball targetBall,
+    BallHitEffect.HitResult result
+)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (targetBall == null)
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] " +
+                "Despawn할 Ball이 null입니다."
+            );
+
+            return;
+        }
+
+        if (
+            targetBall.Object == null ||
+            !targetBall.Object.IsValid
+        )
+        {
+            Debug.LogWarning(
+                "[BaseballPlayer] " +
+                "Ball NetworkObject가 유효하지 않습니다."
+            );
+
+            return;
+        }
+
+        if (!targetBall.IsFlying)
+        {
+            Debug.Log(
+                "[BaseballPlayer] " +
+                "Ball이 이미 종료되었습니다."
+            );
+
+            return;
+        }
+
+        // =========================================================
+        // 최종 확인
+        // =========================================================
+
+        if (
+            targetBall.BallIndex !=
+            PlayerIndex
+        )
+        {
+            Debug.LogWarning(
+                $"[BaseballPlayer] " +
+                $"잘못된 Ball! " +
+                $"PlayerIndex={PlayerIndex}, " +
+                $"BallIndex={targetBall.BallIndex}"
+            );
+
+            return;
+        }
+
+        Vector3 hitDirection =
+            targetBall.HitDirection;
+
+        int playerIndex =
+            PlayerIndex;
+
+        int throwId =
+            targetBall.ThrowId;
+
+        int ballIndex =
+            targetBall.BallIndex;
+
+        Debug.Log(
+            $"[BaseballPlayer] " +
+            $"정확한 Ball 처리 | " +
+            $"PlayerIndex={playerIndex}, " +
+            $"BallIndex={ballIndex}, " +
+            $"ThrowId={throwId}, " +
+            $"Result={result}"
+        );
+
+        // =========================================================
+        // 1. 실제 Ball 제거
+        // =========================================================
+
+        targetBall.DespawnForHit();
+
+        // =========================================================
+        // 2. Hit Effect 생성
+        // =========================================================
+
+        BallSpawnManager spawnManager =
+            FindFirstObjectByType<
+                BallSpawnManager
+            >();
+
+        if (spawnManager == null)
+        {
+            Debug.LogError(
+                "[BaseballPlayer] " +
+                "BallSpawnManager를 찾지 못했습니다."
+            );
+
+            return;
+        }
+
+        spawnManager.SpawnHitEffect(
+            playerIndex,
+            result,
+            hitDirection
+        );
+    }
+
+    // =========================================================
+    // SCORE
+    // =========================================================
+
+    private void AddScore(
+        int score
+    )
+    {
+        if (playerNetwork == null)
+        {
+            Debug.LogError(
+                "[BaseballPlayer] " +
+                "PlayerNetwork가 연결되지 않았습니다."
+            );
+
+            return;
+        }
+
+        playerNetwork.AddBaseballCount(
+            score
+        );
+
+        Debug.Log(
+            $"[BaseballPlayer] " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"BaseballCount +{score}"
+        );
+    }
+
+    // =========================================================
+    // CHARACTER
+    // =========================================================
+
+    private void OnCharacterIndexChanged()
+    {
+        ApplyCharacter();
+    }
+
+    private void ApplyCharacter()
+    {
+        if (characterDatabase == null)
+        {
+            Debug.LogError(
+                "[BaseballPlayer] " +
+                "CharacterDatabase가 없습니다."
+            );
+
+            return;
+        }
+
+        if (
+            CharacterIndex < 0 ||
+            CharacterIndex >=
+            characterDatabase.characters.Length
+        )
+        {
+            return;
+        }
+
+        CharacterData characterData =
+            characterDatabase.characters[
+                CharacterIndex
+            ];
+
+        if (characterData == null)
+            return;
+
+        if (characterRenderer == null)
+            return;
+
+        Material[] materials =
+            characterRenderer.materials;
+
+        if (materials.Length < 2)
+            return;
+
+        materials[0] =
+            characterData.characterMaterial;
+
+        characterRenderer.materials =
+            materials;
     }
 }

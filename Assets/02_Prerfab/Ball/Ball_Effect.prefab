@@ -9,12 +9,12 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1292487932849882970}
-  - component: {fileID: 4208551166315581768}
   - component: {fileID: 4118790333060530225}
   - component: {fileID: 4455515982780770585}
   - component: {fileID: -3236520284478785967}
+  - component: {fileID: 2192823374382367932}
   m_Layer: 0
-  m_Name: Ball
+  m_Name: Ball_Effect
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -29,32 +29,12 @@ Transform:
   m_GameObject: {fileID: 6962850667574493167}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.776, y: 2.311, z: -6.942}
-  m_LocalScale: {x: 4.5, y: 4.5, z: 4.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &4208551166315581768
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6962850667574493167}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f6555e0041ec3ae42baf083806344131, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  startScale: {x: 4.5, y: 4.5, z: 4.5}
-  hitScale: {x: 8, y: 8, z: 8}
-  destroyY: -3
-  despawnDelay: 0.05
-  _ThrowId: 0
-  _BallIndex: 0
-  _IsFlying:
-    RawValue: 0
 --- !u!33 &4118790333060530225
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -120,11 +100,35 @@ MonoBehaviour:
   m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  SortKey: 3791811236
+  SortKey: 2548545318
   SendPriority: 1
   EnableInterpolation: 1
   Flags: 262146
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 4208551166315581768}
+  - {fileID: 2192823374382367932}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &2192823374382367932
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6962850667574493167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3fd244b3d97037b479e4d3aa4fc2d527, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  excellentDistance: 12
+  excellentHeight: 8
+  excellentDepthDistance: 12
+  excellentDuration: 1.2
+  goodDistance: 8
+  goodHeight: 4
+  goodDepthDistance: 5
+  goodDuration: 1
+  hitScale: {x: 8, y: 8, z: 8}
+  endScale: {x: 4, y: 4, z: 4}
+  _PlayerIndex: 0
+  _Result: 0

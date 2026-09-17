@@ -66,8 +66,8 @@ public class BaseballManager : NetworkBehaviour
     {
         if (Object.HasStateAuthority)
         {
-            if (isInitializing)            
-                return;            
+            if (isInitializing)
+                return;
 
             isInitializing = true;
 
@@ -279,7 +279,7 @@ public class BaseballManager : NetworkBehaviour
 
     private IEnumerator StartBaseballGameRoutine()
     {
-        if (ballSpawnManager == null)                 
+        if (ballSpawnManager == null)
             yield break;
 
         // 모든 클라이언트에서 연습 안내 텍스트 표시
@@ -327,16 +327,16 @@ public class BaseballManager : NetworkBehaviour
 
     private void UpdatePracticeText()
     {
-        if (practiceText == null)        
+        if (practiceText == null)
             return;
-        
+
         practiceText.SetActive(IsPracticeTextVisible);
     }
 
     private void UpdateStartText()
     {
-        if (startText == null)        
-            return;        
+        if (startText == null)
+            return;
 
         startText.SetActive(IsStartTextVisible);
     }

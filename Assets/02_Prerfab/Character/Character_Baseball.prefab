@@ -169,6 +169,7 @@ MonoBehaviour:
   excellentScore: 3
   goodScore: 1
   excellentTiming: 0.02
+  goodTiming: 0.07
   _PlayerIndex: 0
   _CharacterIndex: -1
 --- !u!114 &1656893508778106668
@@ -296,61 +297,10 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1366066956005007458, guid: 07ba6e5e0a931da41b9e4d34094e8b65, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 6881028165693213952}
-    - targetCorrespondingSourceObject: {fileID: 1366066956005007458, guid: 07ba6e5e0a931da41b9e4d34094e8b65, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 5278654901413178142}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 07ba6e5e0a931da41b9e4d34094e8b65, type: 3}
 --- !u!4 &7416060596278685127 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 1855181798521420504, guid: 07ba6e5e0a931da41b9e4d34094e8b65, type: 3}
   m_PrefabInstance: {fileID: 9175466135906539295}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &7899581471504349053 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 1366066956005007458, guid: 07ba6e5e0a931da41b9e4d34094e8b65, type: 3}
-  m_PrefabInstance: {fileID: 9175466135906539295}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &6881028165693213952
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7899581471504349053}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1e799e592ed5f3b44bdca8b916c1d699, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  baseballPlayer: {fileID: 3469095610632211917}
---- !u!54 &5278654901413178142
-Rigidbody:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 7899581471504349053}
-  serializedVersion: 4
-  m_Mass: 1
-  m_Drag: 0
-  m_AngularDrag: 0.05
-  m_CenterOfMass: {x: 0, y: 0, z: 0}
-  m_InertiaTensor: {x: 1, y: 1, z: 1}
-  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ImplicitCom: 1
-  m_ImplicitTensor: 1
-  m_UseGravity: 0
-  m_IsKinematic: 1
-  m_Interpolate: 0
-  m_Constraints: 0
-  m_CollisionDetection: 0

@@ -2117,6 +2117,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   ballPrefab:
     RawGuidValue: a994fbcb830ec624d8e4dfd29427438c
+  hitEffectPrefab:
+    RawGuidValue: a1770f0010ada0d4db104a1a6b142a7e
   startPoints:
   - {fileID: 1244953639}
   - {fileID: 327015912}
@@ -2136,14 +2138,14 @@ MonoBehaviour:
   normalMaxDuration: 1.6
   normalMinHeight: 3
   normalMaxHeight: 5
-  normalMinInterval: 1.7
-  normalMaxInterval: 2
+  normalMinInterval: 0.8
+  normalMaxInterval: 1.2
   fastMinDuration: 0.5
   fastMaxDuration: 1.6
   fastMinHeight: 3
   fastMaxHeight: 6
-  fastMinInterval: 1.7
-  fastMaxInterval: 1.8
+  fastMinInterval: 0.6
+  fastMaxInterval: 1
   ballCountText: {fileID: 981800330}
   practiceHitPointUI: {fileID: 360702582}
 --- !u!4 &436331288
@@ -5122,6 +5124,7 @@ MonoBehaviour:
   - {fileID: 770516390}
   - {fileID: 1648578289}
   - {fileID: 372253676}
+  refreshInterval: 0.1
 --- !u!1 &1244953638
 GameObject:
   m_ObjectHideFlags: 0
@@ -5987,7 +5990,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   profileImage: {fileID: 1717951411}
   nicknameText: {fileID: 183441817}
-  playerCountText: {fileID: 596080710}
+  playerCountText: {fileID: 371112056}
 --- !u!1001 &1687627853
 PrefabInstance:
   m_ObjectHideFlags: 0

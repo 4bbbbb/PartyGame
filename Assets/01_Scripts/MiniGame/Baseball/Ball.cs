@@ -1,10 +1,9 @@
 using Fusion;
 using UnityEngine;
-using System.Collections;
 
 public class Ball : NetworkBehaviour
 {
-    [Header("<< Ball Scale >>")]
+    [Header("<< Scale >>")]
     [SerializeField]
     private Vector3 startScale =
         new Vector3(4.5f, 4.5f, 4.5f);
@@ -13,538 +12,312 @@ public class Ball : NetworkBehaviour
     private Vector3 hitScale =
         new Vector3(6.8f, 6.8f, 6.8f);
 
+    [Header("<< Destroy >>")]
+    [SerializeField]
+    private float destroyY = -2.5f;
 
-    [Header("<< Ball Rotation >>")]
-    [SerializeField] private float minRotationSpeed = 500f;
-    [SerializeField] private float maxRotationSpeed = 1000f;
+    [SerializeField]
+    private float despawnDelay = 0.05f;
 
-
-    [Header("<< Parabola >>")]
-    [SerializeField, Range(0.1f, 0.9f)]
-    private float peakPosition = 0.55f;
-
-
-    [Header("<< Ground >>")]
-    [SerializeField] private float groundY = 0f;
-
-
-    [Header("<< Despawn >>")]
-    [SerializeField] private float despawnDelay = 0.2f;
-
-
-    // =========================================================
-    // Networked
-    // =========================================================
+    #region < Network >
 
     [Networked]
-    public int OwnerIndex { get; private set; }
+    private Vector3 StartPosition { get; set; }
 
+    [Networked]
+    private Vector3 HitPosition { get; set; }
+
+    [Networked]
+    private float Duration { get; set; }
+
+    [Networked]
+    private float Height { get; set; }
+
+    [Networked]
+    private float RotationSpeed { get; set; }
+
+    [Networked]
+    private float ElapsedTime { get; set; }
+
+    [Networked]
+    public int ThrowId { get; private set; }
+
+    [Networked]
+    public int BallIndex { get; private set; }
 
     [Networked]
     public NetworkBool IsFlying { get; private set; }
+    #endregion
 
 
-    [Networked]
-    public NetworkBool IsHitMotion { get; private set; }
-
-
-    [Networked]
-    public NetworkBool HasScored { get; set; }
-
-
-    // ---------------------------------------------------------
-    // Hit Result
-    //
-    // 0 = None
-    // 1 = Excellent
-    // 2 = Good
-    // ---------------------------------------------------------
-
-    [Networked, OnChangedRender(nameof(OnHitResultChanged))]
-    public int HitResult { get; private set; }
-
-
-    // =========================================================
-    // Network Trajectory
-    // =========================================================
-
-    [Networked]
-    private Vector3 NetworkStartPosition { get; set; }
-
-
-    [Networked]
-    private Vector3 NetworkHitPosition { get; set; }
-
-
-    [Networked]
-    private float NetworkDuration { get; set; }
-
-
-    [Networked]
-    private float NetworkHeight { get; set; }
-
-
-    [Networked]
-    private float NetworkElapsedTime { get; set; }
-
-
-    // =========================================================
-    // Local Trajectory
-    // =========================================================
-
-    private Vector3 startPosition;
-    private Vector3 hitPosition;
+    #region < Trajectory > 
 
     private Vector3 horizontalDirection;
 
-    private float hitDistance;
-    private float hitTime;
+    private float horizontalDistance;
+
     private float horizontalSpeed;
 
-    private float a;
-    private float b;
-    private float c;
+    private float parabolaA;
+    private float parabolaB;
+    private float parabolaC;
 
-    private float groundDistance;
+    private float visualElapsedTime;
 
-    private bool localDataReady;
+    private bool trajectoryReady;
     private bool isDespawning;
 
-    private float rotationSpeed;
+    private BallSpawnManager spawnManager;
+
+    #endregion
 
 
-    // =========================================================
-    // Property
-    // =========================================================
+    #region < Public > 
 
-    public Vector3 HitDirection =>
-        horizontalDirection;
+    public float HitTime => Duration;
+
+    public float VisualElapsedTime => visualElapsedTime;
+
+    public float VisualHitTimeError => visualElapsedTime - Duration;
+
+    public Vector3 HitDirection => horizontalDirection;
+
+    #endregion
 
 
-    // =========================================================
-    // Spawned
-    // =========================================================
+    #region < Spawn >
 
     public override void Spawned()
     {
-        rotationSpeed =
-            Random.Range(
-                minRotationSpeed,
-                maxRotationSpeed
-            );
-
-
         transform.localScale =
             startScale;
 
-
-        if (NetworkDuration > 0f)
-        {
-            SetupLocalTrajectory();
-        }
+        TrySetupTrajectory();
     }
 
+    #endregion
 
-    // =========================================================
-    // Initialize
-    // =========================================================
+
+    #region < Initialize >    
 
     public void Initialize(
-        Vector3 start,
-        Vector3 hit,
+        Vector3 startPosition,
+        Vector3 hitPosition,
         float duration,
         float height,
-        int ownerIndex
+        float rotationSpeed,
+        int throwId,
+        int ballIndex,
+        BallSpawnManager manager
     )
     {
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
 
+        StartPosition = startPosition;
 
-        NetworkStartPosition =
-            start;
+        HitPosition = hitPosition;
 
-        NetworkHitPosition =
-            hit;
+        Duration = duration;
 
-        NetworkDuration =
-            duration;
+        Height = height;
 
-        NetworkHeight =
-            height;
+        RotationSpeed = rotationSpeed;
 
-        OwnerIndex =
-            ownerIndex;
+        ThrowId = throwId;
 
-        NetworkElapsedTime =
-            0f;
+        BallIndex = ballIndex;
 
+        ElapsedTime = 0f;
 
-        IsFlying =
-            true;
+        IsFlying = true;
 
-        IsHitMotion =
-            false;
+        spawnManager = manager;
 
-        HasScored =
-            false;
+        TrySetupTrajectory();
 
-        HitResult =
-            0;
+        transform.position = StartPosition;
 
+        transform.localScale = startScale;
 
-        SetupLocalTrajectory();
-
-
-        transform.localScale =
-            startScale;
+        transform.rotation = Quaternion.identity;
     }
 
+    #endregion
 
-    // =========================================================
-    // Setup Local Trajectory
-    // =========================================================
 
-    private void SetupLocalTrajectory()
+    #region < Trajectory SetUp >    
+
+    private void TrySetupTrajectory()
     {
-        startPosition =
-            NetworkStartPosition;
-
-        hitPosition =
-            NetworkHitPosition;
-
-        hitTime =
-            NetworkDuration;
-
-
-        if (hitTime <= 0f)
-        {
+        if (Duration <= 0f)
             return;
-        }
-
 
         Vector3 flatDirection =
             new Vector3(
-                hitPosition.x - startPosition.x,
+                HitPosition.x -
+                StartPosition.x,
+
                 0f,
-                hitPosition.z - startPosition.z
+
+                HitPosition.z -
+                StartPosition.z
             );
 
+        horizontalDistance = flatDirection.magnitude;
 
-        hitDistance =
-            flatDirection.magnitude;
-
-
-        if (hitDistance <= 0.001f)
-        {
+        if (horizontalDistance <= 0.001f)
             return;
-        }
 
+        horizontalDirection = flatDirection.normalized;
 
-        horizontalDirection =
-            flatDirection.normalized;
+        horizontalSpeed = horizontalDistance / Duration;
 
+        // 최고점 X 위치
+        float peakX = horizontalDistance * 0.55f;
 
-        horizontalSpeed =
-            hitDistance / hitTime;
-
-
-        // -----------------------------------------------------
-        // Parabola
-        // -----------------------------------------------------
-
-        float peakX =
-            hitDistance * peakPosition;
-
-
+        // 최고점 Y
         float peakY =
             Mathf.Max(
-                startPosition.y,
-                hitPosition.y
-            ) + NetworkHeight;
+                StartPosition.y,
+                HitPosition.y
+            ) + Height;
 
-
-        c =
-            startPosition.y;
-
+        parabolaC = StartPosition.y;
 
         float denominator =
             peakX * peakX -
-            peakX * hitDistance;
-
+            peakX * horizontalDistance;
 
         if (Mathf.Abs(denominator) < 0.0001f)
         {
-            a = 0f;
+            parabolaA = 0f;
 
-            b =
-                (hitPosition.y - startPosition.y)
-                / hitDistance;
+            parabolaB = (HitPosition.y - StartPosition.y) / horizontalDistance;
         }
         else
         {
-            a =
+            parabolaA =
                 (
-                    peakY
-                    - startPosition.y
-                    - (
-                        (hitPosition.y - startPosition.y)
-                        / hitDistance
-                    ) * peakX
-                )
-                / denominator;
+                    peakY -
+                    StartPosition.y -
+                    (
+                        (
+                            HitPosition.y -
+                            StartPosition.y
+                        ) /
+                        horizontalDistance
+                    ) *
+                    peakX
+                ) /
+                denominator;
 
-
-            b =
+            parabolaB =
                 (
-                    hitPosition.y
-                    - startPosition.y
-                    - a * hitDistance * hitDistance
-                )
-                / hitDistance;
+                    HitPosition.y -
+                    StartPosition.y -
+                    parabolaA *
+                    horizontalDistance *
+                    horizontalDistance
+                ) /
+                horizontalDistance;
         }
 
-
-        groundDistance =
-            CalculateGroundDistance();
-
-
-        localDataReady =
-            true;
-
-
-        transform.position =
-            startPosition;
-
-
-        transform.localScale =
-            startScale;
+        trajectoryReady = true;
     }
 
+    #endregion
 
-    // =========================================================
-    // Fixed Update Network
-    // =========================================================
+
+    #region < Update Network >    
 
     public override void FixedUpdateNetwork()
     {
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
-
 
         if (!IsFlying)
-        {
             return;
+
+        if (!trajectoryReady)
+        {
+            TrySetupTrajectory();
+
+            if (!trajectoryReady)
+                return;
         }
 
+        ElapsedTime += Runner.DeltaTime;
 
-        NetworkElapsedTime +=
-            Runner.DeltaTime;
+        UpdateBall(ElapsedTime);
 
-
-        UpdateAuthorityBall();
-
-
-        // -----------------------------------------------------
-        // Ground
-        // -----------------------------------------------------
-
-        if (
-            NetworkElapsedTime >=
-            GetGroundTime()
-        )
+        
+        if (transform.position.y < destroyY)
         {
-            NetworkElapsedTime =
-                GetGroundTime();
-
-
-            UpdateAuthorityBall();
-
-
-            IsFlying =
-                false;
-
-
-            if (!isDespawning)
-            {
-                StartCoroutine(
-                    DespawnAfterDelay()
-                );
-            }
+            DespawnBall();
         }
     }
 
-
-    // =========================================================
-    // Authority Ball
-    // =========================================================
-
-    private void UpdateAuthorityBall()
-    {
-        if (!localDataReady)
-        {
-            SetupLocalTrajectory();
-        }
+    #endregion
 
 
-        if (!localDataReady)
-        {
-            return;
-        }
-
-
-        UpdateBallPosition(
-            NetworkElapsedTime
-        );
-    }
-
-
-    // =========================================================
-    // Render
-    // =========================================================
+    #region < Render >    
 
     public override void Render()
     {
-        if (!localDataReady)
+        if (!trajectoryReady)
         {
-            SetupLocalTrajectory();
+            TrySetupTrajectory();
+
+            if (!trajectoryReady)
+                return;
         }
-
-
-        if (!localDataReady)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Hit Motion 중에는 일반 궤적을 그리지 않는다.
-        // -----------------------------------------------------
-
-        if (IsHitMotion)
-        {
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // 중요
-        //
-        // IsFlying을 여기서 검사하지 않는다.
-        //
-        // Host가 IsFlying=false를 보냈더라도
-        // Client 화면에서는 NetworkElapsedTime을 기준으로
-        // 공을 끝까지 보여줘야 한다.
-        // -----------------------------------------------------
-
 
         if (Object.HasStateAuthority)
         {
-            UpdateBallPosition(
-                NetworkElapsedTime
-            );
+            visualElapsedTime = ElapsedTime;
+
+            UpdateBall(visualElapsedTime);
 
             return;
         }
 
+        var interpolator = new NetworkBehaviourBufferInterpolator(this);
 
-        // -----------------------------------------------------
-        // Client interpolation
-        // -----------------------------------------------------
+        visualElapsedTime = interpolator.Float(nameof(ElapsedTime));
 
-        var interpolator =
-            new NetworkBehaviourBufferInterpolator(
-                this
-            );
-
-
-        float visualElapsedTime =
-            interpolator.Float(
-                nameof(NetworkElapsedTime)
-            );
-
-
-        UpdateBallPosition(
-            visualElapsedTime
-        );
+        UpdateBall(visualElapsedTime);
     }
 
+    #endregion
 
-    // =========================================================
-    // Update Ball Position
-    // =========================================================
 
-    private void UpdateBallPosition(
-        float elapsedTime
-    )
+    #region < Ball >    
+
+    private void UpdateBall(float elapsedTime)
     {
-        if (hitTime <= 0f)
-        {
+        if (!trajectoryReady)
             return;
-        }
 
-
-        float groundTime =
-            GetGroundTime();
-
-
-        float time =
-            Mathf.Clamp(
-                elapsedTime,
-                0f,
-                groundTime
-            );
-
-
-        // -----------------------------------------------------
-        // Horizontal
-        // -----------------------------------------------------
-
-        float horizontalDistance =
-            horizontalSpeed * time;
-
-
-        // -----------------------------------------------------
-        // Parabola Y
-        // -----------------------------------------------------
+        float distance = horizontalSpeed * elapsedTime;
 
         float y =
-            a * horizontalDistance * horizontalDistance
-            + b * horizontalDistance
-            + c;
-
-
-        // -----------------------------------------------------
-        // Position
-        // -----------------------------------------------------
+            parabolaA * distance * distance
+            +
+            parabolaB * distance
+            +
+            parabolaC;
 
         Vector3 position =
-            startPosition
-            + horizontalDirection *
-            horizontalDistance;
+            StartPosition +
+            horizontalDirection *
+            distance;
 
+        position.y = y;
 
-        position.y =
-            y;
+        transform.position = position;
 
-
-        transform.position =
-            position;
-
-
-        // -----------------------------------------------------
-        // Scale
-        // -----------------------------------------------------
-
-        float scaleProgress =
-            Mathf.Clamp01(
-                time / hitTime
-            );
-
+        float scaleProgress = Mathf.Clamp01(elapsedTime / Duration);
 
         transform.localScale =
             Vector3.Lerp(
@@ -553,290 +326,67 @@ public class Ball : NetworkBehaviour
                 scaleProgress
             );
 
+        float rotation = RotationSpeed * elapsedTime;
 
-        // -----------------------------------------------------
-        // Rotation
-        //
-        // Ground에 도착한 이후에는 회전하지 않는다.
-        // -----------------------------------------------------
-
-        if (time < groundTime)
-        {
-            transform.Rotate(
-                Vector3.forward,
-                rotationSpeed * Runner.DeltaTime,
-                Space.Self
-            );
-        }
+        transform.rotation = Quaternion.Euler(0f, 0f, rotation);
     }
 
-
-    // =========================================================
-    // Ground Time
-    // =========================================================
-
-    private float GetGroundTime()
-    {
-        if (horizontalSpeed <= 0.001f)
-        {
-            return hitTime;
-        }
+    #endregion
 
 
-        if (groundDistance <= 0f)
-        {
-            return hitTime;
-        }
+    #region < Despawn >
 
-
-        return groundDistance /
-               horizontalSpeed;
-    }
-
-
-    // =========================================================
-    // Calculate Ground Distance
-    // =========================================================
-
-    private float CalculateGroundDistance()
-    {
-        float targetC =
-            c - groundY;
-
-
-        float discriminant =
-            b * b -
-            4f * a * targetC;
-
-
-        if (discriminant < 0f)
-        {
-            return hitDistance;
-        }
-
-
-        // -----------------------------------------------------
-        // a가 거의 0이면 직선
-        // -----------------------------------------------------
-
-        if (Mathf.Abs(a) < 0.0001f)
-        {
-            if (Mathf.Abs(b) < 0.0001f)
-            {
-                return hitDistance;
-            }
-
-
-            float linearRoot =
-                -targetC / b;
-
-
-            if (linearRoot > hitDistance)
-            {
-                return linearRoot;
-            }
-
-
-            return hitDistance;
-        }
-
-
-        float sqrt =
-            Mathf.Sqrt(
-                discriminant
-            );
-
-
-        float root1 =
-            (-b + sqrt) /
-            (2f * a);
-
-
-        float root2 =
-            (-b - sqrt) /
-            (2f * a);
-
-
-        float validRoot =
-            -1f;
-
-
-        if (root1 > hitDistance)
-        {
-            validRoot =
-                root1;
-        }
-
-
-        if (root2 > hitDistance)
-        {
-            if (
-                validRoot < 0f ||
-                root2 < validRoot
-            )
-            {
-                validRoot =
-                    root2;
-            }
-        }
-
-
-        if (validRoot < 0f)
-        {
-            return hitDistance;
-        }
-
-
-        return validRoot;
-    }
-
-
-    // =========================================================
-    // Hit Time Error
-    // =========================================================
-
-    public float GetHitTimeError()
-    {
-        return NetworkElapsedTime -
-               hitTime;
-    }
-
-
-    // =========================================================
-    // Stop Flying
-    // =========================================================
-
-    public void StopFlying()
+    public void DespawnForHit()
     {
         if (!Object.HasStateAuthority)
-        {
             return;
+
+        if (isDespawning)
+            return;
+
+        if (Object == null || !Object.IsValid || Runner == null)
+            return;
+
+        isDespawning = true;
+        IsFlying = false;
+
+        if (spawnManager != null)
+            spawnManager.OnBallDespawnScheduled(this);
+
+        Runner.Despawn(Object);
+    }    
+
+    private void DespawnBall()
+    {
+        if (isDespawning)
+            return;
+
+        if (Object == null || !Object.IsValid || Runner == null)        
+            return;       
+
+        isDespawning = true;
+
+        IsFlying = false;
+        
+        if (spawnManager != null)
+        {
+            spawnManager.OnBallDespawnScheduled(this);
         }
 
-
-        IsFlying =
-            false;
+        Invoke(nameof(Despawn), despawnDelay);
     }
 
-
-    // =========================================================
-    // Excellent Motion
-    // =========================================================
-
-    public void PlayExcellentMotion()
+    private void Despawn()
     {
         if (!Object.HasStateAuthority)
-        {
             return;
-        }
 
-
-        IsHitMotion =
-            true;
-
-
-        HitResult =
-            1;
-    }
-
-
-    // =========================================================
-    // Good Motion
-    // =========================================================
-
-    public void PlayGoodMotion()
-    {
-        if (!Object.HasStateAuthority)
-        {
+        if (Object == null || !Object.IsValid || Runner == null)       
             return;
-        }
+        
 
-
-        IsHitMotion =
-            true;
-
-
-        HitResult =
-            2;
-    }
-
-
-    // =========================================================
-    // Hit Result Changed
-    // =========================================================
-
-    private void OnHitResultChanged()
-    {
-        Debug.Log(
-            $"[Ball] ★ HitResult Changed = {HitResult}, " +
-            $"Ball={Object.Id}"
-        );
-
-
-        BallHitMotion hitMotion =
-            GetComponent<BallHitMotion>();
-
-
-        if (hitMotion == null)
-        {
-            Debug.LogError(
-                "[Ball] BallHitMotion이 없습니다."
-            );
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Excellent
-        // -----------------------------------------------------
-
-        if (HitResult == 1)
-        {
-            hitMotion.PlayExcellentMotion();
-
-            return;
-        }
-
-
-        // -----------------------------------------------------
-        // Good
-        // -----------------------------------------------------
-
-        if (HitResult == 2)
-        {
-            hitMotion.PlayGoodMotion();
-
-            return;
-        }
-    }
-
-
-    // =========================================================
-    // Despawn
-    // =========================================================
-
-    private IEnumerator DespawnAfterDelay()
-    {
-        isDespawning =
-            true;
-
-
-        yield return new WaitForSeconds(
-            despawnDelay
-        );
-
-
-        if (
-            Object != null &&
-            Object.IsValid &&
-            Object.HasStateAuthority &&
-            Runner != null
-        )
-        {
-            Runner.Despawn(
-                Object
-            );
-        }
+        Runner.Despawn(Object);
     }
 }
+
+#endregion

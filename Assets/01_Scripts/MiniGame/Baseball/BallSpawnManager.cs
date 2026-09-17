@@ -1,4 +1,4 @@
-using System.Collections;
+Ôªøusing System.Collections;
 using TMPro;
 using Fusion;
 using UnityEngine;
@@ -6,44 +6,82 @@ using UnityEngine;
 public class BallSpawnManager : NetworkBehaviour
 {
     [Header("<< Ball >>")]
-    [SerializeField] private NetworkPrefabRef ballPrefab;
+    [SerializeField]
+    private NetworkPrefabRef ballPrefab;
+
+    [Header("<< Hit Effect >>")]
+    [SerializeField]
+    private NetworkPrefabRef hitEffectPrefab;
 
     [Header("<< Points >>")]
-    [SerializeField] private Transform[] startPoints;
-    [SerializeField] private Transform[] hitPoints;
+    [SerializeField]
+    private Transform[] startPoints;
+
+    [SerializeField]
+    private Transform[] hitPoints;
 
     [Header("<< Practice >>")]
-    [SerializeField] private int practiceThrows = 3;
-    [SerializeField] private float practiceDuration = 1.8f;
-    [SerializeField] private float practiceHeight = 4f;
-    [SerializeField] private float practiceInterval = 1.5f;
+    [SerializeField]
+    private int practiceThrows = 3;
+
+    [SerializeField]
+    private float practiceDuration = 1.8f;
+
+    [SerializeField]
+    private float practiceHeight = 4f;
+
+    [SerializeField]
+    private float practiceInterval = 1.0f;
 
     [Header("<< Game >>")]
-    [SerializeField] private int totalThrows = 30;
+    [SerializeField]
+    private int totalThrows = 30;
 
     [Header("<< Normal Ball >>")]
-    [SerializeField] private float normalMinDuration = 1.0f;
-    [SerializeField] private float normalMaxDuration = 1.8f;
-    [SerializeField] private float normalMinHeight = 3f;
-    [SerializeField] private float normalMaxHeight = 5f;
-    [SerializeField] private float normalMinInterval = 1.5f;
-    [SerializeField] private float normalMaxInterval = 2.0f;
+    [SerializeField]
+    private float normalMinDuration = 1.0f;
+
+    [SerializeField]
+    private float normalMaxDuration = 1.8f;
+
+    [SerializeField]
+    private float normalMinHeight = 3f;
+
+    [SerializeField]
+    private float normalMaxHeight = 5f;
+
+    [SerializeField]
+    private float normalMinInterval = 0.8f;
+
+    [SerializeField]
+    private float normalMaxInterval = 1.2f;
 
     [Header("<< Fast Ball >>")]
-    [SerializeField] private float fastMinDuration = 0.5f;
-    [SerializeField] private float fastMaxDuration = 1.8f;
-    [SerializeField] private float fastMinHeight = 3f;
-    [SerializeField] private float fastMaxHeight = 6f;
-    [SerializeField] private float fastMinInterval = 1.5f;
-    [SerializeField] private float fastMaxInterval = 1.8f;
+    [SerializeField]
+    private float fastMinDuration = 0.5f;
+
+    [SerializeField]
+    private float fastMaxDuration = 1.8f;
+
+    [SerializeField]
+    private float fastMinHeight = 3f;
+
+    [SerializeField]
+    private float fastMaxHeight = 6f;
+
+    [SerializeField]
+    private float fastMinInterval = 0.6f;
+
+    [SerializeField]
+    private float fastMaxInterval = 1.0f;
 
     [Header("<< UI >>")]
-    [SerializeField] private TextMeshProUGUI ballCountText;
+    [SerializeField]
+    private TextMeshProUGUI ballCountText;
 
     [Header("<< Practice UI >>")]
-    [SerializeField] private GameObject practiceHitPointUI;
-
-    #region < Local Data >
+    [SerializeField]
+    private GameObject practiceHitPointUI;
 
     private Coroutine practiceCoroutine;
     private Coroutine gameCoroutine;
@@ -53,13 +91,20 @@ public class BallSpawnManager : NetworkBehaviour
     private bool isPracticeRunning;
     private bool isGameRunning;
 
-    public bool IsPracticeRunning => isPracticeRunning;
-    public bool IsGameRunning => isGameRunning;
-    public int CurrentThrow => currentThrow;
+    private int activeBallCount;
 
-    #endregion
+    public bool IsPracticeRunning =>
+        isPracticeRunning;
 
-    #region < Networked UI >
+    public bool IsGameRunning =>
+        isGameRunning;
+
+    public int CurrentThrow =>
+        currentThrow;
+
+    // =========================================================
+    // NETWORKED UI
+    // =========================================================
 
     [Networked, OnChangedRender(nameof(OnBallCountUIChanged))]
     private NetworkBool IsBallCountVisible { get; set; }
@@ -70,201 +115,486 @@ public class BallSpawnManager : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnPracticeHitPointUIChanged))]
     private NetworkBool IsPracticeHitPointVisible { get; set; }
 
-    #endregion
-
-    #region < Network >
+    // =========================================================
+    // SPAWNED
+    // =========================================================
 
     public override void Spawned()
     {
         if (Object.HasStateAuthority)
         {
-            IsBallCountVisible = false;
-            DisplayBallCount = 0;
-            IsPracticeHitPointVisible = false;
+            IsBallCountVisible =
+                false;
+
+            DisplayBallCount =
+                0;
+
+            IsPracticeHitPointVisible =
+                false;
         }
 
-        // ∞¢ ≈¨∂Û¿Ãæ∆Æø°º≠ «ˆ¿Á ≥◊∆Æøˆ≈© ªÛ≈¬∏¶ UIø° ¿˚øÎ
         UpdateBallCountUI();
+
         UpdatePracticeHitPointUI();
     }
 
-    #endregion
-
-    #region < Begin >
+    // =========================================================
+    // PRACTICE
+    // =========================================================
 
     public void BeginPractice()
     {
-        if (!Object.HasStateAuthority)        
+        if (!Object.HasStateAuthority)
             return;
-        
 
-        if (isPracticeRunning || isGameRunning)       
+        if (
+            isPracticeRunning ||
+            isGameRunning
+        )
+        {
             return;
-        
+        }
 
-        practiceCoroutine = StartCoroutine(PracticeThrowRoutine());
+        practiceCoroutine =
+            StartCoroutine(
+                PracticeThrowRoutine()
+            );
     }
-
-    public void BeginGame()
-    {
-        if (!Object.HasStateAuthority)        
-            return;
-        
-
-        if (isPracticeRunning || isGameRunning)        
-            return;
-        
-
-        gameCoroutine = StartCoroutine(GameThrowRoutine());
-    }
-
-    #endregion
-
-    #region < Practice >
 
     private IEnumerator PracticeThrowRoutine()
     {
-        isPracticeRunning = true;
+        isPracticeRunning =
+            true;
 
-        currentThrow = 0;
+        currentThrow =
+            0;
 
-        SetBallCountUI(false, 0);
+        SetBallCountUI(
+            false,
+            0
+        );
 
-        // ∏µÁ ≈¨∂Û¿Ãæ∆Æø°º≠ HitPoint æ»≥ª UI «•Ω√
-        IsPracticeHitPointVisible = true;
+        IsPracticeHitPointVisible =
+            true;
 
-        for (int i = 0; i < practiceThrows; i++)
+        for (
+            int i = 0;
+            i < practiceThrows;
+            i++
+        )
         {
-            SpawnBalls(practiceDuration, practiceHeight);
-
             currentThrow++;
 
-            yield return new WaitForSeconds(practiceInterval);
+            SpawnBalls(
+                practiceDuration,
+                practiceHeight
+            );
+
+            yield return new WaitUntil(
+                () =>
+                    activeBallCount <= 0
+            );
+
+            yield return new WaitForSeconds(
+                practiceInterval
+            );
         }
 
-        // ∏µÁ ≈¨∂Û¿Ãæ∆Æø°º≠ HitPoint æ»≥ª UI º˚±Ë
-        IsPracticeHitPointVisible = false;
+        IsPracticeHitPointVisible =
+            false;
 
-        isPracticeRunning = false;
-        practiceCoroutine = null;
+        isPracticeRunning =
+            false;
+
+        practiceCoroutine =
+            null;
     }
 
-    #endregion
+    // =========================================================
+    // GAME
+    // =========================================================
 
-    #region < Game >
+    public void BeginGame()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (
+            isPracticeRunning ||
+            isGameRunning
+        )
+        {
+            return;
+        }
+
+        gameCoroutine =
+            StartCoroutine(
+                GameThrowRoutine()
+            );
+    }
 
     private IEnumerator GameThrowRoutine()
     {
-        isGameRunning = true;
+        isGameRunning =
+            true;
 
-        currentThrow = 0;
+        currentThrow =
+            0;
 
-        SetBallCountUI(true, totalThrows);
+        SetBallCountUI(
+            true,
+            totalThrows
+        );
 
-        for (int i = 0; i < totalThrows; i++)
+        for (
+            int i = 0;
+            i < totalThrows;
+            i++
+        )
         {
             currentThrow++;
 
-            SetBallCountUI(true, totalThrows - i);
+            SetBallCountUI(
+                true,
+                totalThrows - i
+            );
 
             float duration;
             float height;
             float interval;
 
-            // 1 ~ 3π¯¬∞ ∞¯
+            // Throw 1 ~ 3
             if (i < 3)
             {
-                duration = normalMaxDuration;
-                height = normalMinHeight;
-                interval = normalMaxInterval;
+                duration =
+                    normalMaxDuration;
+
+                height =
+                    normalMinHeight;
+
+                interval =
+                    normalMaxInterval;
             }
-            // 4 ~ 15π¯¬∞ ∞¯
+
+            // Throw 4 ~ 15
             else if (i < 15)
             {
-                duration = Random.Range(normalMinDuration, normalMaxDuration);
+                duration =
+                    Random.Range(
+                        normalMinDuration,
+                        normalMaxDuration
+                    );
 
-                height = Random.Range(normalMinHeight, normalMaxHeight);
+                height =
+                    Random.Range(
+                        normalMinHeight,
+                        normalMaxHeight
+                    );
 
-                interval = Random.Range(normalMinInterval, normalMaxInterval);
+                interval =
+                    Random.Range(
+                        normalMinInterval,
+                        normalMaxInterval
+                    );
             }
-            // 16 ~ 30π¯¬∞ ∞¯
+
+            // Throw 16 ~ 30
             else
             {
-                duration = Random.Range(fastMinDuration, fastMaxDuration);
+                duration =
+                    Random.Range(
+                        fastMinDuration,
+                        fastMaxDuration
+                    );
 
-                height = Random.Range(fastMinHeight, fastMaxHeight);
+                height =
+                    Random.Range(
+                        fastMinHeight,
+                        fastMaxHeight
+                    );
 
-                interval = Random.Range(fastMinInterval, fastMaxInterval);
+                interval =
+                    Random.Range(
+                        fastMinInterval,
+                        fastMaxInterval
+                    );
             }
 
-            SpawnBalls(duration, height);
+            SpawnBalls(
+                duration,
+                height
+            );
 
-            yield return new WaitForSeconds(interval);
+            yield return new WaitUntil(
+                () =>
+                    activeBallCount <= 0
+            );
+
+            yield return new WaitForSeconds(
+                interval
+            );
         }
 
-        // ≥◊∆Æøˆ≈© ∫Øºˆ∑Œ ∏µÁ ≈¨∂Û¿Ãæ∆Æ¿« ƒ´øÓ∆Æ ∫Ø∞Ê
-        SetBallCountUI(true, 0);
+        SetBallCountUI(
+            true,
+            0
+        );
 
-        isGameRunning = false;
-        gameCoroutine = null;
+        isGameRunning =
+            false;
+
+        gameCoroutine =
+            null;
     }
 
-    #endregion
+    // =========================================================
+    // SPAWN BALLS
+    // =========================================================
 
-    #region < Spawn >
-
-    private void SpawnBalls(float duration, float height)
+    private void SpawnBalls(
+        float duration,
+        float height
+    )
     {
-        if (!Object.HasStateAuthority)        
-            return;        
-
-        if (!ballPrefab.IsValid)        
+        if (!Object.HasStateAuthority)
             return;
-        
-        if (startPoints == null || startPoints.Length < 4)       
-            return;
-        
 
-        if (hitPoints == null || hitPoints.Length < 4)        
+        if (!ballPrefab.IsValid)
             return;
-        
 
-        for (int i = 0; i < 4; i++)
+        if (
+            startPoints == null ||
+            startPoints.Length < 4
+        )
         {
-            NetworkObject ballObject = Runner.Spawn(
-                ballPrefab,
-                startPoints[i].position,
-                Quaternion.identity
+            Debug.LogError(
+                "[BallSpawnManager] " +
+                "Start PointÍ∞Ä 4Í∞úÎ≥¥Îã§ Ï†ÅÏäµÎãàÎã§."
             );
+
+            return;
+        }
+
+        if (
+            hitPoints == null ||
+            hitPoints.Length < 4
+        )
+        {
+            Debug.LogError(
+                "[BallSpawnManager] " +
+                "Hit PointÍ∞Ä 4Í∞úÎ≥¥Îã§ Ï†ÅÏäµÎãàÎã§."
+            );
+
+            return;
+        }
+
+        activeBallCount =
+            0;
+
+        // Í∞ôÏùÄ ThrowÏùò 4Í∞ú BallÏùÄ
+        // Í∞ôÏùÄ ÌöåÏ†Ñ ÏÜçÎèÑÎ•º ÏÇ¨Ïö©
+        float rotationSpeed =
+            Random.Range(
+                500f,
+                1000f
+            );
+
+        for (
+            int i = 0;
+            i < 4;
+            i++
+        )
+        {
+            NetworkObject ballObject =
+                Runner.Spawn(
+                    ballPrefab,
+                    startPoints[i].position,
+                    Quaternion.identity
+                );
 
             if (ballObject == null)
             {
-                Debug.LogError($"Ball Spawn Ω«∆–. OwnerIndex = {i}");
+                Debug.LogError(
+                    $"[BallSpawnManager] " +
+                    $"Ball Spawn Ïã§Ìå®. " +
+                    $"BallIndex={i}"
+                );
 
                 continue;
             }
 
-            Ball ball = ballObject.GetComponent<Ball>();
+            Ball ball =
+                ballObject.GetComponent<Ball>();
 
             if (ball == null)
             {
-                Runner.Despawn(ballObject);
+                Debug.LogError(
+                    "[BallSpawnManager] " +
+                    "SpawnÎêú ObjectÏóê " +
+                    "Ball Ïª¥Ìè¨ÎÑåÌä∏Í∞Ä ÏóÜÏäµÎãàÎã§."
+                );
+
+                Runner.Despawn(
+                    ballObject
+                );
+
                 continue;
             }
 
+            activeBallCount++;
+
+            // i = BallIndex
+            //
+            // Ball 0 ‚Üí Player 0
+            // Ball 1 ‚Üí Player 1
+            // Ball 2 ‚Üí Player 2
+            // Ball 3 ‚Üí Player 3
             ball.Initialize(
                 startPoints[i].position,
                 hitPoints[i].position,
                 duration,
                 height,
-                i
+                rotationSpeed,
+                currentThrow,
+                i,
+                this
             );
         }
     }
 
-    #endregion
+    // =========================================================
+    // HIT EFFECT SPAWN
+    // =========================================================
 
-    #region < UI >
+    public void SpawnHitEffect(
+    int playerIndex,
+    BallHitEffect.HitResult result,
+    Vector3 hitDirection
+)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!hitEffectPrefab.IsValid)
+        {
+            Debug.LogError(
+                "[BallSpawnManager] " +
+                "Hit Effect PrefabÏù¥ ÏÑ§Ï†ïÎêòÏßÄ ÏïäÏïòÏäµÎãàÎã§."
+            );
+
+            return;
+        }
+
+        if (
+            hitPoints == null ||
+            playerIndex < 0 ||
+            playerIndex >= hitPoints.Length
+        )
+        {
+            Debug.LogError(
+                $"[BallSpawnManager] " +
+                $"ÏûòÎ™ªÎêú PlayerIndex | " +
+                $"PlayerIndex={playerIndex}"
+            );
+
+            return;
+        }
+
+
+        // --------------------------------------------------
+        // Ïã§Ï†ú HitPoint
+        // --------------------------------------------------
+
+        Transform hitPoint =
+            hitPoints[playerIndex];
+
+        Vector3 spawnPosition = hitPoint.position + Vector3.forward * 0.3f;
+
+
+        Debug.Log(
+            $"[HitEffect] Spawn | " +
+            $"PlayerIndex={playerIndex} | " +
+            $"HitPoint={spawnPosition} | " +
+            $"Result={result}"
+        );
+
+
+        // --------------------------------------------------
+        // Spawn
+        // --------------------------------------------------
+
+        NetworkObject effectObject =
+            Runner.Spawn(
+                hitEffectPrefab,
+                spawnPosition,
+                Quaternion.identity,
+                null,
+                (runner, obj) =>
+                {
+                    BallHitEffect effect =
+                        obj.GetComponent<BallHitEffect>();
+
+                    if (effect == null)
+                    {
+                        Debug.LogError(
+                            "[BallSpawnManager] " +
+                            "BaseballHitEffectÍ∞Ä ÏóÜÏäµÎãàÎã§."
+                        );
+
+                        return;
+                    }
+
+
+                    // ‚òÖ HostÍ∞Ä Í≥ÑÏÇ∞Ìïú Ï†ïÌôïÌïú HitPointÎ•º Ï†ÑÎã¨
+                    effect.Initialize(
+                        playerIndex,
+                        result,
+                        hitDirection,
+                        spawnPosition
+                    );
+                }
+            );
+
+
+        if (effectObject == null)
+        {
+            Debug.LogError(
+                "[BallSpawnManager] " +
+                "Hit Effect Spawn Ïã§Ìå®."
+            );
+
+            return;
+        }
+    }
+
+    // =========================================================
+    // BALL DESPAWN CALLBACK
+    // =========================================================
+
+    public void OnBallDespawnScheduled(
+        Ball ball
+    )
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (activeBallCount <= 0)
+            return;
+
+        activeBallCount--;
+
+        Debug.Log(
+            $"[BallSpawnManager] " +
+            $"Ball Ï¢ÖÎ£å | " +
+            $"ThrowId={ball.ThrowId}, " +
+            $"BallIndex={ball.BallIndex}, " +
+            $"ÎÇ®ÏùÄ Ball={activeBallCount}"
+        );
+    }
+
+    // =========================================================
+    // BALL COUNT UI
+    // =========================================================
 
     private void OnBallCountUIChanged()
     {
@@ -273,27 +603,37 @@ public class BallSpawnManager : NetworkBehaviour
 
     private void UpdateBallCountUI()
     {
-        if (ballCountText == null)        
+        if (ballCountText == null)
             return;
-        
 
-        ballCountText.gameObject.SetActive(IsBallCountVisible);
+        ballCountText.gameObject.SetActive(
+            IsBallCountVisible
+        );
 
-        ballCountText.text = DisplayBallCount.ToString();
+        ballCountText.text =
+            DisplayBallCount.ToString();
     }
 
-    private void SetBallCountUI(bool isVisible, int count)
+    private void SetBallCountUI(
+        bool isVisible,
+        int count
+    )
     {
-        if (!Object.HasStateAuthority)        
+        if (!Object.HasStateAuthority)
             return;
-        
 
-        IsBallCountVisible = isVisible;
-        DisplayBallCount = count;
+        IsBallCountVisible =
+            isVisible;
 
-        // »£Ω∫∆Æ »≠∏Èµµ ¡ÔΩ√ ∞ªΩ≈
+        DisplayBallCount =
+            count;
+
         UpdateBallCountUI();
     }
+
+    // =========================================================
+    // PRACTICE HIT POINT UI
+    // =========================================================
 
     private void OnPracticeHitPointUIChanged()
     {
@@ -302,12 +642,11 @@ public class BallSpawnManager : NetworkBehaviour
 
     private void UpdatePracticeHitPointUI()
     {
-        if (practiceHitPointUI == null)       
+        if (practiceHitPointUI == null)
             return;
-        
 
-        practiceHitPointUI.SetActive(IsPracticeHitPointVisible);
+        practiceHitPointUI.SetActive(
+            IsPracticeHitPointVisible
+        );
     }
-
-    #endregion
 }
