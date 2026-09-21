@@ -341,4 +341,100 @@ public class BaseballManager : NetworkBehaviour
         startText.SetActive(IsStartTextVisible);
     }
     #endregion
+
+
+    #region < Score >
+
+    private Dictionary<PlayerRef, int> CalculateGameScores()
+    {
+        Dictionary<PlayerRef, int> scores = new();
+
+        List<PlayerNetwork> players = GetActivePlayers();
+
+        if (players.Count == 0)
+            return scores;
+
+        players = players
+            .OrderByDescending(player => player.BaseballCount)
+            .ToList();
+
+        // 1등 점수
+        int firstScore = players[0].BaseballCount;
+
+        // 동점 순위 계산
+        int currentRank = 0;
+        int previousScore = int.MinValue;
+
+        foreach (PlayerNetwork player in players)
+        {
+            int baseballScore = player.BaseballCount;
+
+            if (baseballScore != previousScore)
+            {
+                currentRank++;
+                previousScore = baseballScore;
+            }
+
+            switch (currentRank)
+            {
+                case 1:
+                    scores[player.PlayerRef] = 3;
+                    break;
+
+                case 2:
+                    scores[player.PlayerRef] = 2;
+                    break;
+
+                case 3:
+                    scores[player.PlayerRef] = 3;
+                    break;
+
+                default:
+                    scores[player.PlayerRef] = 0;
+                    break;
+            }
+        }
+
+        return scores;
+    }
+
+
+    public void GiveGameScores()
+    {
+        Dictionary<PlayerRef, int> scores =
+            CalculateGameScores();
+
+        List<PlayerNetwork> players =
+            GetActivePlayers();
+
+        foreach (KeyValuePair<PlayerRef, int> score in scores)
+        {
+            PlayerNetwork player =
+                players.FirstOrDefault(
+                    p => p.PlayerRef == score.Key
+                );
+
+            if (player == null)
+            {
+                Debug.LogWarning(
+                    $"점수를 지급할 PlayerNetwork를 찾을 수 없습니다. " +
+                    $"PlayerRef = {score.Key}"
+                );
+
+                continue;
+            }
+
+            player.AddScore(score.Value);
+
+            Debug.Log(
+                $"===== Baseball 점수 지급 =====\n" +
+                $"Player : {score.Key}\n" +
+                $"BaseballCount : {player.BaseballCount}\n" +
+                $"점수 : +{score.Value}\n" +
+                $"누적 점수 : {player.Score}"
+            );
+        }
+    }
+
+    #endregion
 }
