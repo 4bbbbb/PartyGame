@@ -214,6 +214,131 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
                     ""isPartOfComposite"": false
                 }
             ]
+        },
+        {
+            ""name"": ""ColorBlock"",
+            ""id"": ""eba7a927-4419-485c-9f9f-4e59d8e892b1"",
+            ""actions"": [
+                {
+                    ""name"": ""Move"",
+                    ""type"": ""Button"",
+                    ""id"": ""9b0fc246-2bff-44f0-87ec-c3446bca5851"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                },
+                {
+                    ""name"": ""Jump"",
+                    ""type"": ""Button"",
+                    ""id"": ""adf6ac6f-51cc-47cd-9e7b-e67942620019"",
+                    ""expectedControlType"": """",
+                    ""processors"": """",
+                    ""interactions"": """",
+                    ""initialStateCheck"": false
+                }
+            ],
+            ""bindings"": [
+                {
+                    ""name"": """",
+                    ""id"": ""cbec288f-20b3-4a84-afd9-45a9f2c9faec"",
+                    ""path"": ""<Keyboard>/w"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""a9e2b20f-a7ea-4a9d-8958-dce610b43d35"",
+                    ""path"": ""<Keyboard>/a"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""39242965-9dea-4c23-a314-e42d4d82f231"",
+                    ""path"": ""<Keyboard>/s"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""9cce5509-e311-4f56-b64c-e20aad7cac8a"",
+                    ""path"": ""<Keyboard>/d"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""c396e4ac-0781-4198-813c-29932a1cf845"",
+                    ""path"": ""<Keyboard>/upArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""0f2a250c-25de-400d-822a-fdb258a98a28"",
+                    ""path"": ""<Keyboard>/leftArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""ee650b35-3b2c-4e6b-b267-44188fe29b5b"",
+                    ""path"": ""<Keyboard>/downArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""10d7c409-77a2-48f6-943e-639b94772f13"",
+                    ""path"": ""<Keyboard>/rightArrow"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Move"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                },
+                {
+                    ""name"": """",
+                    ""id"": ""1805b15e-fbf4-4fcb-97ba-86b223f03670"",
+                    ""path"": ""<Keyboard>/space"",
+                    ""interactions"": """",
+                    ""processors"": """",
+                    ""groups"": """",
+                    ""action"": ""Jump"",
+                    ""isComposite"": false,
+                    ""isPartOfComposite"": false
+                }
+            ]
         }
     ],
     ""controlSchemes"": []
@@ -227,12 +352,17 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
         // Baseball
         m_Baseball = asset.FindActionMap("Baseball", throwIfNotFound: true);
         m_Baseball_Hit = m_Baseball.FindAction("Hit", throwIfNotFound: true);
+        // ColorBlock
+        m_ColorBlock = asset.FindActionMap("ColorBlock", throwIfNotFound: true);
+        m_ColorBlock_Move = m_ColorBlock.FindAction("Move", throwIfNotFound: true);
+        m_ColorBlock_Jump = m_ColorBlock.FindAction("Jump", throwIfNotFound: true);
     }
 
     ~@Player_InputActions()
     {
         UnityEngine.Debug.Assert(!m_WhackAMole.enabled, "This will cause a leak and performance issues, Player_InputActions.WhackAMole.Disable() has not been called.");
         UnityEngine.Debug.Assert(!m_Baseball.enabled, "This will cause a leak and performance issues, Player_InputActions.Baseball.Disable() has not been called.");
+        UnityEngine.Debug.Assert(!m_ColorBlock.enabled, "This will cause a leak and performance issues, Player_InputActions.ColorBlock.Disable() has not been called.");
     }
 
     /// <summary>
@@ -529,6 +659,113 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
     /// Provides a new <see cref="BaseballActions" /> instance referencing this action map.
     /// </summary>
     public BaseballActions @Baseball => new BaseballActions(this);
+
+    // ColorBlock
+    private readonly InputActionMap m_ColorBlock;
+    private List<IColorBlockActions> m_ColorBlockActionsCallbackInterfaces = new List<IColorBlockActions>();
+    private readonly InputAction m_ColorBlock_Move;
+    private readonly InputAction m_ColorBlock_Jump;
+    /// <summary>
+    /// Provides access to input actions defined in input action map "ColorBlock".
+    /// </summary>
+    public struct ColorBlockActions
+    {
+        private @Player_InputActions m_Wrapper;
+
+        /// <summary>
+        /// Construct a new instance of the input action map wrapper class.
+        /// </summary>
+        public ColorBlockActions(@Player_InputActions wrapper) { m_Wrapper = wrapper; }
+        /// <summary>
+        /// Provides access to the underlying input action "ColorBlock/Move".
+        /// </summary>
+        public InputAction @Move => m_Wrapper.m_ColorBlock_Move;
+        /// <summary>
+        /// Provides access to the underlying input action "ColorBlock/Jump".
+        /// </summary>
+        public InputAction @Jump => m_Wrapper.m_ColorBlock_Jump;
+        /// <summary>
+        /// Provides access to the underlying input action map instance.
+        /// </summary>
+        public InputActionMap Get() { return m_Wrapper.m_ColorBlock; }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Enable()" />
+        public void Enable() { Get().Enable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.Disable()" />
+        public void Disable() { Get().Disable(); }
+        /// <inheritdoc cref="UnityEngine.InputSystem.InputActionMap.enabled" />
+        public bool enabled => Get().enabled;
+        /// <summary>
+        /// Implicitly converts an <see ref="ColorBlockActions" /> to an <see ref="InputActionMap" /> instance.
+        /// </summary>
+        public static implicit operator InputActionMap(ColorBlockActions set) { return set.Get(); }
+        /// <summary>
+        /// Adds <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <param name="instance">Callback instance.</param>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c> or <paramref name="instance"/> have already been added this method does nothing.
+        /// </remarks>
+        /// <seealso cref="ColorBlockActions" />
+        public void AddCallbacks(IColorBlockActions instance)
+        {
+            if (instance == null || m_Wrapper.m_ColorBlockActionsCallbackInterfaces.Contains(instance)) return;
+            m_Wrapper.m_ColorBlockActionsCallbackInterfaces.Add(instance);
+            @Move.started += instance.OnMove;
+            @Move.performed += instance.OnMove;
+            @Move.canceled += instance.OnMove;
+            @Jump.started += instance.OnJump;
+            @Jump.performed += instance.OnJump;
+            @Jump.canceled += instance.OnJump;
+        }
+
+        /// <summary>
+        /// Removes <see cref="InputAction.started"/>, <see cref="InputAction.performed"/> and <see cref="InputAction.canceled"/> callbacks provided via <param cref="instance" /> on all input actions contained in this map.
+        /// </summary>
+        /// <remarks>
+        /// Calling this method when <paramref name="instance" /> have not previously been registered has no side-effects.
+        /// </remarks>
+        /// <seealso cref="ColorBlockActions" />
+        private void UnregisterCallbacks(IColorBlockActions instance)
+        {
+            @Move.started -= instance.OnMove;
+            @Move.performed -= instance.OnMove;
+            @Move.canceled -= instance.OnMove;
+            @Jump.started -= instance.OnJump;
+            @Jump.performed -= instance.OnJump;
+            @Jump.canceled -= instance.OnJump;
+        }
+
+        /// <summary>
+        /// Unregisters <param cref="instance" /> and unregisters all input action callbacks via <see cref="ColorBlockActions.UnregisterCallbacks(IColorBlockActions)" />.
+        /// </summary>
+        /// <seealso cref="ColorBlockActions.UnregisterCallbacks(IColorBlockActions)" />
+        public void RemoveCallbacks(IColorBlockActions instance)
+        {
+            if (m_Wrapper.m_ColorBlockActionsCallbackInterfaces.Remove(instance))
+                UnregisterCallbacks(instance);
+        }
+
+        /// <summary>
+        /// Replaces all existing callback instances and previously registered input action callbacks associated with them with callbacks provided via <param cref="instance" />.
+        /// </summary>
+        /// <remarks>
+        /// If <paramref name="instance" /> is <c>null</c>, calling this method will only unregister all existing callbacks but not register any new callbacks.
+        /// </remarks>
+        /// <seealso cref="ColorBlockActions.AddCallbacks(IColorBlockActions)" />
+        /// <seealso cref="ColorBlockActions.RemoveCallbacks(IColorBlockActions)" />
+        /// <seealso cref="ColorBlockActions.UnregisterCallbacks(IColorBlockActions)" />
+        public void SetCallbacks(IColorBlockActions instance)
+        {
+            foreach (var item in m_Wrapper.m_ColorBlockActionsCallbackInterfaces)
+                UnregisterCallbacks(item);
+            m_Wrapper.m_ColorBlockActionsCallbackInterfaces.Clear();
+            AddCallbacks(instance);
+        }
+    }
+    /// <summary>
+    /// Provides a new <see cref="ColorBlockActions" /> instance referencing this action map.
+    /// </summary>
+    public ColorBlockActions @ColorBlock => new ColorBlockActions(this);
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "WhackAMole" which allows adding and removing callbacks.
     /// </summary>
@@ -579,5 +816,27 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnHit(InputAction.CallbackContext context);
+    }
+    /// <summary>
+    /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "ColorBlock" which allows adding and removing callbacks.
+    /// </summary>
+    /// <seealso cref="ColorBlockActions.AddCallbacks(IColorBlockActions)" />
+    /// <seealso cref="ColorBlockActions.RemoveCallbacks(IColorBlockActions)" />
+    public interface IColorBlockActions
+    {
+        /// <summary>
+        /// Method invoked when associated input action "Move" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnMove(InputAction.CallbackContext context);
+        /// <summary>
+        /// Method invoked when associated input action "Jump" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// </summary>
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
+        /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
+        void OnJump(InputAction.CallbackContext context);
     }
 }
