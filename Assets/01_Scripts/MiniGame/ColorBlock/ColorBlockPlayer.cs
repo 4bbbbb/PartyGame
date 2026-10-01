@@ -26,8 +26,7 @@ public class ColorBlockPlayer : NetworkBehaviour
     [SerializeField] private LayerMask groundLayer;
 
     [Header("<< Camera >>")]
-    [SerializeField] private Transform cameraTarget;
-
+    [SerializeField] private Transform camPos;
 
     #region < Network >
 
@@ -44,8 +43,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private PlayerNetwork playerNetwork;
 
-    public void SetPlayerNetwork(
-        PlayerNetwork player)
+    public void SetPlayerNetwork(PlayerNetwork player)
     {
         if (!Object.HasStateAuthority)
             return;
@@ -117,9 +115,11 @@ public class ColorBlockPlayer : NetworkBehaviour
             $"PlayerRef = {Object.InputAuthority}"
         );
 
-        // 내 캐릭터만 InputActions 생성
+        // 내 캐릭터만 카메라 연결 + InputActions 생성
         if (Object.HasInputAuthority)
         {
+            SetupCamera();
+
             inputActions =
                 new Player_InputActions();
 
@@ -127,19 +127,47 @@ public class ColorBlockPlayer : NetworkBehaviour
 
             inputActions.ColorBlock.Jump.performed +=
                 OnJump;
-
-            ColorBlockCamera camera =
-                Camera.main != null
-                ? Camera.main.GetComponent<ColorBlockCamera>()
-                : null;
-
-            if (camera != null)
-            {
-                camera.SetTarget(cameraTarget);
-            }
         }
 
         UpdateJumpAnimation();
+    }
+
+    private void SetupCamera()
+    {
+        if (Camera.main == null)
+        {
+            Debug.LogWarning("Main Camera를 찾을 수 없습니다.");
+            return;
+        }
+
+        ColorBlockCamera cameraController =
+            Camera.main.GetComponent<ColorBlockCamera>();
+
+        if (cameraController == null)
+        {
+            Debug.LogError(
+                "Main Camera에 ColorBlockCamera가 없습니다."
+            );
+
+            return;
+        }
+
+        if (camPos == null)
+        {
+            Debug.LogError(
+                $"CameraTarget이 없습니다. " +
+                $"PlayerRef = {Object.InputAuthority}"
+            );
+
+            return;
+        }
+
+        cameraController.SetTarget(camPos);
+
+        Debug.Log(
+            $"[ColorBlockCamera] 내 카메라 연결 완료 : " +
+            $"{Object.InputAuthority}"
+        );
     }
 
     #endregion
@@ -228,12 +256,24 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (rb == null)
             return;
 
+        if (camPos == null)
+            return;
+
+        // 카메라가 바라보는 방향
+        Vector3 forward = camPos.forward;
+        Vector3 right = camPos.right;
+
+        // 수평 이동만 사용
+        forward.y = 0f;
+        right.y = 0f;
+
+        forward.Normalize();
+        right.Normalize();
+
+        // 카메라 기준 WASD
         Vector3 moveDirection =
-            new Vector3(
-                moveInput.x,
-                0f,
-                moveInput.y
-            );
+            forward * moveInput.y +
+            right * moveInput.x;
 
         moveDirection =
             Vector3.ClampMagnitude(
@@ -251,6 +291,7 @@ public class ColorBlockPlayer : NetworkBehaviour
                 velocity.z
             );
 
+        // 애니메이션
         float speed =
             moveDirection.magnitude;
 
@@ -262,12 +303,11 @@ public class ColorBlockPlayer : NetworkBehaviour
             );
         }
 
+        // 이동 방향을 바라봄
         if (moveDirection.sqrMagnitude > 0.01f)
         {
             Quaternion targetRotation =
-                Quaternion.LookRotation(
-                    moveDirection
-                );
+                Quaternion.LookRotation(moveDirection);
 
             transform.rotation =
                 Quaternion.Slerp(

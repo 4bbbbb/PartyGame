@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class ColorBlockCamera : MonoBehaviour
 {
-    [Header("<< Follow >>")]
-    [SerializeField] private float followSpeed = 15f;
-
     private Transform target;
 
     public void SetTarget(Transform targetTransform)
@@ -14,8 +11,8 @@ public class ColorBlockCamera : MonoBehaviour
         if (target == null)
             return;
 
-        // 처음에는 바로 위치 이동
         transform.position = target.position;
+        transform.rotation = target.rotation;
     }
 
     private void LateUpdate()
@@ -23,12 +20,10 @@ public class ColorBlockCamera : MonoBehaviour
         if (target == null)
             return;
 
-        // CameraTarget의 위치만 따라간다.
-        // 회전은 절대 따라가지 않는다.
-        transform.position = Vector3.Lerp(
-            transform.position,
+        // 플레이어와 완전히 같은 위치/회전으로 따라감
+        transform.SetPositionAndRotation(
             target.position,
-            followSpeed * Time.deltaTime
+            target.rotation
         );
     }
 }
