@@ -1,6 +1,7 @@
 ﻿using Fusion;
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class ColorBlockPlayer : NetworkBehaviour
 {
     [Header("<< Character >>")]
@@ -12,11 +13,12 @@ public class ColorBlockPlayer : NetworkBehaviour
     [Header("<< Move >>")]
     [SerializeField] private float moveSpeed = 5f;
 
+    [SerializeField] private float rotationSpeed = 10f;
+
     [Header("<< Jump >>")]
     [SerializeField] private float jumpForce = 7f;
 
-    [Header("<< Rotation >>")]
-    [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private float gravity = -20f;
 
     [Header("<< Ground Check >>")]
     [SerializeField] private Transform groundCheck;
@@ -27,6 +29,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     [Header("<< Camera >>")]
     [SerializeField] private Transform camPos;
+
 
     #region < Network >
 
@@ -72,13 +75,15 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     #region < Movement >
 
-    private Rigidbody rb;
+    private CharacterController controller;
 
     private Player_InputActions inputActions;
 
     private Vector2 moveInput;
 
     private bool jumpInput;
+
+    private float verticalVelocity;
 
     #endregion
 
@@ -95,11 +100,15 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void Awake()
     {
-        rb = GetComponent<Rigidbody>();
+        controller =
+            GetComponent<CharacterController>();
 
-        if (rb != null)
+        if (controller == null)
         {
-            rb.freezeRotation = true;
+            Debug.LogError(
+                "[ColorBlockPlayer] " +
+                "CharacterController가 없습니다."
+            );
         }
     }
 
@@ -127,6 +136,11 @@ public class ColorBlockPlayer : NetworkBehaviour
 
             inputActions.ColorBlock.Jump.performed +=
                 OnJump;
+
+            Debug.Log(
+                "[ColorBlockPlayer] " +
+                "InputActions 활성화 완료"
+            );
         }
 
         UpdateJumpAnimation();
@@ -136,7 +150,11 @@ public class ColorBlockPlayer : NetworkBehaviour
     {
         if (Camera.main == null)
         {
-            Debug.LogWarning("Main Camera를 찾을 수 없습니다.");
+            Debug.LogWarning(
+                "[ColorBlockPlayer] " +
+                "Main Camera를 찾을 수 없습니다."
+            );
+
             return;
         }
 
@@ -146,6 +164,7 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (cameraController == null)
         {
             Debug.LogError(
+                "[ColorBlockPlayer] " +
                 "Main Camera에 ColorBlockCamera가 없습니다."
             );
 
@@ -155,7 +174,7 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (camPos == null)
         {
             Debug.LogError(
-                $"CameraTarget이 없습니다. " +
+                $"[ColorBlockPlayer] CamPos가 없습니다. " +
                 $"PlayerRef = {Object.InputAuthority}"
             );
 
@@ -165,8 +184,8 @@ public class ColorBlockPlayer : NetworkBehaviour
         cameraController.SetTarget(camPos);
 
         Debug.Log(
-            $"[ColorBlockCamera] 내 카메라 연결 완료 : " +
-            $"{Object.InputAuthority}"
+            $"[ColorBlockPlayer] " +
+            $"내 카메라 연결 완료 : {Object.InputAuthority}"
         );
     }
 
@@ -237,13 +256,8 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
 
         Move();
-
-        if (jumpInput)
-        {
-            Jump();
-
-            jumpInput = false;
-        }
+        HandleJump();
+        ApplyGravity();
     }
 
     #endregion
@@ -253,27 +267,13 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void Move()
     {
-        if (rb == null)
+        if (controller == null)
             return;
 
-        if (camPos == null)
-            return;
-
-        // 카메라가 바라보는 방향
-        Vector3 forward = camPos.forward;
-        Vector3 right = camPos.right;
-
-        // 수평 이동만 사용
-        forward.y = 0f;
-        right.y = 0f;
-
-        forward.Normalize();
-        right.Normalize();
-
-        // 카메라 기준 WASD
+        // 플레이어가 바라보는 방향 기준 WASD
         Vector3 moveDirection =
-            forward * moveInput.y +
-            right * moveInput.x;
+            transform.forward * moveInput.y +
+            transform.right * moveInput.x;
 
         moveDirection =
             Vector3.ClampMagnitude(
@@ -281,15 +281,20 @@ public class ColorBlockPlayer : NetworkBehaviour
                 1f
             );
 
-        Vector3 velocity =
+        // 실제 이동
+        Vector3 horizontalMovement =
             moveDirection * moveSpeed;
 
-        rb.linearVelocity =
+        Vector3 movement =
             new Vector3(
-                velocity.x,
-                rb.linearVelocity.y,
-                velocity.z
+                horizontalMovement.x,
+                verticalVelocity,
+                horizontalMovement.z
             );
+
+        controller.Move(
+            movement * Runner.DeltaTime
+        );
 
         // 애니메이션
         float speed =
@@ -304,17 +309,18 @@ public class ColorBlockPlayer : NetworkBehaviour
         }
 
         // 이동 방향을 바라봄
-        if (moveDirection.sqrMagnitude > 0.01f)
+        if (moveDirection.sqrMagnitude > 0.01f && moveInput.y >= 0f)
         {
             Quaternion targetRotation =
-                Quaternion.LookRotation(moveDirection);
+                Quaternion.LookRotation(
+                    moveDirection
+                );
 
             transform.rotation =
                 Quaternion.Slerp(
                     transform.rotation,
                     targetRotation,
-                    rotationSpeed *
-                    Runner.DeltaTime
+                    rotationSpeed * Runner.DeltaTime
                 );
         }
     }
@@ -324,31 +330,57 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     #region < Jump >
 
-    private void Jump()
+    private void HandleJump()
     {
+        if (controller == null)
+            return;
+
+        if (!controller.isGrounded)
+            return;
+
+        // 바닥에 있을 때 아래로 계속 떨어지는 것을 방지
+        if (verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+        }
+
+        if (!jumpInput)
+            return;
+
         if (IsJumping)
             return;
 
-        if (!IsGrounded())
-            return;
+        verticalVelocity = jumpForce;
 
         IsJumping = true;
 
-        rb.linearVelocity =
-            new Vector3(
-                rb.linearVelocity.x,
-                0f,
-                rb.linearVelocity.z
-            );
-
-        rb.AddForce(
-            Vector3.up * jumpForce,
-            ForceMode.Impulse
-        );
+        jumpInput = false;
 
         if (animator != null)
         {
             animator.SetTrigger("Jump");
+        }
+    }
+
+    private void ApplyGravity()
+    {
+        if (controller == null)
+            return;
+
+        // 점프 중 또는 공중
+        verticalVelocity +=
+            gravity * Runner.DeltaTime;
+
+        // 착지했으면 점프 상태 종료
+        if (controller.isGrounded &&
+            verticalVelocity < 0f)
+        {
+            verticalVelocity = -2f;
+
+            if (IsJumping)
+            {
+                IsJumping = false;
+            }
         }
     }
 
@@ -377,23 +409,6 @@ public class ColorBlockPlayer : NetworkBehaviour
     private void OnJumpingChanged()
     {
         UpdateJumpAnimation();
-    }
-
-    #endregion
-
-
-    #region < Ground >
-
-    private bool IsGrounded()
-    {
-        if (groundCheck == null)
-            return false;
-
-        return Physics.CheckSphere(
-            groundCheck.position,
-            groundCheckRadius,
-            groundLayer
-        );
     }
 
     #endregion
