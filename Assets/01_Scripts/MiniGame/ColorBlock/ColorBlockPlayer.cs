@@ -110,6 +110,9 @@ public class ColorBlockPlayer : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnJumpingChanged))]
     private NetworkBool IsJumping { get; set; }
 
+    [Networked, OnChangedRender(nameof(OnSpeedChanged))]
+    private float NetworkSpeed { get; set; }
+
     #endregion
 
 
@@ -164,6 +167,7 @@ public class ColorBlockPlayer : NetworkBehaviour
         }
 
         UpdateJumpAnimation();
+        UpdateSpeedAnimation();
     }
 
     private void SetupCamera()
@@ -209,6 +213,7 @@ public class ColorBlockPlayer : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Character >
 
@@ -299,6 +304,25 @@ public class ColorBlockPlayer : NetworkBehaviour
         moveInput = inputActions.ColorBlock.Move.ReadValue<Vector2>();
     }
 
+    public Vector2 GetMoveInput()
+    {
+        if (!Object.HasInputAuthority)
+            return Vector2.zero;
+
+        return moveInput;
+    }
+
+    public bool GetJumpInput()
+    {
+        if (!Object.HasInputAuthority)
+            return false;
+
+        bool value = jumpInput;
+        jumpInput = false;
+
+        return value;
+    }
+
     private void OnJump(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (!Object.HasInputAuthority)
@@ -317,8 +341,22 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (!Object.HasInputAuthority)
+        if (!Object.HasStateAuthority)
             return;
+
+        if (GetInput(out ColorBlockInputData inputData))
+        {
+            moveInput = inputData.Move;
+
+            if (inputData.Jump)
+            {
+                jumpInput = true;
+            }
+        }
+        else
+        {
+            moveInput = Vector2.zero;
+        }
 
         Move();
         HandleJump();
@@ -332,51 +370,37 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void Move()
     {
-        if (controller == null)
-            return;
+        if (controller == null) return;
 
-        // 플레이어가 바라보는 방향 기준 WASD
-        Vector3 moveDirection = transform.forward * moveInput.y +  transform.right * moveInput.x;
+        Vector3 moveDirection =
+            transform.forward * moveInput.y +
+            transform.right * moveInput.x;
 
         moveDirection = Vector3.ClampMagnitude(moveDirection, 1f);
 
-        // 실제 이동
         Vector3 horizontalMovement = moveDirection * moveSpeed;
 
-        Vector3 movement =
-            new Vector3(
-                horizontalMovement.x,
-                verticalVelocity,
-                horizontalMovement.z
-            );
+        Vector3 movement = new Vector3(
+            horizontalMovement.x,
+            verticalVelocity,
+            horizontalMovement.z
+        );
 
         controller.Move(movement * Runner.DeltaTime);
 
-        // 애니메이션
         float speed = moveDirection.magnitude;
 
-        if (animator != null)
-        {
-            animator.SetFloat(
-                "Speed",
-                speed
-            );
-        }
+        NetworkSpeed = speed;
 
-        // 이동 방향을 바라봄
         if (moveDirection.sqrMagnitude > 0.01f && moveInput.y >= 0f)
         {
-            Quaternion targetRotation =
-                Quaternion.LookRotation(
-                    moveDirection
-                );
+            Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
 
-            transform.rotation =
-                Quaternion.Slerp(
-                    transform.rotation,
-                    targetRotation,
-                    rotationSpeed * Runner.DeltaTime
-                );
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                targetRotation,
+                rotationSpeed * Runner.DeltaTime
+            );
         }
     }
 
@@ -445,6 +469,8 @@ public class ColorBlockPlayer : NetworkBehaviour
         IsJumping = false;
     }
 
+
+
     #endregion
 
 
@@ -458,10 +484,26 @@ public class ColorBlockPlayer : NetworkBehaviour
         }
     }
 
+    private void UpdateSpeedAnimation()
+    {
+        if (animator == null)
+            return;
+
+        animator.SetFloat("Speed", NetworkSpeed);
+    }
+
+
     private void OnJumpingChanged()
     {
         UpdateJumpAnimation();
     }
+
+    private void OnSpeedChanged()
+    {
+        UpdateSpeedAnimation();
+    }
+
+
 
     #endregion
 }

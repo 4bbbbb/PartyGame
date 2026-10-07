@@ -26,7 +26,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private const string ROOM_NAME = "LobbyRoom";
 
-    private NetworkRunner runner;    
+    private NetworkRunner runner;   
 
     public NetworkRunner GetRunner()
     {
@@ -61,6 +61,9 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
 
         runner = gameObject.AddComponent<NetworkRunner>();
+        ////////////////////////
+        ////////////////////////
+        ////////////////////////
         runner.ProvideInput = false;
 
         runner.AddCallbacks(this);
@@ -207,19 +210,14 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         this.runner = null;
     }
 
-    public void OnDisconnectedFromServer(
-        NetworkRunner runner,
-        NetDisconnectReason reason)
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason)
     {
         Debug.Log("===== OnDisconnectedFromServer »£√‚ =====");
         Debug.Log($"Disconnect Reason : {reason}");
     }
 
 
-    public void OnConnectFailed(
-        NetworkRunner runner,
-        NetAddress remoteAddress,
-        NetConnectFailedReason reason)
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason)
     {
         Debug.LogError($"Connect Failed : {reason}");
     }
@@ -232,7 +230,31 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         request.Accept();
     }
 
-    public void OnInput(NetworkRunner runner, NetworkInput input){}
+    public void OnInput(NetworkRunner runner, NetworkInput input)
+    {
+        if (!runner.ProvideInput)
+            return;
+
+        ColorBlockManager colorBlockManager = FindFirstObjectByType<ColorBlockManager>();
+
+        if (colorBlockManager == null)
+            return;
+
+        ColorBlockPlayer localPlayer = colorBlockManager.GetLocalPlayer();
+
+        if (localPlayer == null)
+            return;
+
+        ColorBlockInputData data = new ColorBlockInputData
+        {
+            Move = localPlayer.GetMoveInput(),
+            Jump = localPlayer.GetJumpInput()
+        };
+
+        input.Set(data);
+
+        Debug.Log($"[NetworkManager OnInput] Move={data.Move}, Jump={data.Jump}");
+    }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player,NetworkInput input)
     {

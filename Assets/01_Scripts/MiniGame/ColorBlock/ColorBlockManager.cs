@@ -45,6 +45,18 @@ public class ColorBlockManager : NetworkBehaviour
     {
         Debug.Log("===== ColorBlockManager Spawned =====");
 
+        // 모든 플레이어가 ColorBlock 입력을 제공할 수 있도록 설정
+        if (Runner != null)
+        {
+            Runner.ProvideInput = true;
+
+            Debug.Log(
+                $"[ColorBlockManager] ProvideInput = true | " +
+                $"LocalPlayer = {Runner.LocalPlayer}"
+            );
+        }
+
+        // 아래부터는 기존대로 State Authority만 게임을 진행
         if (!Object.HasStateAuthority)
         {
             return;
@@ -80,6 +92,31 @@ public class ColorBlockManager : NetworkBehaviour
         StartGame();
 
         isInitializing = false;
+    }
+
+    #endregion
+
+
+    #region < Network Input >
+
+    private void EnableColorBlockInput()
+    {
+        if (Runner == null)
+            return;
+
+        Runner.ProvideInput = true;
+
+        Debug.Log("[ColorBlockManager] ColorBlock Network Input 활성화");
+    }
+
+    private void DisableColorBlockInput()
+    {
+        if (Runner == null)
+            return;
+
+        Runner.ProvideInput = false;
+
+        Debug.Log("[ColorBlockManager] ColorBlock Network Input 비활성화");
     }
 
     #endregion
@@ -128,6 +165,25 @@ public class ColorBlockManager : NetworkBehaviour
         return players
             .OrderBy(player => player.PlayerRef.RawEncoded)
             .ToList();
+    }
+
+    public ColorBlockPlayer GetLocalPlayer()
+    {
+        if (Runner == null)
+            return null;
+
+        ColorBlockPlayer[] players =
+            FindObjectsByType<ColorBlockPlayer>(FindObjectsSortMode.None);
+
+        foreach (ColorBlockPlayer player in players)
+        {
+            if (player.Object != null && player.Object.HasInputAuthority)
+            {
+                return player;
+            }
+        }
+
+        return null;
     }
 
     #endregion
@@ -274,6 +330,8 @@ public class ColorBlockManager : NetworkBehaviour
     {
         isGameRunning = true;
         roundIndex = 0;
+
+        EnableColorBlockInput();
 
         RPC_StartCountdown();
 
@@ -516,4 +574,6 @@ public class ColorBlockManager : NetworkBehaviour
     }
 
     #endregion
+
+
 }
