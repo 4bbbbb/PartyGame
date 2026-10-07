@@ -9,7 +9,7 @@ public class ColorBlock : NetworkBehaviour
     [SerializeField] private BlockLetter blockLetter;
 
     [Header("<< Fall >>")]
-    [SerializeField] private float fallDistance = 5f;
+    [SerializeField] private float fallDistance = 7f;
     [SerializeField] private float fallDuration = 0.2f;
     [SerializeField] private float stayDuration = 1f;
     [SerializeField] private float returnDuration = 0.5f;
@@ -20,14 +20,24 @@ public class ColorBlock : NetworkBehaviour
     private Vector3 startPosition;
     private bool isFalling;
 
-
     private void Awake()
     {
         startPosition = transform.position;
     }
 
 
+    #region < Fall >
+
     public void Fall()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        RPC_Fall();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_Fall()
     {
         if (isFalling)
             return;
@@ -35,16 +45,13 @@ public class ColorBlock : NetworkBehaviour
         StartCoroutine(FallCoroutine());
     }
 
-
     private IEnumerator FallCoroutine()
     {
         isFalling = true;
 
         Vector3 start = transform.position;
 
-        Vector3 fallPosition =
-            start + Vector3.down * fallDistance;
-
+        Vector3 fallPosition = start + Vector3.down * fallDistance;
 
         // ========================================
         // 1. 0.2초 동안 아래로 내려가기
@@ -65,13 +72,11 @@ public class ColorBlock : NetworkBehaviour
 
         transform.position = fallPosition;
 
-
         // ========================================
         // 2. 내려간 상태로 1초 유지
         // ========================================
 
         yield return new WaitForSeconds(stayDuration);
-
 
         // ========================================
         // 3. 0.5초 동안 원래 위치로 올라오기
@@ -99,4 +104,6 @@ public class ColorBlock : NetworkBehaviour
 
         isFalling = false;
     }
+
+    #endregion
 }

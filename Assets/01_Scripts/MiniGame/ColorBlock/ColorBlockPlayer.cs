@@ -6,17 +6,21 @@ public class ColorBlockPlayer : NetworkBehaviour
 {
     [Header("<< Character >>")]
     [SerializeField] private Transform characterModel;
+    [SerializeField] private Renderer characterRenderer;
+
+    [Header("<< Character Database >>")]
+    [SerializeField] private CharacterDatabase characterDatabase;
 
     [Header("<< Animation >>")]
     [SerializeField] private Animator animator;
 
     [Header("<< Move >>")]
-    [SerializeField] private float moveSpeed = 5f;
+    [SerializeField] private float moveSpeed = 10f;
 
-    [SerializeField] private float rotationSpeed = 10f;
+    [SerializeField] private float rotationSpeed = 3f;
 
     [Header("<< Jump >>")]
-    [SerializeField] private float jumpForce = 7f;
+    [SerializeField] private float jumpForce = 8f;
 
     [SerializeField] private float gravity = -20f;
 
@@ -36,8 +40,8 @@ public class ColorBlockPlayer : NetworkBehaviour
     [Networked]
     public int PlayerIndex { get; private set; }
 
-    [Networked]
-    private int CharacterIndex { get; set; }
+    [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
+    public int CharacterIndex { get; private set; } = -1;
 
     #endregion
 
@@ -45,6 +49,7 @@ public class ColorBlockPlayer : NetworkBehaviour
     #region < Player Network >
 
     private PlayerNetwork playerNetwork;
+    public PlayerNetwork PlayerNetwork => playerNetwork;
 
     public void SetPlayerNetwork(PlayerNetwork player)
     {
@@ -60,6 +65,12 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
 
         PlayerIndex = index;
+
+        Debug.Log(
+           $"[ColorBlockPlayer SetPlayerIndex] " +
+           $"Object={Object.Id}, " +
+           $"PlayerIndex={PlayerIndex}"
+       );
     }
 
     public void SetCharacterIndex(int index)
@@ -68,6 +79,12 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
 
         CharacterIndex = index;
+
+        Debug.Log(
+            $"[ColorBlockPlayer SetCharacterIndex] " +
+            $"Object={Object.Id}, " +
+            $"CharacterIndex={CharacterIndex}"
+        );
     }
 
     #endregion
@@ -100,8 +117,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void Awake()
     {
-        controller =
-            GetComponent<CharacterController>();
+        controller = GetComponent<CharacterController>();
 
         if (controller == null)
         {
@@ -121,21 +137,25 @@ public class ColorBlockPlayer : NetworkBehaviour
     {
         Debug.Log(
             $"[ColorBlockPlayer Spawned] " +
-            $"PlayerRef = {Object.InputAuthority}"
+            $"Object={Object.Id}, " +
+            $"InputAuthority={Object.InputAuthority}, " +
+            $"HasInputAuthority={Object.HasInputAuthority}, " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"CharacterIndex={CharacterIndex}"
         );
+
+        ApplyCharacter();
 
         // 내 캐릭터만 카메라 연결 + InputActions 생성
         if (Object.HasInputAuthority)
         {
             SetupCamera();
 
-            inputActions =
-                new Player_InputActions();
+            inputActions = new Player_InputActions();
 
             inputActions.ColorBlock.Enable();
 
-            inputActions.ColorBlock.Jump.performed +=
-                OnJump;
+            inputActions.ColorBlock.Jump.performed += OnJump;
 
             Debug.Log(
                 "[ColorBlockPlayer] " +
@@ -158,8 +178,7 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
         }
 
-        ColorBlockCamera cameraController =
-            Camera.main.GetComponent<ColorBlockCamera>();
+        ColorBlockCamera cameraController = Camera.main.GetComponent<ColorBlockCamera>();
 
         if (cameraController == null)
         {
@@ -191,18 +210,66 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     #endregion
 
+    #region < Character >
+
+    private void OnCharacterIndexChanged()
+    {
+        ApplyCharacter();
+    }
+
+    private void ApplyCharacter()
+    {
+        if (characterDatabase == null)
+        {
+            Debug.LogError(
+                "[ColorBlockPlayer] " +
+                "CharacterDatabase가 없습니다."
+            );
+
+            return;
+        }
+
+        if (CharacterIndex < 0 || CharacterIndex >= characterDatabase.characters.Length)       
+            return;
+       
+
+        CharacterData characterData = characterDatabase.characters[CharacterIndex];
+
+        if (characterData == null)
+            return;
+
+        if (characterRenderer == null)
+            return;
+
+        Material[] materials = characterRenderer.materials;
+
+        if (materials.Length < 2)
+            return;
+
+        materials[0] = characterData.characterMaterial;
+
+        characterRenderer.materials = materials;
+
+        Debug.Log(
+            $"[ColorBlockPlayer] " +
+            $"캐릭터 적용 완료 | " +
+            $"PlayerIndex={PlayerIndex}, " +
+            $"CharacterIndex={CharacterIndex}, " +
+            $"CharacterName={characterData.characterName}"
+        );
+    }
+
+    #endregion
+
 
     #region < Despawn >
 
-    public override void Despawned(
-        NetworkRunner runner,
-        bool hasState)
+    public override void Despawned(NetworkRunner runner, bool hasState)
     {
         if (inputActions == null)
             return;
 
-        inputActions.ColorBlock.Jump.performed -=
-            OnJump;
+        inputActions.ColorBlock.Jump.performed -= OnJump;
 
         inputActions.ColorBlock.Disable();
 
@@ -229,12 +296,10 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (inputActions == null)
             return;
 
-        moveInput =
-            inputActions.ColorBlock.Move.ReadValue<Vector2>();
+        moveInput = inputActions.ColorBlock.Move.ReadValue<Vector2>();
     }
 
-    private void OnJump(
-        UnityEngine.InputSystem.InputAction.CallbackContext context)
+    private void OnJump(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
         if (!Object.HasInputAuthority)
             return;
@@ -271,19 +336,12 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
 
         // 플레이어가 바라보는 방향 기준 WASD
-        Vector3 moveDirection =
-            transform.forward * moveInput.y +
-            transform.right * moveInput.x;
+        Vector3 moveDirection = transform.forward * moveInput.y +  transform.right * moveInput.x;
 
-        moveDirection =
-            Vector3.ClampMagnitude(
-                moveDirection,
-                1f
-            );
+        moveDirection = Vector3.ClampMagnitude(moveDirection, 1f);
 
         // 실제 이동
-        Vector3 horizontalMovement =
-            moveDirection * moveSpeed;
+        Vector3 horizontalMovement = moveDirection * moveSpeed;
 
         Vector3 movement =
             new Vector3(
@@ -292,13 +350,10 @@ public class ColorBlockPlayer : NetworkBehaviour
                 horizontalMovement.z
             );
 
-        controller.Move(
-            movement * Runner.DeltaTime
-        );
+        controller.Move(movement * Runner.DeltaTime);
 
         // 애니메이션
-        float speed =
-            moveDirection.magnitude;
+        float speed = moveDirection.magnitude;
 
         if (animator != null)
         {
@@ -368,12 +423,10 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
 
         // 점프 중 또는 공중
-        verticalVelocity +=
-            gravity * Runner.DeltaTime;
+        verticalVelocity += gravity * Runner.DeltaTime;
 
         // 착지했으면 점프 상태 종료
-        if (controller.isGrounded &&
-            verticalVelocity < 0f)
+        if (controller.isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = -2f;
 
@@ -399,8 +452,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void UpdateJumpAnimation()
     {
-        if (IsJumping &&
-            animator != null)
+        if (IsJumping && animator != null)
         {
             animator.SetTrigger("Jump");
         }

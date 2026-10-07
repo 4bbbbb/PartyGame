@@ -224,6 +224,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   characterModel: {fileID: 4911259889532881060}
+  characterRenderer: {fileID: 6923566071672863272}
+  characterDatabase: {fileID: 11400000, guid: eb93ae62e79069a49bc6f1b16311cd75, type: 2}
   animator: {fileID: 1353437300167971550}
   moveSpeed: 10
   rotationSpeed: 3
@@ -236,6 +238,7 @@ MonoBehaviour:
     m_Bits: 64
   camPos: {fileID: 5343531342232103059}
   _PlayerIndex: 0
+  _CharacterIndex: -1
 --- !u!114 &1099635807633328901
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -264,7 +267,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5720587980726014494}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
   m_Name: 
@@ -322,3 +325,8 @@ CharacterController:
   m_SkinWidth: 0.08
   m_MinMoveDistance: 0.001
   m_Center: {x: 0, y: 1, z: 0}
+--- !u!137 &6923566071672863272 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -6649697836553743001, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
+  m_PrefabInstance: {fileID: 4873727832658161487}
+  m_PrefabAsset: {fileID: 0}

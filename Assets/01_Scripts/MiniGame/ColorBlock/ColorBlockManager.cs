@@ -15,7 +15,6 @@ public class ColorBlockManager : NetworkBehaviour
 
     [Header("<< Round >>")]
     [SerializeField] private float moveTime = 3f;
-    [SerializeField] private float roundEndDelay = 0f;
 
     [Header("<< Monitor >>")]
     [SerializeField] private MonitorUI monitorUI;
@@ -31,8 +30,7 @@ public class ColorBlockManager : NetworkBehaviour
 
     private readonly Dictionary<PlayerRef, ColorBlockPlayer> spawnedPlayers = new();
 
-    private List<BlockCondition> currentConditions =
-        new List<BlockCondition>();
+    private List<BlockCondition> currentConditions =  new List<BlockCondition>();
 
     private int roundIndex = 0;
     private bool isGameRunning = false;
@@ -100,8 +98,7 @@ public class ColorBlockManager : NetworkBehaviour
 
         foreach (PlayerRef playerRef in Runner.ActivePlayers)
         {
-            NetworkObject playerObject =
-                Runner.GetPlayerObject(playerRef);
+            NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
 
             if (playerObject == null)
             {
@@ -113,8 +110,7 @@ public class ColorBlockManager : NetworkBehaviour
                 continue;
             }
 
-            PlayerNetwork playerNetwork =
-                playerObject.GetComponent<PlayerNetwork>();
+            PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
             if (playerNetwork == null)
             {
@@ -143,25 +139,20 @@ public class ColorBlockManager : NetworkBehaviour
     {
         if (Runner == null)
         {
-            Debug.LogError("❌ Runner가 없습니다.");
+            Debug.LogError(" Runner가 없습니다.");
             return;
         }
 
         if (!colorBlockPlayerPrefab.IsValid)
         {
-            Debug.LogError(
-                "❌ ColorBlockPlayer Prefab이 연결되지 않았습니다."
-            );
+            Debug.LogError(" ColorBlockPlayer Prefab이 연결되지 않았습니다.");
 
             return;
         }
 
-        if (playerSpawnPoints == null ||
-            playerSpawnPoints.Length == 0)
+        if (playerSpawnPoints == null || playerSpawnPoints.Length < 4)
         {
-            Debug.LogError(
-                "❌ ColorBlock Player Spawn Point가 없습니다."
-            );
+            Debug.LogError(" ColorBlock Player Spawn Point가 4개 필요합니다.");
 
             return;
         }
@@ -170,18 +161,12 @@ public class ColorBlockManager : NetworkBehaviour
 
         if (players.Count == 0)
         {
-            Debug.LogError(
-                "❌ PlayerNetwork를 하나도 찾지 못했습니다."
-            );
+            Debug.LogError(" PlayerNetwork를 하나도 찾지 못했습니다.");
 
             return;
         }
 
-        int spawnCount =
-            Mathf.Min(
-                players.Count,
-                playerSpawnPoints.Length
-            );
+        int spawnCount = Mathf.Min(players.Count, playerSpawnPoints.Length);
 
         for (int i = 0; i < spawnCount; i++)
         {
@@ -194,69 +179,78 @@ public class ColorBlockManager : NetworkBehaviour
 
             PlayerRef playerRef = player.PlayerRef;
 
-            // 이미 생성되어 있으면 중복 생성하지 않음
+            // 같은 PlayerRef로 이미 생성되어 있으면 중복 생성하지 않음
             if (spawnedPlayers.ContainsKey(playerRef))
             {
                 continue;
             }
 
-            Transform spawnPoint =
-                playerSpawnPoints[i];
+            Transform spawnPoint = playerSpawnPoints[i];
 
             Debug.Log(
-                $"===== ColorBlock Player Spawn =====\n" +
-                $"Index : {i}\n" +
-                $"PlayerRef : {playerRef}\n" +
-                $"Nickname : {player.Nickname}\n" +
-                $"CharacterIndex : {player.CharacterIndex}\n" +
-                $"Position : {spawnPoint.position}"
+                $"===== ColorBlock Spawn =====\n" +
+                $"Index = {i}\n" +
+                $"PlayerRef = {playerRef}\n" +
+                $"Nickname = {player.Nickname}\n" +
+                $"CharacterIndex = {player.CharacterIndex}"
             );
 
-            NetworkObject playerObject =
-                Runner.Spawn(
-                    colorBlockPlayerPrefab,
-                    spawnPoint.position,
-                    spawnPoint.rotation,
-                    playerRef
-                );
+            // --------------------------------------------------
+            // ColorBlockPlayer 네트워크 생성
+            // --------------------------------------------------
+
+            NetworkObject playerObject = Runner.Spawn(
+                colorBlockPlayerPrefab,
+                spawnPoint.position,
+                spawnPoint.rotation,
+                playerRef
+            );
 
             if (playerObject == null)
             {
-                Debug.LogError(
-                    $"❌ ColorBlockPlayer Spawn 실패 : {playerRef}"
-                );
+                Debug.LogError($" ColorBlockPlayer Spawn 실패 : {playerRef}");
 
                 continue;
             }
 
-            ColorBlockPlayer colorBlockPlayer =
-                playerObject.GetComponent<ColorBlockPlayer>();
+            ColorBlockPlayer colorBlockPlayer = playerObject.GetComponent<ColorBlockPlayer>();
 
             if (colorBlockPlayer == null)
             {
                 Debug.LogError(
-                    "❌ ColorBlockPlayer 프리팹에 " +
-                    "ColorBlockPlayer 컴포넌트가 없습니다."
+                    " ColorBlockPlayer 프리팹에 " +
+                    " ColorBlockPlayer 컴포넌트가 없습니다."
                 );
 
                 Runner.Despawn(playerObject);
+
                 continue;
             }
 
-            // 플레이어 순서
+            // --------------------------------------------------
+            // Player 정보 연결
+            // --------------------------------------------------
+
+            // 1. 플레이어 순서
             colorBlockPlayer.SetPlayerIndex(i);
 
-            // Lobby PlayerNetwork 연결
+            // 2. Lobby PlayerNetwork 연결
             colorBlockPlayer.SetPlayerNetwork(player);
 
-            // 캐릭터 번호 전달
-            colorBlockPlayer.SetCharacterIndex(
-                player.CharacterIndex
-            );
+            // 3. 캐릭터 번호 전달
+            colorBlockPlayer.SetCharacterIndex(player.CharacterIndex);
 
-            spawnedPlayers.Add(
-                playerRef,
-                colorBlockPlayer
+            // --------------------------------------------------
+            // 등록
+            // --------------------------------------------------
+
+            spawnedPlayers.Add(playerRef, colorBlockPlayer);
+
+            Debug.Log(
+                $" ColorBlockPlayer 생성 완료\n" +
+                $"PlayerRef = {playerRef}\n" +
+                $"PlayerIndex = {i}\n" +
+                $"CharacterIndex = {player.CharacterIndex}"
             );
         }
     }
@@ -281,51 +275,121 @@ public class ColorBlockManager : NetworkBehaviour
         isGameRunning = true;
         roundIndex = 0;
 
-        if (countdownText != null)
-        {
-            countdownText.gameObject.SetActive(true);
+        RPC_StartCountdown();
 
-            countdownText.text = "3";
-            yield return new WaitForSeconds(countdownTime);
-
-            countdownText.text = "2";
-            yield return new WaitForSeconds(countdownTime);
-
-            countdownText.text = "1";
-            yield return new WaitForSeconds(countdownTime);
-
-            countdownText.text = "START";
-            yield return new WaitForSeconds(1.5f);
-
-            countdownText.gameObject.SetActive(false);
-        }
+        yield return new WaitForSeconds(countdownTime * 3f + 1.5f);
 
         while (true)
         {
-            int conditionCount =
-                GetConditionCount();
+            int conditionCount = GetConditionCount();
 
-            currentConditions =
-                GetRandomConditions(conditionCount);
+            currentConditions = GetRandomConditions(conditionCount);
 
-            monitorUI.ShowConditions(
-                currentConditions
-            );
+            ShowConditionsToAll(currentConditions);
 
             yield return new WaitForSeconds(moveTime);
 
             CheckBlocks();
 
             yield return new WaitForSeconds(1.7f);
+            
+        }
+    }
 
-            if (roundEndDelay > 0f)
-            {
-                yield return new WaitForSeconds(
-                    roundEndDelay
-                );
-            }
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_StartCountdown()
+    {
+        StartCoroutine(CountdownCoroutine());
+    }
 
-            roundIndex++;
+    private IEnumerator CountdownCoroutine()
+    {
+        if (countdownText == null)
+            yield break;
+
+        countdownText.gameObject.SetActive(true);
+
+        countdownText.text = "3";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "2";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "1";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "START";
+        yield return new WaitForSeconds(1.5f);
+
+        countdownText.gameObject.SetActive(false);
+    }
+
+    private void ShowConditionsToAll(List<BlockCondition> conditions)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        int count = conditions.Count;
+
+        int type1 = count > 0 ? (int)conditions[0].type : 0;
+        int group1 = count > 0 ? conditions[0].groupIndex : 0;
+
+        int type2 = count > 1 ? (int)conditions[1].type : 0;
+        int group2 = count > 1 ? conditions[1].groupIndex : 0;
+
+        int type3 = count > 2 ? (int)conditions[2].type : 0;
+        int group3 = count > 2 ? conditions[2].groupIndex : 0;
+
+        RPC_ShowConditions(
+            count,
+            type1, group1,
+            type2, group2,
+            type3, group3
+        );
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowConditions(
+        int count,
+        int type1, int group1,
+        int type2, int group2,
+        int type3, int group3)
+    {
+        List<BlockCondition> conditions = new List<BlockCondition>();
+
+        if (count >= 1)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type1,
+                    group1
+                )
+            );
+        }
+
+        if (count >= 2)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type2,
+                    group2
+                )
+            );
+        }
+
+        if (count >= 3)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type3,
+                    group3
+                )
+            );
+        }
+
+        if (monitorUI != null)
+        {
+            monitorUI.ShowConditions(conditions);
         }
     }
 
@@ -354,11 +418,9 @@ public class ColorBlockManager : NetworkBehaviour
         return Random.Range(1, 4);
     }
 
-    private List<BlockCondition> GetRandomConditions(
-        int conditionCount)
+    private List<BlockCondition> GetRandomConditions(int conditionCount)
     {
-        List<BlockCondition> conditions =
-            new List<BlockCondition>();
+        List<BlockCondition> conditions = new List<BlockCondition>();
 
         List<int> groups = new List<int>()
         {
@@ -368,33 +430,25 @@ public class ColorBlockManager : NetworkBehaviour
         // 그룹 섞기
         for (int i = 0; i < groups.Count; i++)
         {
-            int randomIndex =
-                Random.Range(i, groups.Count);
+            int randomIndex =  Random.Range(i, groups.Count);
 
             int temp = groups[i];
 
-            groups[i] =
-                groups[randomIndex];
+            groups[i] = groups[randomIndex];
 
-            groups[randomIndex] =
-                temp;
+            groups[randomIndex] = temp;
         }
 
         for (int i = 0; i < conditionCount; i++)
         {
-            int groupIndex =
-                groups[i];
+            int groupIndex = groups[i];
 
             ConditionType type =
                 Random.value < 0.5f
                 ? ConditionType.Color
                 : ConditionType.Letter;
 
-            conditions.Add(
-                new BlockCondition(
-                    type,
-                    groupIndex
-                )
+            conditions.Add(new BlockCondition(type, groupIndex)
             );
         }
 
@@ -417,9 +471,7 @@ public class ColorBlockManager : NetworkBehaviour
         }
     }
 
-    private bool IsMatch(
-        ColorBlock block,
-        BlockCondition condition)
+    private bool IsMatch(ColorBlock block, BlockCondition condition)
     {
         switch (condition.type)
         {
@@ -439,9 +491,7 @@ public class ColorBlockManager : NetworkBehaviour
         return false;
     }
 
-    private bool IsColorMatch(
-        BlockColor color,
-        int groupIndex)
+    private bool IsColorMatch(BlockColor color, int groupIndex)
     {
         return groupIndex switch
         {
@@ -453,9 +503,7 @@ public class ColorBlockManager : NetworkBehaviour
         };
     }
 
-    private bool IsLetterMatch(
-        BlockLetter letter,
-        int groupIndex)
+    private bool IsLetterMatch(BlockLetter letter, int groupIndex)
     {
         return groupIndex switch
         {

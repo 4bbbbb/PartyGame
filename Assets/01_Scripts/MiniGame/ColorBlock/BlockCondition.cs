@@ -1,3 +1,5 @@
+using Fusion;
+
 public enum BlockColor
 {
     Red,

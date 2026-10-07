@@ -31,8 +31,7 @@ public class BaseballPlayer : NetworkBehaviour
 
     private PlayerNetwork playerNetwork;
 
-    public PlayerNetwork PlayerNetwork =>
-        playerNetwork;
+    public PlayerNetwork PlayerNetwork => playerNetwork;
 
     // =========================================================
     // NETWORKED
@@ -68,27 +67,21 @@ public class BaseballPlayer : NetworkBehaviour
     // PLAYER NETWORK
     // =========================================================
 
-    public void SetPlayerNetwork(
-        PlayerNetwork playerNetwork
-    )
+    public void SetPlayerNetwork(PlayerNetwork playerNetwork)
     {
-        this.playerNetwork =
-            playerNetwork;
+        this.playerNetwork = playerNetwork;
     }
 
     // =========================================================
     // PLAYER INDEX
     // =========================================================
 
-    public void SetPlayerIndex(
-        int index
-    )
+    public void SetPlayerIndex(int index)
     {
         if (!Object.HasStateAuthority)
             return;
 
-        PlayerIndex =
-            index;
+        PlayerIndex = index;
 
         Debug.Log(
             $"[BaseballPlayer SetPlayerIndex] " +
@@ -101,15 +94,12 @@ public class BaseballPlayer : NetworkBehaviour
     // CHARACTER INDEX
     // =========================================================
 
-    public void SetCharacterIndex(
-        int characterIndex
-    )
+    public void SetCharacterIndex(int characterIndex)
     {
         if (!Object.HasStateAuthority)
             return;
 
-        CharacterIndex =
-            characterIndex;
+        CharacterIndex = characterIndex;
 
         Debug.Log(
             $"[BaseballPlayer SetCharacterIndex] " +
@@ -127,10 +117,7 @@ public class BaseballPlayer : NetworkBehaviour
         if (!Object.HasInputAuthority)
             return;
 
-        if (
-            Input.GetKeyDown(KeyCode.Space) ||
-            Input.GetMouseButtonDown(0)
-        )
+        if (Input.GetKeyDown(KeyCode.Space) || Input.GetMouseButtonDown(0))
         {
             RPC_PlayHit();
         }
@@ -158,11 +145,9 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        float visualHitTimeError =
-            targetBall.VisualHitTimeError;
+        float visualHitTimeError = targetBall.VisualHitTimeError;
 
-        NetworkId ballId =
-            targetBall.Object;
+        NetworkId ballId = targetBall.Object;
 
         Debug.Log(
             $"[BaseballPlayer] BAT HIT POINT | " +
@@ -186,31 +171,20 @@ public class BaseballPlayer : NetworkBehaviour
 
     private Ball FindBestBall()
     {
-        Ball[] balls =
-            FindObjectsByType<Ball>(
-                FindObjectsSortMode.None
-            );
+        Ball[] balls = FindObjectsByType<Ball>(FindObjectsSortMode.None);
 
-        Ball bestBall =
-            null;
+        Ball bestBall = null;
 
-        float bestError =
-            float.MaxValue;
+        float bestError = float.MaxValue;
 
-        foreach (
-            Ball ball in balls
-        )
+        foreach (Ball ball in balls)
         {
             if (ball == null)
                 continue;
 
-            if (
-                ball.Object == null ||
-                !ball.Object.IsValid
-            )
-            {
+            if (ball.Object == null || !ball.Object.IsValid)            
                 continue;
-            }
+            
 
             if (!ball.IsFlying)
                 continue;
@@ -218,29 +192,20 @@ public class BaseballPlayer : NetworkBehaviour
             // ⭐ 핵심
             //
             // 내 PlayerIndex와 같은 BallIndex만 사용
-            if (
-                ball.BallIndex !=
-                PlayerIndex
-            )
-            {
+            if (ball.BallIndex != PlayerIndex)            
                 continue;
-            }
+            
 
             float error =
                 Mathf.Abs(
                     ball.VisualHitTimeError
                 );
 
-            if (
-                error <
-                bestError
-            )
+            if (error < bestError)
             {
-                bestError =
-                    error;
+                bestError = error;
 
-                bestBall =
-                    ball;
+                bestBall = ball;
             }
         }
 
@@ -251,28 +216,20 @@ public class BaseballPlayer : NetworkBehaviour
     // HIT ANIMATION
     // =========================================================
 
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.All
-    )]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
     private void RPC_PlayHit()
     {
         if (animator == null)
             return;
 
-        animator.SetTrigger(
-            "Hit"
-        );
+        animator.SetTrigger("Hit");
     }
 
     // =========================================================
     // HIT REQUEST
     // =========================================================
 
-    [Rpc(
-    RpcSources.InputAuthority,
-    RpcTargets.StateAuthority
-)]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_RequestHit(
     NetworkId ballId,
     int throwId,
@@ -295,10 +252,7 @@ public class BaseballPlayer : NetworkBehaviour
         // Player가 보낸 Ball Reference 확인
         // =========================================================
 
-        if (!Runner.TryFindObject(
-        ballId,
-            out NetworkObject ballObject
-        ))
+        if (!Runner.TryFindObject(ballId, out NetworkObject ballObject))
         {
             Debug.LogWarning(
                 $"[BaseballPlayer] " +
@@ -311,8 +265,7 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        Ball ball =
-            ballObject.GetComponent<Ball>();
+        Ball ball = ballObject.GetComponent<Ball>();
 
         if (ball == null)
         {
@@ -396,27 +349,18 @@ public class BaseballPlayer : NetworkBehaviour
         // 판정
         // =========================================================
 
-        CheckHitTiming(
-            ball,
-            visualHitTimeError
-        );
+        CheckHitTiming(ball, visualHitTimeError);
     }
     // =========================================================
     // HIT CHECK
     // =========================================================
 
-    private void CheckHitTiming(
-      Ball targetBall,
-      float visualHitTimeError
-  )
+    private void CheckHitTiming(Ball targetBall, float visualHitTimeError)
     {
         if (!Object.HasStateAuthority)
             return;
 
-        float error =
-            Mathf.Abs(
-                visualHitTimeError
-            );
+        float error = Mathf.Abs( visualHitTimeError);
 
         Debug.Log(
             $"[BaseballPlayer] Hit 판정 | " +
@@ -437,17 +381,11 @@ public class BaseballPlayer : NetworkBehaviour
                 $"PLAYER {PlayerIndex} EXCELLENT!"
             );
 
-            AddScore(
-                excellentScore
-            );
+            AddScore(excellentScore);
 
-            lastHitThrowId =
-                targetBall.ThrowId;
+            lastHitThrowId = targetBall.ThrowId;
 
-            DespawnPlayerBall(
-                targetBall,
-                BallHitEffect.HitResult.Excellent
-            );
+            DespawnPlayerBall(targetBall, BallHitEffect.HitResult.Excellent);
 
             return;
         }
@@ -463,41 +401,21 @@ public class BaseballPlayer : NetworkBehaviour
                 $"PLAYER {PlayerIndex} GOOD!"
             );
 
-            AddScore(
-                goodScore
-            );
+            AddScore(goodScore);
 
-            lastHitThrowId =
-                targetBall.ThrowId;
+            lastHitThrowId = targetBall.ThrowId;
 
-            DespawnPlayerBall(
-                targetBall,
-                BallHitEffect.HitResult.Good
-            );
+            DespawnPlayerBall(targetBall, BallHitEffect.HitResult.Good);
 
             return;
         }
-
-        // =========================================================
-        // MISS
-        // =========================================================
-
-        Debug.Log(
-            $"[BaseballPlayer] " +
-            $"PLAYER {PlayerIndex} MISS!"
-        );
-
-        // MISS는 Ball을 제거하지 않는다.
     }
 
     // =========================================================
     // DESPAWN MY BALL + SPAWN EFFECT
     // =========================================================
 
-    private void DespawnPlayerBall(
-    Ball targetBall,
-    BallHitEffect.HitResult result
-)
+    private void DespawnPlayerBall(Ball targetBall, BallHitEffect.HitResult result)
     {
         if (!Object.HasStateAuthority)
             return;
@@ -512,10 +430,7 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        if (
-            targetBall.Object == null ||
-            !targetBall.Object.IsValid
-        )
+        if (targetBall.Object == null || !targetBall.Object.IsValid)
         {
             Debug.LogWarning(
                 "[BaseballPlayer] " +
@@ -539,10 +454,7 @@ public class BaseballPlayer : NetworkBehaviour
         // 최종 확인
         // =========================================================
 
-        if (
-            targetBall.BallIndex !=
-            PlayerIndex
-        )
+        if (targetBall.BallIndex != PlayerIndex)
         {
             Debug.LogWarning(
                 $"[BaseballPlayer] " +
@@ -554,17 +466,13 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        Vector3 hitDirection =
-            targetBall.HitDirection;
+        Vector3 hitDirection = targetBall.HitDirection;
 
-        int playerIndex =
-            PlayerIndex;
+        int playerIndex = PlayerIndex;
 
-        int throwId =
-            targetBall.ThrowId;
+        int throwId = targetBall.ThrowId;
 
-        int ballIndex =
-            targetBall.BallIndex;
+        int ballIndex = targetBall.BallIndex;
 
         Debug.Log(
             $"[BaseballPlayer] " +
@@ -585,10 +493,7 @@ public class BaseballPlayer : NetworkBehaviour
         // 2. Hit Effect 생성
         // =========================================================
 
-        BallSpawnManager spawnManager =
-            FindFirstObjectByType<
-                BallSpawnManager
-            >();
+        BallSpawnManager spawnManager =  FindFirstObjectByType<BallSpawnManager>();
 
         if (spawnManager == null)
         {
@@ -600,20 +505,14 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        spawnManager.SpawnHitEffect(
-            playerIndex,
-            result,
-            hitDirection
-        );
+        spawnManager.SpawnHitEffect(playerIndex, result, hitDirection);
     }
 
     // =========================================================
     // SCORE
     // =========================================================
 
-    private void AddScore(
-        int score
-    )
+    private void AddScore(int score)
     {
         if (playerNetwork == null)
         {
@@ -625,9 +524,7 @@ public class BaseballPlayer : NetworkBehaviour
             return;
         }
 
-        playerNetwork.AddBaseballCount(
-            score
-        );
+        playerNetwork.AddBaseballCount(score);
 
         Debug.Log(
             $"[BaseballPlayer] " +
@@ -647,29 +544,15 @@ public class BaseballPlayer : NetworkBehaviour
 
     private void ApplyCharacter()
     {
-        if (characterDatabase == null)
-        {
-            Debug.LogError(
-                "[BaseballPlayer] " +
-                "CharacterDatabase가 없습니다."
-            );
-
+        if (characterDatabase == null)   
             return;
-        }
+       
 
-        if (
-            CharacterIndex < 0 ||
-            CharacterIndex >=
-            characterDatabase.characters.Length
-        )
-        {
+        if (CharacterIndex < 0 || CharacterIndex >= characterDatabase.characters.Length)       
             return;
-        }
+        
 
-        CharacterData characterData =
-            characterDatabase.characters[
-                CharacterIndex
-            ];
+        CharacterData characterData = characterDatabase.characters[CharacterIndex];
 
         if (characterData == null)
             return;
@@ -677,16 +560,13 @@ public class BaseballPlayer : NetworkBehaviour
         if (characterRenderer == null)
             return;
 
-        Material[] materials =
-            characterRenderer.materials;
+        Material[] materials = characterRenderer.materials;
 
         if (materials.Length < 2)
             return;
 
-        materials[0] =
-            characterData.characterMaterial;
+        materials[0] = characterData.characterMaterial;
 
-        characterRenderer.materials =
-            materials;
+        characterRenderer.materials = materials;
     }
 }
