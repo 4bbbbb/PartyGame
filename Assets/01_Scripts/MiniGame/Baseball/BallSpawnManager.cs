@@ -246,18 +246,18 @@ public class BallSpawnManager : NetworkBehaviour
             yield return new WaitUntil(() => activeBallCount <= 0);
 
             yield return new WaitForSeconds(interval);
-        }
-
-        if (BaseballManager.Instance != null)
-        {
-            BaseballManager.Instance.GiveGameScores();
-        }
+        }        
 
         SetBallCountUI(true, 0);
 
         isGameRunning = false;
 
         gameCoroutine = null;
+
+        if (BaseballManager.Instance != null)
+        {
+            BaseballManager.Instance.StartGameResult();
+        }
     }
 
     // =========================================================

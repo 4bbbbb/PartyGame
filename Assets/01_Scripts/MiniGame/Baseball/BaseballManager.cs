@@ -24,6 +24,11 @@ public class BaseballManager : NetworkBehaviour
     [Header("<< Game Setting >>")]
     [SerializeField] private float startMessageDuration = 1.5f;
 
+    [Networked, Capacity(4)]
+    private NetworkArray<int> PlayerBaseballCounts => default;
+
+
+
     #region < Local Data >
 
     // State Authority에서 생성한 BaseballPlayer 목록
@@ -34,6 +39,7 @@ public class BaseballManager : NetworkBehaviour
 
     #endregion
 
+
     #region < Networked UI >
 
     [Networked, OnChangedRender(nameof(OnPracticeTextChanged))]
@@ -43,6 +49,7 @@ public class BaseballManager : NetworkBehaviour
     private NetworkBool IsStartTextVisible { get; set; }
 
     #endregion
+
 
     #region < Instance >
 
@@ -83,13 +90,16 @@ public class BaseballManager : NetworkBehaviour
 
     private IEnumerator InitializeBaseballGameRoutine()
     {
-        // Runner가 준비될 때까지 대기
         yield return new WaitUntil(() => Runner != null);
 
-        // PlayerNetwork가 생성될 때까지 대기
         yield return new WaitUntil(() => GetActivePlayers().Count > 0);
 
         SpawnPlayers();
+
+        for (int i = 0; i < 4; i++)
+        {
+            PlayerBaseballCounts.Set(i, 0);
+        }
 
         yield return null;
 
@@ -114,8 +124,7 @@ public class BaseballManager : NetworkBehaviour
 
         foreach (PlayerRef playerRef in Runner.ActivePlayers)
         {
-            NetworkObject playerObject =
-                Runner.GetPlayerObject(playerRef);
+            NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
 
             if (playerObject == null)
             {
@@ -127,8 +136,7 @@ public class BaseballManager : NetworkBehaviour
                 continue;
             }
 
-            PlayerNetwork playerNetwork =
-                playerObject.GetComponent<PlayerNetwork>();
+            PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
             if (playerNetwork == null)
             {
@@ -146,6 +154,19 @@ public class BaseballManager : NetworkBehaviour
         return players
             .OrderBy(player => player.PlayerRef.RawEncoded)
             .ToList();
+    }
+
+    private int GetPlayerIndex(PlayerRef playerRef)
+    {
+        foreach (KeyValuePair<PlayerRef, BaseballPlayer> pair in spawnedPlayers)
+        {
+            if (pair.Key != playerRef)
+                continue;
+
+            return pair.Value.PlayerIndex;
+        }
+
+        return -1;
     }
 
     #endregion
@@ -345,61 +366,103 @@ public class BaseballManager : NetworkBehaviour
 
     #region < Score >
 
+    public int GetBaseballCount(int playerIndex)
+    {
+        if (playerIndex < 0 || playerIndex >= 4)
+            return 0;
+
+        return PlayerBaseballCounts[playerIndex];
+    }
+
+    public void AddBaseballCount(int playerIndex, int amount)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (playerIndex < 0 || playerIndex >= 4)
+            return;
+
+        PlayerBaseballCounts.Set(
+            playerIndex,
+            PlayerBaseballCounts[playerIndex] + amount
+        );
+
+        Debug.Log(
+            $"[Baseball Score] " +
+            $"PlayerIndex={playerIndex}, " +
+            $"Add={amount}, " +
+            $"Total={PlayerBaseballCounts[playerIndex]}"
+        );
+    }
+
     private Dictionary<PlayerRef, int> CalculateGameScores()
     {
         Dictionary<PlayerRef, int> scores = new();
 
-        List<PlayerNetwork> players = GetActivePlayers();
+        List<PlayerNetwork> players =
+            GetActivePlayers();
 
         if (players.Count == 0)
             return scores;
 
         players = players
-            .OrderByDescending(player => player.BaseballCount)
+            .OrderByDescending(player =>
+                PlayerBaseballCounts[
+                    GetPlayerIndex(player.PlayerRef)
+                ]
+            )
             .ToList();
 
-        // 1등 점수
-        int firstScore = players[0].BaseballCount;
-
-        // 동점 순위 계산
-        int currentRank = 0;
+        int rankGroup = 0;
         int previousScore = int.MinValue;
 
-        foreach (PlayerNetwork player in players)
+        for (int i = 0; i < players.Count; i++)
         {
-            int baseballScore = player.BaseballCount;
+            PlayerNetwork player = players[i];
+
+            int baseballScore =
+                PlayerBaseballCounts[
+                    GetPlayerIndex(player.PlayerRef)
+                ];
 
             if (baseballScore != previousScore)
             {
-                currentRank++;
+                rankGroup++;
                 previousScore = baseballScore;
             }
 
-            switch (currentRank)
+            int gameScore;
+
+            switch (rankGroup)
             {
                 case 1:
-                    scores[player.PlayerRef] = 3;
+                    gameScore = 3;
                     break;
 
                 case 2:
-                    scores[player.PlayerRef] = 2;
-                    break;
-
-                case 3:
-                    scores[player.PlayerRef] = 3;
+                    gameScore = 2;
                     break;
 
                 default:
-                    scores[player.PlayerRef] = 0;
+                    gameScore = 1;
                     break;
             }
+
+            scores[player.PlayerRef] = gameScore;
+
+            Debug.Log(
+                $"[Baseball Rank] " +
+                $"Player={player.PlayerRef}, " +
+                $"BaseballScore={baseballScore}, " +
+                $"RankGroup={rankGroup}, " +
+                $"GameScore={gameScore}"
+            );
         }
 
         return scores;
     }
 
-
-    public void GiveGameScores()
+    private void GiveGameScores()
     {
         Dictionary<PlayerRef, int> scores =
             CalculateGameScores();
@@ -417,11 +480,22 @@ public class BaseballManager : NetworkBehaviour
             if (player == null)
             {
                 Debug.LogWarning(
-                    $"점수를 지급할 PlayerNetwork를 찾을 수 없습니다. " +
-                    $"PlayerRef = {score.Key}"
+                    $"[BaseballManager] 점수를 지급할 PlayerNetwork를 찾을 수 없습니다. " +
+                    $"PlayerRef={score.Key}"
                 );
 
                 continue;
+            }
+
+            int playerIndex =
+                GetPlayerIndex(score.Key);
+
+            int baseballCount = 0;
+
+            if (playerIndex >= 0)
+            {
+                baseballCount =
+                    PlayerBaseballCounts[playerIndex];
             }
 
             player.AddScore(score.Value);
@@ -429,11 +503,56 @@ public class BaseballManager : NetworkBehaviour
             Debug.Log(
                 $"===== Baseball 점수 지급 =====\n" +
                 $"Player : {score.Key}\n" +
-                $"BaseballCount : {player.BaseballCount}\n" +
-                $"점수 : +{score.Value}\n" +
-                $"누적 점수 : {player.Score}"
+                $"PlayerIndex : {playerIndex}\n" +
+                $"BaseballCount : {baseballCount}\n" +
+                $"게임 점수 : +{score.Value}\n" +
+                $"누적 Score : {player.Score}"
             );
         }
+    }
+
+    // =========================================================
+    // GAME RESULT
+    // =========================================================
+
+    public void StartGameResult()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (!isGameStarted)
+            return;
+
+        // 게임 종료
+        isGameStarted = false;
+
+        // 야구 점수 → 전체 Score에 반영
+        GiveGameScores();
+
+        // 3초 후 Score 씬으로 이동
+        StartCoroutine(GoToScoreSceneSequence());
+    }
+
+    private IEnumerator GoToScoreSceneSequence()
+    {
+        if (!Object.HasStateAuthority)
+            yield break;
+
+        Debug.Log(
+            "[BaseballManager] 게임 종료 - 3초 후 Score 씬으로 이동합니다."
+        );
+
+        yield return new WaitForSeconds(3f);
+
+        const int SCORE_SCENE_INDEX = 4;
+
+        Debug.Log(
+            $"[BaseballManager] Score 씬 이동 | SceneIndex={SCORE_SCENE_INDEX}"
+        );
+
+        Runner.LoadScene(
+            SceneRef.FromIndex(SCORE_SCENE_INDEX)
+        );
     }
 
     #endregion

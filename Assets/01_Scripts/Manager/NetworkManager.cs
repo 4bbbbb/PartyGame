@@ -150,9 +150,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             runner.SetPlayerObject(player, playerObject);            
         }
 
-
-
-
         if (LobbyManager.Instance != null)
         {
             LobbyManager.Instance.PlayerJoined(runner, player);
@@ -237,16 +234,11 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnInput(NetworkRunner runner, NetworkInput input){}
 
-    public void OnInputMissing(
-        NetworkRunner runner,
-        PlayerRef player,
-        NetworkInput input)
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player,NetworkInput input)
     {
     }
 
-    public void OnSessionListUpdated(
-        NetworkRunner runner,
-        List<SessionInfo> sessionList)
+    public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList)
     {
         Debug.Log($"세션 개수 : {sessionList.Count}");
 
@@ -256,15 +248,11 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         }
     }
 
-    public void OnCustomAuthenticationResponse(
-        NetworkRunner runner,
-        Dictionary<string, object> data)
+    public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data)
     {
     }
 
-    public void OnHostMigration(
-        NetworkRunner runner,
-        HostMigrationToken hostMigrationToken)
+    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken)
     {
     }
 

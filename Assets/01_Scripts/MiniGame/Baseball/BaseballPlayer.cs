@@ -514,17 +514,20 @@ public class BaseballPlayer : NetworkBehaviour
 
     private void AddScore(int score)
     {
-        if (playerNetwork == null)
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (BaseballManager.Instance == null)
         {
             Debug.LogError(
                 "[BaseballPlayer] " +
-                "PlayerNetwork가 연결되지 않았습니다."
+                "BaseballManager를 찾을 수 없습니다."
             );
 
             return;
         }
 
-        playerNetwork.AddBaseballCount(score);
+        BaseballManager.Instance.AddBaseballCount(PlayerIndex, score);
 
         Debug.Log(
             $"[BaseballPlayer] " +

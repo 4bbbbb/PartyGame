@@ -13,11 +13,7 @@ public class PlayerNetwork : NetworkBehaviour
     public int CharacterIndex { get; set; } = -1;
 
     [Networked, OnChangedRender(nameof(OnReadyChanged))]
-    public NetworkBool IsReady { get; set; }
-
-    // baseball
-    [Networked, OnChangedRender(nameof(OnBaseballCountChanged))]
-    public int BaseballCount { get; set; }
+    public NetworkBool IsReady { get; set; }   
 
     [Networked]
     public int Score { get; set; }
@@ -192,28 +188,6 @@ public class PlayerNetwork : NetworkBehaviour
         if (LobbyUIManager.Instance != null)
         {
             LobbyUIManager.Instance.UpdateStartButton();
-        }
-    }
-
-    #endregion
-
-
-    #region < Baseball > 
-    public void AddBaseballCount(int amount)
-    {
-        if (!Object.HasStateAuthority)
-        {
-            return;
-        }
-
-        BaseballCount += amount;
-    }
-
-    private void OnBaseballCountChanged()
-    {
-        if (BaseballUIManager.Instance != null)
-        {
-            BaseballUIManager.Instance.RefreshProfiles(Runner);
         }
     }
 

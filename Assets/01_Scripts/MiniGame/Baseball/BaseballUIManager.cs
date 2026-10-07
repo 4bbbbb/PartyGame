@@ -53,10 +53,7 @@ public class BaseballUIManager : MonoBehaviour
 
     private void Start()
     {
-        refreshCoroutine =
-            StartCoroutine(
-                RefreshProfilesRoutine()
-            );
+        refreshCoroutine = StartCoroutine(RefreshProfilesRoutine());
     }
 
 
@@ -78,9 +75,7 @@ public class BaseballUIManager : MonoBehaviour
             }
 
 
-            yield return new WaitForSeconds(
-                refreshInterval
-            );
+            yield return new WaitForSeconds(refreshInterval);
         }
     }
 
@@ -89,9 +84,7 @@ public class BaseballUIManager : MonoBehaviour
     // Refresh Profiles
     // =========================================================
 
-    public void RefreshProfiles(
-        NetworkRunner runner
-    )
+    public void RefreshProfiles(NetworkRunner runner)
     {
         if (runner == null)
             return;
@@ -99,13 +92,9 @@ public class BaseballUIManager : MonoBehaviour
         if (characterDatabase == null)
             return;
 
-        if (
-            characterDatabase.characters == null ||
-            characterDatabase.characters.Length == 0
-        )
-        {
+        if (characterDatabase.characters == null || characterDatabase.characters.Length == 0)       
             return;
-        }
+        
 
 
         PlayerNetwork[] players =
@@ -129,11 +118,7 @@ public class BaseballUIManager : MonoBehaviour
         // Profile UI
         // =====================================================
 
-        for (
-            int i = 0;
-            i < profileUIs.Length;
-            i++
-        )
+        for (int i = 0; i < profileUIs.Length; i++)
         {
             if (i >= players.Length)
             {
@@ -142,8 +127,7 @@ public class BaseballUIManager : MonoBehaviour
             }
 
 
-            PlayerNetwork player =
-                players[i];
+            PlayerNetwork player = players[i];
 
 
             if (player == null)
@@ -164,10 +148,7 @@ public class BaseballUIManager : MonoBehaviour
             }
 
 
-            CharacterData characterData =
-                characterDatabase.characters[
-                    player.CharacterIndex
-                ];
+            CharacterData characterData = characterDatabase.characters[player.CharacterIndex];
 
 
             profileUIs[i].gameObject.SetActive(true);
@@ -177,11 +158,55 @@ public class BaseballUIManager : MonoBehaviour
             // 여기서 BaseballCount를 계속 읽는다.
             // =================================================
 
+            BaseballManager baseballManager = BaseballManager.Instance;
+
+            if (baseballManager == null)
+                continue;
+
+            int baseballCount = 0;
+
+            BaseballPlayer baseballPlayer = FindBaseballPlayer(player);
+
+            if (baseballPlayer != null && BaseballManager.Instance != null)
+            {
+                baseballCount = BaseballManager.Instance.GetBaseballCount(baseballPlayer.PlayerIndex);
+            }
+
             profileUIs[i].Show(
                 player.Nickname.ToString(),
                 characterData.characterColor,
-                player.BaseballCount
-            );
+                baseballCount
+            );           
         }
+    }
+
+    private BaseballPlayer FindBaseballPlayer(
+    PlayerNetwork playerNetwork
+)
+    {
+        if (playerNetwork == null)
+            return null;
+
+        BaseballPlayer[] baseballPlayers =
+            FindObjectsByType<BaseballPlayer>(
+                FindObjectsInactive.Exclude,
+                FindObjectsSortMode.None
+            );
+
+        foreach (BaseballPlayer baseballPlayer in baseballPlayers)
+        {
+            if (baseballPlayer == null)
+                continue;
+
+            if (baseballPlayer.Object == null)
+                continue;
+
+            if (baseballPlayer.Object.InputAuthority == playerNetwork.PlayerRef)
+            {
+                return baseballPlayer;
+            }
+        }
+
+        return null;
     }
 }
