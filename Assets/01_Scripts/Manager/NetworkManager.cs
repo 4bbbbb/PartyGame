@@ -252,8 +252,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         };
 
         input.Set(data);
-
-        Debug.Log($"[NetworkManager OnInput] Move={data.Move}, Jump={data.Jump}");
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player,NetworkInput input)

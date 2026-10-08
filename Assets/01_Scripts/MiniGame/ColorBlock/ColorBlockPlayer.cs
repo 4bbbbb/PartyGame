@@ -1,15 +1,20 @@
 ﻿using Fusion;
+using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
 
 [RequireComponent(typeof(CharacterController))]
 public class ColorBlockPlayer : NetworkBehaviour
-{
+{   
     [Header("<< Character >>")]
     [SerializeField] private Transform characterModel;
     [SerializeField] private Renderer characterRenderer;
 
     [Header("<< Character Database >>")]
     [SerializeField] private CharacterDatabase characterDatabase;
+
+    [Header("<< Name >>")]
+    [SerializeField] private TMPro.TextMeshProUGUI nameText;
 
     [Header("<< Animation >>")]
     [SerializeField] private Animator animator;
@@ -34,6 +39,14 @@ public class ColorBlockPlayer : NetworkBehaviour
     [Header("<< Camera >>")]
     [SerializeField] private Transform camPos;
 
+    [Header("<< ColorBlock >>")]
+    [SerializeField] private ColorBlockManager colorBlockManager;
+
+    public void SetColorBlockManager(ColorBlockManager manager)
+    {
+        colorBlockManager = manager;
+    }
+
 
     #region < Network >
 
@@ -53,10 +66,9 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     public void SetPlayerNetwork(PlayerNetwork player)
     {
-        if (!Object.HasStateAuthority)
-            return;
-
         playerNetwork = player;
+
+        UpdateName();
     }
 
     public void SetPlayerIndex(int index)
@@ -85,6 +97,17 @@ public class ColorBlockPlayer : NetworkBehaviour
             $"Object={Object.Id}, " +
             $"CharacterIndex={CharacterIndex}"
         );
+    }
+
+    private void UpdateName()
+    {
+        if (playerNetwork == null)
+            return;
+
+        if (nameText == null)
+            return;
+
+        nameText.text = playerNetwork.Nickname.ToString();
     }
 
     #endregion
@@ -148,6 +171,8 @@ public class ColorBlockPlayer : NetworkBehaviour
         );
 
         ApplyCharacter();
+        FindPlayerNetwork();
+        UpdateName();
 
         // 내 캐릭터만 카메라 연결 + InputActions 생성
         if (Object.HasInputAuthority)
@@ -168,6 +193,24 @@ public class ColorBlockPlayer : NetworkBehaviour
 
         UpdateJumpAnimation();
         UpdateSpeedAnimation();
+    }
+
+    private void FindPlayerNetwork()
+    {
+        if (Runner == null)
+            return;
+
+        foreach (PlayerNetwork player in FindObjectsByType<PlayerNetwork>(
+            FindObjectsInactive.Exclude,
+            FindObjectsSortMode.None))
+        {
+            if (player.Object != null &&
+                player.Object.InputAuthority == Object.InputAuthority)
+            {
+                playerNetwork = player;
+                return;
+            }
+        }
     }
 
     private void SetupCamera()
@@ -271,6 +314,11 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        if (Object != null && Object.HasInputAuthority)
+        {
+            SetupSpectatorCamera();
+        }
+
         if (inputActions == null)
             return;
 
@@ -281,6 +329,67 @@ public class ColorBlockPlayer : NetworkBehaviour
         inputActions.Dispose();
 
         inputActions = null;
+    }
+
+    private void SetupSpectatorCamera()
+    {
+        if (Camera.main == null)
+        {
+            Debug.LogWarning("[ColorBlockPlayer] Main Camera를 찾을 수 없습니다.");
+            return;
+        }
+
+        ColorBlockCamera cameraController = Camera.main.GetComponent<ColorBlockCamera>();
+
+        if (cameraController == null)
+        {
+            Debug.LogError("[ColorBlockPlayer] Main Camera에 ColorBlockCamera가 없습니다.");
+            return;
+        }
+
+        ColorBlockPlayer[] alivePlayers = FindObjectsByType<ColorBlockPlayer>(FindObjectsSortMode.None);
+
+        List<ColorBlockPlayer> candidates = new List<ColorBlockPlayer>();
+
+        foreach (ColorBlockPlayer player in alivePlayers)
+        {
+            if (player == null)
+                continue;
+
+            if (player.Object == null)
+                continue;
+
+            candidates.Add(player);
+        }
+
+        if (candidates.Count == 0)
+        {
+            Debug.Log("[ColorBlockPlayer] 관전할 생존 플레이어가 없습니다.");
+            return;
+        }
+
+        int randomIndex = Random.Range(0, candidates.Count);
+
+        ColorBlockPlayer targetPlayer = candidates[randomIndex];
+
+        if (targetPlayer.camPos == null)
+        {
+            Debug.LogWarning(
+                $"[ColorBlockPlayer] 관전 대상 CamPos가 없습니다. " +
+                $"PlayerRef={targetPlayer.Object.InputAuthority}"
+            );
+            return;
+        }
+
+        cameraController.SetTarget(targetPlayer.camPos);
+
+        Debug.Log(
+            $"[ColorBlockPlayer] 관전 시작 | " +
+            $"Target={targetPlayer.Object.InputAuthority}"
+        );
+
+
+
     }
 
     #endregion
@@ -361,7 +470,9 @@ public class ColorBlockPlayer : NetworkBehaviour
         Move();
         HandleJump();
         ApplyGravity();
-    }
+
+        CheckFallDeath();
+    }   
 
     #endregion
 
@@ -506,4 +617,20 @@ public class ColorBlockPlayer : NetworkBehaviour
 
 
     #endregion
+
+
+    #region < Fall >
+    private void CheckFallDeath()
+    {
+        if (colorBlockManager == null)
+            return;
+
+        if (transform.position.y > colorBlockManager.FallDeathY)
+            return;
+
+        colorBlockManager.PlayerFell(this);
+    }
+
+    #endregion
+
 }

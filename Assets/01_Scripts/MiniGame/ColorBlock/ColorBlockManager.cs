@@ -1,9 +1,10 @@
-﻿using TMPro;
+﻿using Fusion;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Fusion;
+using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ColorBlockManager : NetworkBehaviour
 {
@@ -16,6 +17,10 @@ public class ColorBlockManager : NetworkBehaviour
     [Header("<< Round >>")]
     [SerializeField] private float moveTime = 3f;
 
+    [Header("<< Round Difficulty >>")]
+    [SerializeField] private float moveTimeDecrease = 0.3f;
+    [SerializeField] private float minimumMoveTime = 1.5f;
+
     [Header("<< Monitor >>")]
     [SerializeField] private MonitorUI monitorUI;
 
@@ -25,16 +30,30 @@ public class ColorBlockManager : NetworkBehaviour
     [Header("<< Countdown >>")]
     [SerializeField] private TextMeshProUGUI countdownText;
     [SerializeField] private float countdownTime = 1f;
+   
+    [Header("<< Elimination >>")]
+    [SerializeField] private float fallDeathY = -5f;
+
+    [Header("<< Game End")]
+    [SerializeField] private GameObject gameEndText;
+    [SerializeField] private RawImage freezeFrame;
+    public float FallDeathY => fallDeathY;
 
     #region < Local Data >
 
     private readonly Dictionary<PlayerRef, ColorBlockPlayer> spawnedPlayers = new();
+    private readonly Dictionary<PlayerRef, int> eliminatedRounds = new();
 
     private List<BlockCondition> currentConditions =  new List<BlockCondition>();
 
     private int roundIndex = 0;
     private bool isGameRunning = false;
     private bool isInitializing = false;
+
+    [Networked]
+    private NetworkBool IsGameEnding { get; set; }
+
+    public bool GameEnding => IsGameEnding;
 
     #endregion
 
@@ -274,14 +293,15 @@ public class ColorBlockManager : NetworkBehaviour
             if (colorBlockPlayer == null)
             {
                 Debug.LogError(
-                    " ColorBlockPlayer 프리팹에 " +
-                    " ColorBlockPlayer 컴포넌트가 없습니다."
+                    " ColorBlockPlayer 프리팹에 ColorBlockPlayer 컴포넌트가 없습니다."
                 );
 
                 Runner.Despawn(playerObject);
 
                 continue;
             }
+
+            colorBlockPlayer.SetColorBlockManager(this);
 
             // --------------------------------------------------
             // Player 정보 연결
@@ -345,12 +365,18 @@ public class ColorBlockManager : NetworkBehaviour
 
             ShowConditionsToAll(currentConditions);
 
-            yield return new WaitForSeconds(moveTime);
+            yield return new WaitForSeconds(GetCurrentMoveTime());
+            if (IsGameEnding)
+                yield break;
 
             CheckBlocks();
 
             yield return new WaitForSeconds(1.7f);
-            
+
+            if (IsGameEnding)
+                yield break;
+
+            roundIndex++;
         }
     }
 
@@ -451,6 +477,16 @@ public class ColorBlockManager : NetworkBehaviour
         }
     }
 
+    private float GetCurrentMoveTime()
+    {
+        int eliminatedCount = eliminatedRounds.Count;
+
+        float currentTime =
+            moveTime - eliminatedCount * moveTimeDecrease;
+
+        return Mathf.Max(currentTime, minimumMoveTime);
+    }
+
     #endregion
 
 
@@ -522,12 +558,11 @@ public class ColorBlockManager : NetworkBehaviour
             {
                 if (IsMatch(block, condition))
                 {
-                    block.Fall();
-                    break;
+                    block.Fall(); break;
                 }
             }
         }
-    }
+    }    
 
     private bool IsMatch(ColorBlock block, BlockCondition condition)
     {
@@ -576,4 +611,224 @@ public class ColorBlockManager : NetworkBehaviour
     #endregion
 
 
+    #region < Fall >
+
+    public void PlayerFell(ColorBlockPlayer player)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (player == null || player.Object == null)
+            return;
+
+        PlayerRef playerRef = player.Object.InputAuthority;
+
+        if (eliminatedRounds.ContainsKey(playerRef))
+                return;
+
+        eliminatedRounds.Add(playerRef, roundIndex);
+
+        Debug.Log(
+        $"[ColorBlock] Player 탈락 | " +
+        $"PlayerRef={playerRef} | " +
+        $"Round={roundIndex}"
+        );
+
+        Runner.Despawn(player.Object);
+
+        CheckGameEnd();
+    }
+
+    #endregion
+
+
+    #region < End >
+
+    private void CheckGameEnd()
+    {
+        if (IsGameEnding)
+            return;
+
+        int aliveCount = spawnedPlayers.Count - eliminatedRounds.Count;
+
+        Debug.Log(
+            $"[ColorBlock] 현재 생존자 수 = {aliveCount} " +
+            $"| 전체 플레이어 = {spawnedPlayers.Count} " +
+            $"| 탈락자 = {eliminatedRounds.Count}"
+        );
+
+        if (aliveCount <= 1)
+        {
+            IsGameEnding = true;
+            Debug.Log("[ColorBlock] 게임 종료 조건 충족!");
+
+            StartCoroutine(GameEndRoutine());
+        }
+    }
+
+    private IEnumerator GameEndRoutine()
+    {
+        {
+            GiveColorBlockScores();
+
+            RPC_StartFreezeFrame();
+
+            yield return new WaitForSecondsRealtime(1f);
+
+            RPC_ShowGameEnd();
+
+            yield return new WaitForSecondsRealtime(1.5f);
+
+            const int SCORE_SCENE_INDEX = 4;
+
+            Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_StartFreezeFrame()
+    {
+        StartCoroutine(CaptureFreezeFrame());
+    }
+
+    private IEnumerator CaptureFreezeFrame()
+    {
+        if (freezeFrame == null)
+        {
+            Debug.LogWarning("[ColorBlock] FreezeFrame이 연결되지 않았습니다.");
+            yield break;
+        }
+
+        yield return new WaitForEndOfFrame();
+
+        Texture2D screenshot = new Texture2D(
+            Screen.width,
+            Screen.height,
+            TextureFormat.RGB24,
+            false
+        );
+
+        screenshot.ReadPixels(
+            new Rect(0, 0, Screen.width, Screen.height),
+            0,
+            0
+        );
+
+        screenshot.Apply();
+
+        freezeFrame.texture = screenshot;
+
+        freezeFrame.gameObject.SetActive(true);
+
+        Debug.Log("[ColorBlock] Freeze Frame 적용 완료");
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowGameEnd()
+    {
+        if (gameEndText == null)
+            return;
+
+        gameEndText.SetActive(true);
+    }
+
+    #endregion
+
+
+    #region < Score >
+
+    private void GiveColorBlockScores()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        Debug.Log("===== ColorBlock 점수 계산 시작 =====");
+
+        List<PlayerNetwork> players = GetActivePlayers();
+        
+        PlayerNetwork survivor = null;
+
+        foreach (PlayerNetwork player in players)
+        {
+            if (!eliminatedRounds.ContainsKey(player.PlayerRef))
+            {
+                survivor = player;
+                break;
+            }
+        }
+
+        List<PlayerNetwork> eliminatedPlayers = players
+            .Where(player => eliminatedRounds.ContainsKey(player.PlayerRef))
+            .OrderByDescending(player => eliminatedRounds[player.PlayerRef])
+            .ToList();
+
+        List<PlayerNetwork> ranking = new();
+
+        if (survivor != null)
+        {
+            ranking.Add(survivor);
+        }
+
+        ranking.AddRange(eliminatedPlayers);
+
+        int currentRank = 1;
+        int index = 0;
+
+        while (index < ranking.Count)
+        {
+            PlayerNetwork player = ranking[index];
+
+            int groupSize = 1;
+
+            if (player != survivor)
+            {
+                int round = eliminatedRounds[player.PlayerRef];
+
+                while (index + groupSize < ranking.Count)
+                {
+                    PlayerNetwork nextPlayer = ranking[index + groupSize];
+
+                    if (nextPlayer == survivor)
+                        break;
+
+                    if (eliminatedRounds[nextPlayer.PlayerRef] != round)
+                        break;
+
+                    groupSize++;
+                }
+            }
+
+            int score = 0;
+
+            if (currentRank == 1)
+                score = 3;
+            else if (currentRank == 2)
+                score = 2;
+            else if (currentRank == 3)
+                score = 1;
+            else
+                score = 0;
+
+            for (int i = 0; i < groupSize; i++)
+            {
+                PlayerNetwork target = ranking[index + i];
+
+                target.AddScore(score);
+
+                Debug.Log(
+                    $"[ColorBlock Score] " +
+                    $"Player={target.PlayerRef} | " +
+                    $"Rank={currentRank} | " +
+                    $"Score=+{score}"
+                );
+            }
+
+            currentRank += groupSize;
+            index += groupSize;
+        }
+
+        Debug.Log("===== ColorBlock 점수 계산 완료 =====");
+    }
+
+    #endregion
 }
