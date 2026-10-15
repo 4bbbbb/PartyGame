@@ -29,13 +29,6 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     [SerializeField] private float gravity = -20f;
 
-    [Header("<< Ground Check >>")]
-    [SerializeField] private Transform groundCheck;
-
-    [SerializeField] private float groundCheckRadius = 0.2f;
-
-    [SerializeField] private LayerMask groundLayer;
-
     [Header("<< Camera >>")]
     [SerializeField] private Transform camPos;
 
