@@ -176,38 +176,23 @@ public class BaseballManager : NetworkBehaviour
 
     private void SpawnPlayers()
     {
-        if (Runner == null)
-        {
-            Debug.LogError("Runner가 없습니다.");
+        if (Runner == null)        
             return;
-        }
+       
 
-        if (!baseballPlayerPrefab.IsValid)
-        {
-            Debug.LogError(
-                "BaseballPlayer Prefab이 연결되지 않았습니다."
-            );
-
+        if (!baseballPlayerPrefab.IsValid)     
             return;
-        }
+        
 
-        if (playerSpawnPoints == null || playerSpawnPoints.Length < 4)
-        {
-            Debug.LogError("BaseballPlayer Spawn Point가 4개 필요합니다.");
-
+        if (playerSpawnPoints == null || playerSpawnPoints.Length < 4)        
             return;
-        }
+        
 
         List<PlayerNetwork> players = GetActivePlayers();
 
-        if (players.Count == 0)
-        {
-            Debug.LogError(
-                "PlayerNetwork를 하나도 찾지 못했습니다."
-            );
-
+        if (players.Count == 0)                    
             return;
-        }
+        
 
         int spawnCount = Mathf.Min(players.Count, playerSpawnPoints.Length);
 
@@ -222,21 +207,12 @@ public class BaseballManager : NetworkBehaviour
 
             PlayerRef playerRef = player.PlayerRef;
 
-            // 같은 PlayerRef로 이미 생성된 경우 중복 생성하지 않음
             if (spawnedPlayers.ContainsKey(playerRef))
             {
                 continue;
             }
 
-            Transform spawnPoint = playerSpawnPoints[i];
-
-            Debug.Log(
-                $"[Baseball Spawn] " +
-                $"Index={i}, " +
-                $"PlayerRef={playerRef}, " +
-                $"Nickname={player.Nickname}, " +
-                $"CharacterIndex={player.CharacterIndex}"
-            );
+            Transform spawnPoint = playerSpawnPoints[i];           
 
             NetworkObject playerObject = Runner.Spawn(
                 baseballPlayerPrefab,
@@ -245,24 +221,14 @@ public class BaseballManager : NetworkBehaviour
                 playerRef
             );
 
-            if (playerObject == null)
-            {
-                Debug.LogError(
-                    $"BaseballPlayer Spawn 실패 : {playerRef}"
-                );
-
+            if (playerObject == null)         
                 continue;
-            }
+            
 
             BaseballPlayer baseballPlayer = playerObject.GetComponent<BaseballPlayer>();
 
             if (baseballPlayer == null)
-            {
-                Debug.LogError(
-                    "BaseballPlayer 프리팹에 " +
-                    "BaseballPlayer 컴포넌트가 없습니다."
-                );
-
+            {                
                 Runner.Despawn(playerObject);
                 continue;
             }

@@ -376,7 +376,7 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
                     ""initialStateCheck"": true
                 },
                 {
-                    ""name"": ""ThrowObstacle"",
+                    ""name"": ""DropObstacle"",
                     ""type"": ""Button"",
                     ""id"": ""4923f8b5-680d-4400-b4d7-58adb1d09ad5"",
                     ""expectedControlType"": """",
@@ -459,7 +459,7 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
                     ""interactions"": """",
                     ""processors"": """",
                     ""groups"": """",
-                    ""action"": ""ThrowObstacle"",
+                    ""action"": ""DropObstacle"",
                     ""isComposite"": false,
                     ""isPartOfComposite"": false
                 }
@@ -587,7 +587,7 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
         // DodgeIt_Alien
         m_DodgeIt_Alien = asset.FindActionMap("DodgeIt_Alien", throwIfNotFound: true);
         m_DodgeIt_Alien_Move = m_DodgeIt_Alien.FindAction("Move", throwIfNotFound: true);
-        m_DodgeIt_Alien_ThrowObstacle = m_DodgeIt_Alien.FindAction("ThrowObstacle", throwIfNotFound: true);
+        m_DodgeIt_Alien_DropObstacle = m_DodgeIt_Alien.FindAction("DropObstacle", throwIfNotFound: true);
         // DodgeIt
         m_DodgeIt = asset.FindActionMap("DodgeIt", throwIfNotFound: true);
         m_DodgeIt_Move = m_DodgeIt.FindAction("Move", throwIfNotFound: true);
@@ -1009,7 +1009,7 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
     private readonly InputActionMap m_DodgeIt_Alien;
     private List<IDodgeIt_AlienActions> m_DodgeIt_AlienActionsCallbackInterfaces = new List<IDodgeIt_AlienActions>();
     private readonly InputAction m_DodgeIt_Alien_Move;
-    private readonly InputAction m_DodgeIt_Alien_ThrowObstacle;
+    private readonly InputAction m_DodgeIt_Alien_DropObstacle;
     /// <summary>
     /// Provides access to input actions defined in input action map "DodgeIt_Alien".
     /// </summary>
@@ -1026,9 +1026,9 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
         /// </summary>
         public InputAction @Move => m_Wrapper.m_DodgeIt_Alien_Move;
         /// <summary>
-        /// Provides access to the underlying input action "DodgeIt_Alien/ThrowObstacle".
+        /// Provides access to the underlying input action "DodgeIt_Alien/DropObstacle".
         /// </summary>
-        public InputAction @ThrowObstacle => m_Wrapper.m_DodgeIt_Alien_ThrowObstacle;
+        public InputAction @DropObstacle => m_Wrapper.m_DodgeIt_Alien_DropObstacle;
         /// <summary>
         /// Provides access to the underlying input action map instance.
         /// </summary>
@@ -1058,9 +1058,9 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
             @Move.started += instance.OnMove;
             @Move.performed += instance.OnMove;
             @Move.canceled += instance.OnMove;
-            @ThrowObstacle.started += instance.OnThrowObstacle;
-            @ThrowObstacle.performed += instance.OnThrowObstacle;
-            @ThrowObstacle.canceled += instance.OnThrowObstacle;
+            @DropObstacle.started += instance.OnDropObstacle;
+            @DropObstacle.performed += instance.OnDropObstacle;
+            @DropObstacle.canceled += instance.OnDropObstacle;
         }
 
         /// <summary>
@@ -1075,9 +1075,9 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
             @Move.started -= instance.OnMove;
             @Move.performed -= instance.OnMove;
             @Move.canceled -= instance.OnMove;
-            @ThrowObstacle.started -= instance.OnThrowObstacle;
-            @ThrowObstacle.performed -= instance.OnThrowObstacle;
-            @ThrowObstacle.canceled -= instance.OnThrowObstacle;
+            @DropObstacle.started -= instance.OnDropObstacle;
+            @DropObstacle.performed -= instance.OnDropObstacle;
+            @DropObstacle.canceled -= instance.OnDropObstacle;
         }
 
         /// <summary>
@@ -1306,12 +1306,12 @@ public partial class @Player_InputActions: IInputActionCollection2, IDisposable
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
         void OnMove(InputAction.CallbackContext context);
         /// <summary>
-        /// Method invoked when associated input action "ThrowObstacle" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
+        /// Method invoked when associated input action "DropObstacle" is either <see cref="UnityEngine.InputSystem.InputAction.started" />, <see cref="UnityEngine.InputSystem.InputAction.performed" /> or <see cref="UnityEngine.InputSystem.InputAction.canceled" />.
         /// </summary>
         /// <seealso cref="UnityEngine.InputSystem.InputAction.started" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.performed" />
         /// <seealso cref="UnityEngine.InputSystem.InputAction.canceled" />
-        void OnThrowObstacle(InputAction.CallbackContext context);
+        void OnDropObstacle(InputAction.CallbackContext context);
     }
     /// <summary>
     /// Interface to implement callback methods for all input action callbacks associated with input actions defined by "DodgeIt" which allows adding and removing callbacks.

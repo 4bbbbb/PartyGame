@@ -290,7 +290,7 @@
                     "initialStateCheck": true
                 },
                 {
-                    "name": "ThrowObstacle",
+                    "name": "DropObstacle",
                     "type": "Button",
                     "id": "4923f8b5-680d-4400-b4d7-58adb1d09ad5",
                     "expectedControlType": "",
@@ -373,7 +373,7 @@
                     "interactions": "",
                     "processors": "",
                     "groups": "",
-                    "action": "ThrowObstacle",
+                    "action": "DropObstacle",
                     "isComposite": false,
                     "isPartOfComposite": false
                 }
