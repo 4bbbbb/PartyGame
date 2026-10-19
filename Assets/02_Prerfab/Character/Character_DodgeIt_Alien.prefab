@@ -509,10 +509,21 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
       insertIndex: -1
       addedObject: {fileID: 693061643961521306}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -1280595440594189602}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1086268506649843137}
   m_SourcePrefab: {fileID: 100100000, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
 --- !u!4 &929684036617344009 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -836400511372743874, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
+  m_PrefabInstance: {fileID: 8683613662201626423}
+  m_PrefabAsset: {fileID: 0}
+--- !u!137 &6572409450286967376 stripped
+SkinnedMeshRenderer:
+  m_CorrespondingSourceObject: {fileID: -6649697836553743001, guid: f9f65d468731bcf4fba794d064637f84, type: 3}
   m_PrefabInstance: {fileID: 8683613662201626423}
   m_PrefabAsset: {fileID: 0}
 --- !u!1 &8377554368321061478 stripped
@@ -532,13 +543,79 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f397016c19a3a5c4ca05e8a59e931267, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  characterRenderer: {fileID: 6572409450286967376}
+  characterDatabase: {fileID: 11400000, guid: eb93ae62e79069a49bc6f1b16311cd75, type: 2}
+  nameText: {fileID: 9153392145424574691}
+  _PlayerIndex: 0
+  _CharacterIndex: 0
   moveSpeed: 5
   obstacleSpawnPoint: {fileID: 5273898286642346771}
-  obstacle3Prefab: {fileID: 4232882728962797539, guid: 9e686419c7c859746953be634a51ef1e, type: 3}
-  obstacle4Prefab: {fileID: 8406397044989595572, guid: c2a6ed768f7dfda43bcad43a588b6ee0, type: 3}
-  obstacle5Prefab: {fileID: 22510327691246431, guid: 9608120c19f3ff540a6db910d82adaaa, type: 3}
+  obstacle3Prefab: {fileID: 5648880403984546960, guid: 9e686419c7c859746953be634a51ef1e, type: 3}
+  obstacle4Prefab: {fileID: 3683086577238735185, guid: c2a6ed768f7dfda43bcad43a588b6ee0, type: 3}
+  obstacle5Prefab: {fileID: -4467107808222860703, guid: 9608120c19f3ff540a6db910d82adaaa, type: 3}
   firstSpawnDelay: 1
   nextSpawnDelay: 2
+--- !u!114 &-1280595440594189602
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8377554368321061478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 3180003827
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262402
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1086268506649843137}
+  - {fileID: 693061643961521306}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &1086268506649843137
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8377554368321061478}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  ConfigFlags: 0
+  PhysicsSettings:
+    ForecastEnabled: 1
+    DebugPhysics: 0
+    GravityForecast: 2
+    MaxExtrapolationTime: 0.15
+    MinLinearDetectedError: 0.02
+    MinAngularDetectedError: 3
+    MaxLinearError: 0
+    MaxAngularError: 0
+    LowCorrectionProgressThreshold: 0.015
+    HighErrorSimilarityThreshold: 1
+    MaxErrorTotalTime: 0.5
+    MaxRemoteSleepIgnoreTime: 0.5
+    ErrorCorrectionType: 0
+    LinearVelCorrectionMul: 1
+    AngularVelCorrectionMul: 1
+    PositionCorrectionLerp: 0.15
+    RotationCorrectionLerp: 0.15
+    Spring: 75
+    Damper: 2
+    MinImpactfulCollisionAlignment: 0.3
+    ImpactStartCorrectionTime: 0.1
+    ImpactCorrectionTimeComplete: 0.3
 --- !u!4 &9153810210882377948 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: f9f65d468731bcf4fba794d064637f84, type: 3}

@@ -64,28 +64,28 @@ public class TagManager : NetworkBehaviour
     }
 
 
-    private void Start()
-    {
-        Debug.Log("===== TagManager Start 호출 =====");
+    //private void Start()
+    //{
+    //    Debug.Log("===== TagManager Start 호출 =====");
 
-        if (NetworkManager.Instance == null)
-        {
-            Debug.LogError("NetworkManager 없음");
-            return;
-        }
+    //    if (NetworkManager.Instance == null)
+    //    {
+    //        Debug.LogError("NetworkManager 없음");
+    //        return;
+    //    }
 
-        NetworkRunner runner = NetworkManager.Instance.GetRunner();
+    //    NetworkRunner runner = NetworkManager.Instance.GetRunner();
 
-        if (runner == null)
-        {
-            Debug.LogError("Runner 없음");
-            return;
-        }
+    //    if (runner == null)
+    //    {
+    //        Debug.LogError("Runner 없음");
+    //        return;
+    //    }
 
-        Debug.Log(
-            $"현재 플레이어 수 : {runner.ActivePlayers.Count()}"
-        );
-    }
+    //    Debug.Log(
+    //        $"현재 플레이어 수 : {runner.ActivePlayers.Count()}"
+    //    );
+    //}
 
 
     public override void Spawned()
@@ -323,8 +323,7 @@ public class TagManager : NetworkBehaviour
     }
 
 
-    private bool HasPlayerAlreadySelected(
-        PlayerRef player)
+    private bool HasPlayerAlreadySelected(PlayerRef player)
     {
         for (int i = 0; i < 4; i++)
         {

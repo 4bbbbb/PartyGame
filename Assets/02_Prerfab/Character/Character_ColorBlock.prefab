@@ -440,10 +440,6 @@ MonoBehaviour:
   rotationSpeed: 3
   jumpForce: 8
   gravity: -20
-  groundCheckRadius: 0.2
-  groundLayer:
-    serializedVersion: 2
-    m_Bits: 64
   camPos: {fileID: 5343531342232103059}
   colorBlockManager: {fileID: 0}
   _PlayerIndex: 0

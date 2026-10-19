@@ -129,7 +129,7 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
+  m_Size: {x: 1, y: 1.7, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &3686408408100872346
 MonoBehaviour:
@@ -227,6 +227,12 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7f412d7140e9e0742a6a8a29fa513b4a, type: 3}
       insertIndex: -1
       addedObject: {fileID: -4477810394918836663}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7f412d7140e9e0742a6a8a29fa513b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 3683086577238735185}
+    - targetCorrespondingSourceObject: {fileID: 919132149155446097, guid: 7f412d7140e9e0742a6a8a29fa513b4a, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: -6628464113020068817}
   m_SourcePrefab: {fileID: 100100000, guid: 7f412d7140e9e0742a6a8a29fa513b4a, type: 3}
 --- !u!1 &8406397044989595572 stripped
 GameObject:
@@ -276,7 +282,7 @@ Rigidbody:
     m_Bits: 0
   m_ImplicitCom: 1
   m_ImplicitTensor: 1
-  m_UseGravity: 1
+  m_UseGravity: 0
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
@@ -293,6 +299,67 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7b0f5a44a2d1f6c408e514d04cd90728, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &3683086577238735185
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8406397044989595572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  SortKey: 1174492712
+  SendPriority: 1
+  EnableInterpolation: 1
+  Flags: 262402
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: -6628464113020068817}
+  - {fileID: -4477810394918836663}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &-6628464113020068817
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8406397044989595572}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 0
+  _autoAOIOverride: 1
+  ConfigFlags: 0
+  PhysicsSettings:
+    ForecastEnabled: 1
+    DebugPhysics: 0
+    GravityForecast: 2
+    MaxExtrapolationTime: 0.15
+    MinLinearDetectedError: 0.02
+    MinAngularDetectedError: 3
+    MaxLinearError: 0
+    MaxAngularError: 0
+    LowCorrectionProgressThreshold: 0.015
+    HighErrorSimilarityThreshold: 1
+    MaxErrorTotalTime: 0.5
+    MaxRemoteSleepIgnoreTime: 0.5
+    ErrorCorrectionType: 0
+    LinearVelCorrectionMul: 1
+    AngularVelCorrectionMul: 1
+    PositionCorrectionLerp: 0.15
+    RotationCorrectionLerp: 0.15
+    Spring: 75
+    Damper: 2
+    MinImpactfulCollisionAlignment: 0.3
+    ImpactStartCorrectionTime: 0.1
+    ImpactCorrectionTimeComplete: 0.3
 --- !u!4 &9215021513702364430 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 7f412d7140e9e0742a6a8a29fa513b4a, type: 3}
