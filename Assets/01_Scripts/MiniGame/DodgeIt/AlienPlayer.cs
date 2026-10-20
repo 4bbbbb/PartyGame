@@ -20,8 +20,10 @@ public class AlienPlayer : NetworkBehaviour
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; private set; }
 
+
     [Header("<< Move >>")]
     [SerializeField] private float moveSpeed = 5f;
+
 
     [Header("<< Obstacle Spawn >>")]
     [SerializeField] private Transform obstacleSpawnPoint;
@@ -31,6 +33,7 @@ public class AlienPlayer : NetworkBehaviour
 
     [SerializeField] private float firstSpawnDelay = 1f;
     [SerializeField] private float nextSpawnDelay = 2f;
+
 
     private Player_InputActions inputActions;
 
@@ -42,6 +45,7 @@ public class AlienPlayer : NetworkBehaviour
     private bool isSpawning;
 
     private DodgeItObstacle currentObstacle;
+
 
     private PlayerNetwork playerNetwork;
 
@@ -55,13 +59,7 @@ public class AlienPlayer : NetworkBehaviour
     }
 
     public override void Spawned()
-    {
-        Debug.Log(
-            $"[AlienPlayer] Spawned | " +
-            $"InputAuthority={Object.HasInputAuthority} | " +
-            $"StateAuthority={Object.HasStateAuthority}"
-        );
-
+    {      
         FindPlayerNetwork();
         ApplyCharacter();
 
@@ -104,8 +102,7 @@ public class AlienPlayer : NetworkBehaviour
         if (Object == null || !Object.HasInputAuthority)
             return;
 
-        Vector2 moveInput =
-            inputActions.DodgeIt_Alien.Move.ReadValue<Vector2>();
+        Vector2 moveInput = inputActions.DodgeIt_Alien.Move.ReadValue<Vector2>();
 
         RPC_SendMoveInput(moveInput);
     }
@@ -122,20 +119,13 @@ public class AlienPlayer : NetworkBehaviour
         RPC_RequestDropObstacle();
     }
 
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.StateAuthority,
-        Channel = RpcChannel.Unreliable
-    )]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Unreliable)]
     private void RPC_SendMoveInput(Vector2 moveInput)
     {
         NetworkMoveInput = Vector2.ClampMagnitude(moveInput, 1f);
     }
 
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.StateAuthority
-    )]
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
     private void RPC_RequestDropObstacle()
     {
         dropRequested = true;
@@ -150,11 +140,9 @@ public class AlienPlayer : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        Vector3 movement =
-            Vector3.right * NetworkMoveInput.x * moveSpeed;
+        Vector3 movement = Vector3.right * NetworkMoveInput.x * moveSpeed;
 
-        Vector3 nextPosition =
-            transform.position + movement * Runner.DeltaTime;
+        Vector3 nextPosition = transform.position + movement * Runner.DeltaTime;
 
         nextPosition.x = Mathf.Clamp(nextPosition.x, -7f, 7f);
 
@@ -197,13 +185,9 @@ public class AlienPlayer : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return false;
 
-        if (obstacleSpawnPoint == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] Obstacle Spawn Point가 할당되지 않았습니다."
-            );
+        if (obstacleSpawnPoint == null)                   
             return false;
-        }
+        
 
         int randomValue = Random.Range(0, 100);
 
@@ -216,13 +200,9 @@ public class AlienPlayer : NetworkBehaviour
         else
             selectedPrefab = obstacle5Prefab;
 
-        if (selectedPrefab == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] 선택된 장애물 프리팹이 할당되지 않았습니다."
-            );
+        if (selectedPrefab == null)                   
             return false;
-        }
+        
 
         NetworkObject obstacleObject = Runner.Spawn(
             selectedPrefab,
@@ -230,21 +210,14 @@ public class AlienPlayer : NetworkBehaviour
             obstacleSpawnPoint.rotation
         );
 
-        if (obstacleObject == null)
-        {
-            Debug.LogError("[AlienPlayer] 네트워크 장애물 스폰 실패!");
+        if (obstacleObject == null)       
             return false;
-        }
+        
 
-        currentObstacle =
-            obstacleObject.GetComponent<DodgeItObstacle>();
+        currentObstacle = obstacleObject.GetComponent<DodgeItObstacle>();
 
         if (currentObstacle == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] 장애물 프리팹에 DodgeItObstacle이 없습니다."
-            );
-
+        {    
             Runner.Despawn(obstacleObject);
             return false;
         }
@@ -253,7 +226,6 @@ public class AlienPlayer : NetworkBehaviour
 
         waitingForNextObstacle = false;
 
-        Debug.Log("[AlienPlayer] 네트워크 장애물 생성 완료");
         return true;
     }
 
@@ -269,8 +241,6 @@ public class AlienPlayer : NetworkBehaviour
 
         currentObstacle = null;
         waitingForNextObstacle = true;
-
-        Debug.Log("[AlienPlayer] 장애물 투하 처리 완료");
     }
 
     #endregion
@@ -288,12 +258,7 @@ public class AlienPlayer : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        PlayerIndex = index;
-
-        Debug.Log(
-            $"[AlienPlayer SetPlayerIndex] " +
-            $"Object={Object.Id}, PlayerIndex={PlayerIndex}"
-        );
+        PlayerIndex = index;     
     }
 
     public void SetCharacterIndex(int index)
@@ -302,12 +267,7 @@ public class AlienPlayer : NetworkBehaviour
             return;
 
         CharacterIndex = index;
-        ApplyCharacter();
-
-        Debug.Log(
-            $"[AlienPlayer SetCharacterIndex] " +
-            $"Object={Object.Id}, CharacterIndex={CharacterIndex}"
-        );
+        ApplyCharacter();       
     }
 
     private void FindPlayerNetwork()
@@ -318,26 +278,16 @@ public class AlienPlayer : NetworkBehaviour
         NetworkObject playerNetworkObject =
             Runner.GetPlayerObject(Object.InputAuthority);
 
-        if (playerNetworkObject == null)
-        {
-            Debug.LogWarning(
-                $"[AlienPlayer] PlayerNetwork를 찾을 수 없습니다: " +
-                $"{Object.InputAuthority}"
-            );
+        if (playerNetworkObject == null)     
             return;
-        }
+        
 
         PlayerNetwork player =
             playerNetworkObject.GetComponent<PlayerNetwork>();
 
-        if (player == null)
-        {
-            Debug.LogWarning(
-                "[AlienPlayer] PlayerNetwork 컴포넌트가 없습니다."
-            );
+        if (player == null)      
             return;
-        }
-
+        
         SetPlayerNetwork(player);
     }
 
@@ -360,67 +310,35 @@ public class AlienPlayer : NetworkBehaviour
 
     private void ApplyCharacter()
     {
-        if (characterDatabase == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] CharacterDatabase가 연결되지 않았습니다."
-            );
+        if (characterDatabase == null)     
             return;
-        }
+        
 
-        if (CharacterIndex < 0 ||
-            CharacterIndex >= characterDatabase.characters.Length)
-        {
-            Debug.LogWarning(
-                $"[AlienPlayer] 유효하지 않은 CharacterIndex: {CharacterIndex}"
-            );
+        if (CharacterIndex < 0 || CharacterIndex >= characterDatabase.characters.Length)           
             return;
-        }
+        
 
-        CharacterData characterData =
-            characterDatabase.characters[CharacterIndex];
+        CharacterData characterData = characterDatabase.characters[CharacterIndex];
 
-        if (characterData == null)
-        {
-            Debug.LogError(
-                $"[AlienPlayer] CharacterData가 비어 있습니다: {CharacterIndex}"
-            );
+        if (characterData == null)     
             return;
-        }
+        
 
         if (characterRenderer == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] Character Renderer가 연결되지 않았습니다."
-            );
             return;
-        }
+       
 
         if (characterData.characterMaterial == null)
-        {
-            Debug.LogError(
-                "[AlienPlayer] 캐릭터 머티리얼이 없습니다."
-            );
             return;
-        }
+        
 
         Material[] materials = characterRenderer.materials;
 
-        if (materials.Length < 2)
-        {
-            Debug.LogError(
-                "[AlienPlayer] Renderer의 머티리얼 슬롯이 2개 미만입니다."
-            );
-            return;
-        }
+        if (materials.Length < 2)         
+            return;        
 
         materials[0] = characterData.characterMaterial;
-        characterRenderer.materials = materials;
-
-        Debug.Log(
-            $"[AlienPlayer] 캐릭터 외형 적용 완료: " +
-            $"{characterData.characterName}"
-        );
+        characterRenderer.materials = materials;        
     }
 
     #endregion

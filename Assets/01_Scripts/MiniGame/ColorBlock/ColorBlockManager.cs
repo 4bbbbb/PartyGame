@@ -695,7 +695,6 @@ public class ColorBlockManager : NetworkBehaviour
     {
         if (freezeFrame == null)
         {
-            Debug.LogWarning("[ColorBlock] FreezeFrame이 연결되지 않았습니다.");
             yield break;
         }
 

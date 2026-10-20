@@ -1,6 +1,8 @@
-using Fusion;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
+using Fusion;
 using UnityEngine;
 
 public class DodgeItManager : NetworkBehaviour
@@ -16,57 +18,66 @@ public class DodgeItManager : NetworkBehaviour
     [SerializeField] private NetworkObject dodgeItPlayerPrefab;
     [SerializeField] private Transform[] playerSpawnPoints;
 
+    [Header("<< Timer >>")]
+    [SerializeField] private TextMeshProUGUI timerText;
+
+    [Header("<< Game End >>")]
+    [SerializeField] private GameObject gameEnd;
+
+    [Header("<< Elimination VFX >>")]
+    [SerializeField] private GameObject eliminateVFXPrefab;
+
     [Networked]
     public PlayerRef AlienPlayer { get; private set; }
 
+    [Networked]
+    private int RemainingTime { get; set; } = 30;
+
+    [Networked]
+    private NetworkBool IsGameEnding { get; set; }
+
+    private bool isEndGameScheduled;
+
+    private Coroutine timerCoroutine;
+
     private readonly Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new();
 
-    /// <summary>
-    /// AlienManager에서 선정된 Alien 플레이어를 전달받는다.
-    /// </summary>
+    private readonly Dictionary<PlayerRef, int> eliminatedTicks = new();
+
+
+
     public void SetAlienPlayer(PlayerRef alienPlayer)
     {
         if (Object == null || !Object.HasStateAuthority)
             return;
 
-        if (!Runner.ActivePlayers.Contains(alienPlayer))
-        {
-            Debug.LogWarning($"유효하지 않은 Alien 플레이어: {alienPlayer}");
+        if (!Runner.ActivePlayers.Contains(alienPlayer))        
             return;
-        }
+        
 
         AlienPlayer = alienPlayer;
 
         Debug.Log($"Dodge It! Alien 선정 완료: {AlienPlayer}");
     }
 
-    /// <summary>
-    /// Alien 선정이 완료된 후 본게임을 시작한다.
-    /// </summary>
+   
     public void StartGame()
     {
         if (Object == null || !Object.HasStateAuthority)
             return;
 
-        if (!Runner.ActivePlayers.Contains(AlienPlayer))
-        {
-            Debug.LogError("Alien 플레이어가 설정되지 않았습니다.");
+        if (!Runner.ActivePlayers.Contains(AlienPlayer))       
             return;
-        }
+        
 
         if (alienPrefab == null || alienSpawnPoint == null)
-        {
-            Debug.LogError("Alien 프리팹 또는 스폰 위치가 연결되지 않았습니다.");
             return;
-        }
+      
 
         if (dodgeItPlayerPrefab == null ||
             playerSpawnPoints == null ||
             playerSpawnPoints.Length < 3)
-        {
-            Debug.LogError(
-                "DodgeItPlayer 프리팹과 스폰 위치 3개를 확인해 주세요."
-            );
+        {            
             return;
         }
 
@@ -75,27 +86,21 @@ public class DodgeItManager : NetworkBehaviour
             .ToList();
 
         if (players.Count != 4)
-        {
-            Debug.LogWarning(
-                $"Dodge It!은 현재 4인 플레이를 기준으로 합니다. 현재 인원: {players.Count}"
-            );
-            return;
-        }
+            return;        
 
         SpawnAlien();
         SpawnPlayers(players);
+
+        StartTimer();
 
         Debug.Log("===== Dodge It! 게임 시작 =====");
     }
 
     public override void Spawned()
     {
-        Debug.Log("===== DodgeItManager Spawned =====");
-
         if (AlienManager.Instance != null)
         {
             AlienManager.Instance.OnAlienSelected += HandleAlienSelected;
-            Debug.Log("Alien 선정 이벤트 연결 완료");
         }
         else
         {
@@ -105,8 +110,6 @@ public class DodgeItManager : NetworkBehaviour
 
     private void HandleAlienSelected(PlayerRef alienPlayer)
     {
-        Debug.Log($"DodgeItManager Alien 수신: {alienPlayer}");
-
         if (!Object.HasStateAuthority)
             return;
 
@@ -120,9 +123,9 @@ public class DodgeItManager : NetworkBehaviour
             AlienManager.Instance.OnAlienSelected -= HandleAlienSelected;
     }
 
-    /// <summary>
-    /// Alien 플레이어 스폰
-    /// </summary>
+
+    #region < Spawn >
+
     private void SpawnAlien()
     {
         if (spawnedPlayers.ContainsKey(AlienPlayer))
@@ -135,21 +138,15 @@ public class DodgeItManager : NetworkBehaviour
             AlienPlayer
         );
 
-        if (alienObject == null)
-        {
-            Debug.LogError("[DodgeItManager] Alien 스폰에 실패했습니다.");
+        if (alienObject == null)        
             return;
-        }
+        
 
         AlienPlayer alienPlayerComponent =
             alienObject.GetComponent<AlienPlayer>();
 
         if (alienPlayerComponent == null)
-        {
-            Debug.LogError(
-                "[DodgeItManager] Alien 프리팹에 AlienPlayer가 없습니다."
-            );
-
+        {           
             Runner.Despawn(alienObject);
             return;
         }
@@ -158,24 +155,15 @@ public class DodgeItManager : NetworkBehaviour
             Runner.GetPlayerObject(AlienPlayer);
 
         if (playerNetworkObject == null)
-        {
-            Debug.LogError(
-                $"[DodgeItManager] Alien의 PlayerNetwork를 찾을 수 없습니다: {AlienPlayer}"
-            );
-
+        {     
             Runner.Despawn(alienObject);
             return;
         }
 
-        PlayerNetwork playerNetwork =
-            playerNetworkObject.GetComponent<PlayerNetwork>();
+        PlayerNetwork playerNetwork = playerNetworkObject.GetComponent<PlayerNetwork>();
 
         if (playerNetwork == null)
-        {
-            Debug.LogError(
-                "[DodgeItManager] Alien의 PlayerNetwork 컴포넌트가 없습니다."
-            );
-
+        {    
             Runner.Despawn(alienObject);
             return;
         }
@@ -190,14 +178,7 @@ public class DodgeItManager : NetworkBehaviour
         alienPlayerComponent.SetPlayerIndex(alienPlayerIndex);
         alienPlayerComponent.SetCharacterIndex(playerNetwork.CharacterIndex);
 
-        spawnedPlayers.Add(AlienPlayer, alienObject);
-
-        Debug.Log(
-            $"[DodgeItManager] Alien 스폰 완료: " +
-            $"Player={AlienPlayer}, " +
-            $"PlayerIndex={alienPlayerIndex}, " +
-            $"CharacterIndex={playerNetwork.CharacterIndex}"
-        );
+        spawnedPlayers.Add(AlienPlayer, alienObject);       
     }
 
     private void SpawnPlayers(List<PlayerRef> players)
@@ -212,13 +193,9 @@ public class DodgeItManager : NetworkBehaviour
             if (spawnedPlayers.ContainsKey(player))
                 continue;
 
-            if (spawnIndex >= playerSpawnPoints.Length)
-            {
-                Debug.LogError(
-                    "[DodgeItManager] 플레이어 스폰 위치가 부족합니다."
-                );
+            if (spawnIndex >= playerSpawnPoints.Length)            
                 return;
-            }
+            
 
             Transform spawnPoint = playerSpawnPoints[spawnIndex];
 
@@ -231,28 +208,19 @@ public class DodgeItManager : NetworkBehaviour
 
             if (playerObject == null)
             {
-                Debug.LogError(
-                    $"[DodgeItManager] 플레이어 스폰 실패: {player}"
-                );
                 continue;
             }
 
-            DodgeItPlayer dodgePlayer =
-                playerObject.GetComponent<DodgeItPlayer>();
+            DodgeItPlayer dodgePlayer = playerObject.GetComponent<DodgeItPlayer>();
 
-            NetworkObject playerNetworkObject =
-                Runner.GetPlayerObject(player);
+            NetworkObject playerNetworkObject = Runner.GetPlayerObject(player);
 
             PlayerNetwork playerNetwork = playerNetworkObject != null
                 ? playerNetworkObject.GetComponent<PlayerNetwork>()
                 : null;
 
             if (dodgePlayer == null || playerNetwork == null)
-            {
-                Debug.LogError(
-                    $"[DodgeItManager] 플레이어 구성 요소를 찾을 수 없습니다: {player}"
-                );
-
+            {          
                 Runner.Despawn(playerObject);
                 continue;
             }
@@ -262,16 +230,334 @@ public class DodgeItManager : NetworkBehaviour
             dodgePlayer.SetPlayerNetwork(playerNetwork);
             dodgePlayer.SetPlayerIndex(playerIndex);
             dodgePlayer.SetCharacterIndex(playerNetwork.CharacterIndex);
+            dodgePlayer.SetDodgeItManager(this);
 
             spawnedPlayers.Add(player, playerObject);
-            spawnIndex++;
-
-            Debug.Log(
-                $"[DodgeItManager] DodgeItPlayer 스폰 완료: " +
-                $"Player={player}, " +
-                $"PlayerIndex={playerIndex}, " +
-                $"CharacterIndex={playerNetwork.CharacterIndex}"
-            );
+            spawnIndex++;          
         }
-    }    
+    }
+
+    #endregion
+
+
+    #region < Timer >
+
+    private void StartTimer()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        RemainingTime = 30;
+        IsGameEnding = false;
+        isEndGameScheduled = false;
+
+        if (gameEnd != null)
+            gameEnd.SetActive(false);
+
+        UpdateTimerUI();
+
+        if (timerCoroutine != null)
+            StopCoroutine(timerCoroutine);
+
+        timerCoroutine = StartCoroutine(TimerRoutine());
+    }
+
+    private IEnumerator TimerRoutine()
+    {
+        while (RemainingTime > 0 && !IsGameEnding)
+        {
+            yield return new WaitForSeconds(1f);
+
+            if (IsGameEnding)
+                yield break;
+
+            RemainingTime--;
+        }
+
+        timerCoroutine = null;
+
+        if (!IsGameEnding)
+            EndGame();
+    }
+
+    public override void Render()
+    {
+        UpdateTimerUI();
+    }
+
+    private void UpdateTimerUI()
+    {
+        if (timerText != null)
+            timerText.text = RemainingTime.ToString();
+    }
+
+    #endregion
+
+
+    #region < VFX >
+
+    public void SpawnEliminateVFX(Vector3 position)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        RPC_SpawnEliminateVFX(position);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_SpawnEliminateVFX(Vector3 position)
+    {
+        Debug.Log(
+            $"[VFX RPC] 실행됨 | " +
+            $"LocalPlayer: {Runner.LocalPlayer} | " +
+            $"HasStateAuthority: {Object.HasStateAuthority}"
+        );
+
+        SpawnEliminateVFXLocal(position);
+    }
+
+    private void SpawnEliminateVFXLocal(Vector3 position)
+    {
+        if (eliminateVFXPrefab == null)
+        {
+            Debug.LogError("[VFX] eliminateVFXPrefab이 연결되지 않았습니다!");
+            return;
+        }
+
+        Instantiate(
+            eliminateVFXPrefab,
+            position,
+            Quaternion.identity
+        );
+
+        Debug.Log($"[VFX] 생성 완료: {position}");
+    }
+
+    #endregion
+
+
+    #region < End >
+
+    private void EndGame()
+    {
+        if (!Object.HasStateAuthority || IsGameEnding)
+            return;
+
+        IsGameEnding = true;
+
+        StartCoroutine(GameEndRoutine());
+    }
+
+    private IEnumerator GameEndRoutine()
+    {
+        GiveDodgeItScores();
+
+        RPC_FreezeGame();
+
+        yield return new WaitForSecondsRealtime(1f);
+
+        RPC_ShowGameEnd();
+
+        yield return new WaitForSecondsRealtime(1.5f);
+
+        const int SCORE_SCENE_INDEX = 4;
+
+        Time.timeScale = 1f;
+
+        Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_FreezeGame()
+    {
+        Time.timeScale = 0f;
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowGameEnd()
+    {
+        if (gameEnd != null)
+            gameEnd.SetActive(true);
+    }
+
+
+    public void CheckAllPlayersEliminated()
+    {
+        if (Object == null)
+            return;
+
+        if (!Object.HasStateAuthority || IsGameEnding || isEndGameScheduled)
+            return;
+
+        int aliveCount = 0;
+
+        foreach (var pair in spawnedPlayers)
+        {
+            if (pair.Key == AlienPlayer)
+                continue;
+
+            NetworkObject playerObject = pair.Value;
+
+            if (playerObject == null)
+                continue;
+
+            DodgeItPlayer player = playerObject.GetComponent<DodgeItPlayer>();
+
+            if (player == null)
+                continue;
+
+            if (!player.IsEliminated)
+                aliveCount++;
+        }
+
+        if (aliveCount == 0)
+        {
+            isEndGameScheduled = true;
+
+            // 타이머를 즉시 멈춘다.
+            if (timerCoroutine != null)
+            {
+                StopCoroutine(timerCoroutine);
+                timerCoroutine = null;
+            }
+
+            Debug.Log("[Dodge It!] 전원 탈락! 타이머 중지, 1초 후 게임 종료");
+
+            StartCoroutine(EndGameAfterDelay());
+        }
+    }
+
+
+    private IEnumerator EndGameAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+
+        EndGame();
+    }
+
+    public void RecordElimination(PlayerRef player)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        if (eliminatedTicks.ContainsKey(player))
+            return;
+
+        eliminatedTicks[player] = Runner.Tick.Raw;
+
+        Debug.Log(
+            $"[Dodge It!] 탈락 기록 저장 완료: {player} | Tick={Runner.Tick.Raw}"
+        );
+    }
+
+    #endregion
+
+
+    #region < Score >
+
+    private void GiveDodgeItScores()
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        Debug.Log("===== Dodge It! 점수 계산 시작 =====");
+
+        List<PlayerRef> players = Runner.ActivePlayers
+            .OrderBy(player => player.RawEncoded)
+            .ToList();
+
+        List<PlayerRef> dodgePlayers = players
+            .Where(player => player != AlienPlayer)
+            .ToList();
+
+        bool allEliminated = dodgePlayers.All(
+            player => eliminatedTicks.ContainsKey(player)
+        );
+
+        if (allEliminated)
+        {
+            AddPlayerScore(AlienPlayer, 3);
+
+            Debug.Log("[Dodge It!] 전원 탈락! Alien +3점");
+
+            Debug.Log("===== Dodge It! 점수 계산 완료 =====");
+            return;
+        }
+
+        List<PlayerRef> survivors = dodgePlayers
+            .Where(player => !eliminatedTicks.ContainsKey(player))
+            .ToList();
+
+        foreach (PlayerRef survivor in survivors)
+        {
+            AddPlayerScore(survivor, 3);
+
+            Debug.Log($"[Dodge It! Score] 생존: {survivor} | +3점");
+        }
+
+        List<IGrouping<int, PlayerRef>> eliminationGroups = dodgePlayers
+            .Where(player => eliminatedTicks.ContainsKey(player))
+            .GroupBy(player => eliminatedTicks[player])
+            .OrderBy(group => group.Key)
+            .ToList();
+
+        int eliminationOrder = 0;
+
+        foreach (IGrouping<int, PlayerRef> group in eliminationGroups)
+        {
+            int score;
+
+            if (group.Count() > 1)
+            {
+                score = 1;
+            }
+            else
+            {
+                eliminationOrder++;
+
+                score = eliminationOrder;
+            }
+
+            foreach (PlayerRef player in group)
+            {
+                AddPlayerScore(player, score);
+
+                Debug.Log(
+                    $"[Dodge It! Score] 탈락: {player} | " +
+                    $"Tick={group.Key} | +{score}점"
+                );
+            }
+        }
+
+        Debug.Log($"[Dodge It! Score] Alien: {AlienPlayer} | +0점");
+        Debug.Log("===== Dodge It! 점수 계산 완료 =====");
+    }
+
+    private void AddPlayerScore(PlayerRef playerRef, int score)
+    {
+        NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
+
+        if (playerObject == null)
+        {
+            Debug.LogWarning(
+                $"[Dodge It!] PlayerNetwork를 찾을 수 없습니다: {playerRef}"
+            );
+            return;
+        }
+
+        PlayerNetwork playerNetwork =
+            playerObject.GetComponent<PlayerNetwork>();
+
+        if (playerNetwork == null)
+        {
+            Debug.LogWarning(
+                $"[Dodge It!] PlayerNetwork 컴포넌트가 없습니다: {playerRef}"
+            );
+            return;
+        }
+
+        playerNetwork.AddScore(score);
+    }
+
+    #endregion
 }

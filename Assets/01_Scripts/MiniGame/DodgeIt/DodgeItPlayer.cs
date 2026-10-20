@@ -37,18 +37,27 @@ public class DodgeItPlayer : NetworkBehaviour
     private CharacterController controller;
     private Player_InputActions inputActions;
 
+
     [Networked]
     private Vector2 NetworkMoveInput { get; set; }
 
     [Networked]
     private NetworkBool NetworkJumpRequested { get; set; }
 
+    [Networked]
+    public NetworkBool IsEliminated { get; private set; }
+
     private float verticalVelocity;
     private bool isJumping;
     private bool jumpInput;
 
     private PlayerNetwork playerNetwork;
+    private DodgeItManager dodgeItManager;
 
+    public void SetDodgeItManager(DodgeItManager manager)
+    {
+        dodgeItManager = manager;
+    }
     public PlayerNetwork PlayerNetwork => playerNetwork;
 
     #region < Unity >
@@ -60,20 +69,11 @@ public class DodgeItPlayer : NetworkBehaviour
     }
 
     public override void Spawned()
-    {
-        Debug.Log(
-            $"[DodgeItPlayer] Spawned | " +
-            $"InputAuthority={Object.HasInputAuthority} | " +
-            $"StateAuthority={Object.HasStateAuthority}"
-        );
-
-        // 각 클라이언트에서 해당 캐릭터의 PlayerNetwork를 찾는다.
+    {     
         FindPlayerNetwork();
 
-        // 스폰 직후에도 외형을 적용한다.
         ApplyCharacter();
 
-        // 내 캐릭터만 입력을 받는다.
         if (Object.HasInputAuthority)
         {
             inputActions.DodgeIt.Enable();
@@ -106,8 +106,7 @@ public class DodgeItPlayer : NetworkBehaviour
         if (Object == null || !Object.HasInputAuthority)
             return;
 
-        Vector2 moveInput =
-            inputActions.DodgeIt.Move.ReadValue<Vector2>();
+        Vector2 moveInput = inputActions.DodgeIt.Move.ReadValue<Vector2>();
 
         bool jumpPressed = jumpInput;
         jumpInput = false;
@@ -117,30 +116,129 @@ public class DodgeItPlayer : NetworkBehaviour
 
     #endregion
 
+
     #region < Network Input >
 
-    [Rpc(
-        RpcSources.InputAuthority,
-        RpcTargets.StateAuthority,
-        Channel = RpcChannel.Unreliable
-    )]
-    private void RPC_SendInput(
-        Vector2 moveInput,
-        NetworkBool jumpPressed)
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Unreliable)]
+    private void RPC_SendInput(Vector2 moveInput, NetworkBool jumpPressed)
     {
         NetworkMoveInput = Vector2.ClampMagnitude(moveInput, 1f);
 
         if (jumpPressed)
+        {
             NetworkJumpRequested = true;
+        }
     }
 
     #endregion
+
+
+    #region < Player Network >
+
+    public void SetPlayerNetwork(PlayerNetwork player)
+    {
+        playerNetwork = player;
+        UpdateName();
+    }
+
+    public void SetPlayerIndex(int index)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        PlayerIndex = index;       
+    }
+
+    public void SetCharacterIndex(int index)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        CharacterIndex = index;
+
+        ApplyCharacter();       
+    }
+
+    private void FindPlayerNetwork()
+    {
+        if (Object == null || Runner == null)
+            return;
+
+        NetworkObject playerNetworkObject =
+            Runner.GetPlayerObject(Object.InputAuthority);
+
+        if (playerNetworkObject == null)
+            return;
+        
+
+        PlayerNetwork player = playerNetworkObject.GetComponent<PlayerNetwork>();
+
+        if (player == null)            
+            return;        
+
+        SetPlayerNetwork(player);
+    }
+
+    private void UpdateName()
+    {
+        if (playerNetwork == null || nameText == null)
+            return;
+
+        nameText.text = playerNetwork.Nickname.ToString();
+    }
+
+    #endregion
+
+
+    #region < Character >
+
+    private void OnCharacterIndexChanged()
+    {
+        ApplyCharacter();
+    }
+
+    private void ApplyCharacter()
+    {
+        if (characterDatabase == null)
+            return;
+        
+
+        if (CharacterIndex < 0 || CharacterIndex >= characterDatabase.characters.Length)        
+            return;        
+
+        CharacterData characterData = characterDatabase.characters[CharacterIndex];
+
+        if (characterData == null)
+            return;
+        
+
+        if (characterRenderer == null)
+            return;
+        
+
+        if (characterData.characterMaterial == null)
+            return;
+        
+
+        Material[] materials = characterRenderer.materials;
+
+        if (materials.Length < 2)
+            return;        
+
+        materials[0] = characterData.characterMaterial;
+        characterRenderer.materials = materials;        
+    }
+
+    #endregion
+
 
     #region < Move >
 
     public override void FixedUpdateNetwork()
     {
-        // 실제 이동은 State Authority에서만 처리한다.
+        if (IsEliminated)
+            return;
+
         if (!Object.HasStateAuthority)
             return;
 
@@ -156,28 +254,23 @@ public class DodgeItPlayer : NetworkBehaviour
 
     private void Move(Vector2 moveInput)
     {
-        Vector3 movement =
-            Vector3.right * moveInput.x * moveSpeed;
+        Vector3 movement = Vector3.right * moveInput.x * moveSpeed;
 
         movement.y = verticalVelocity;
 
         controller.Move(movement * Runner.DeltaTime);
 
-        // 좌우 이동 범위 제한
         Vector3 position = transform.position;
 
         position.x = Mathf.Clamp(position.x, minX, maxX);
 
         transform.position = position;
 
-        // 이동 방향 바라보기
         if (Mathf.Abs(moveInput.x) > 0.01f)
         {
-            Vector3 lookDirection =
-                new Vector3(moveInput.x, 0f, 0f);
+            Vector3 lookDirection = new Vector3(moveInput.x, 0f, 0f);
 
-            Quaternion targetRotation =
-                Quaternion.LookRotation(lookDirection);
+            Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
 
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
@@ -188,6 +281,7 @@ public class DodgeItPlayer : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Jump >
 
@@ -216,7 +310,6 @@ public class DodgeItPlayer : NetworkBehaviour
             verticalVelocity += gravity * Runner.DeltaTime;
         }
 
-        // 점프 요청 소비
         NetworkJumpRequested = false;
     }
 
@@ -226,6 +319,7 @@ public class DodgeItPlayer : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Animation >
 
@@ -243,157 +337,49 @@ public class DodgeItPlayer : NetworkBehaviour
 
     #endregion
 
-    #region < Player Network >
 
-    public void SetPlayerNetwork(PlayerNetwork player)
-    {
-        playerNetwork = player;
-        UpdateName();
-    }
+    #region < Eliminate >
 
-    public void SetPlayerIndex(int index)
+
+    public void Eliminate()
     {
-        if (!Object.HasStateAuthority)
+        if (!Object.HasStateAuthority || IsEliminated)
             return;
 
-        PlayerIndex = index;
-
-        Debug.Log(
-            $"[DodgeItPlayer SetPlayerIndex] " +
-            $"Object={Object.Id}, PlayerIndex={PlayerIndex}"
-        );
-    }
-
-    public void SetCharacterIndex(int index)
-    {
-        if (!Object.HasStateAuthority)
-            return;
-
-        CharacterIndex = index;
-
-        // 초기 설정 시에도 외형을 즉시 적용한다.
-        ApplyCharacter();
-
-        Debug.Log(
-            $"[DodgeItPlayer SetCharacterIndex] " +
-            $"Object={Object.Id}, CharacterIndex={CharacterIndex}"
-        );
-    }
-
-    private void FindPlayerNetwork()
-    {
-        if (Object == null || Runner == null)
-            return;
-
-        NetworkObject playerNetworkObject =
-            Runner.GetPlayerObject(Object.InputAuthority);
-
-        if (playerNetworkObject == null)
+        if (dodgeItManager == null)
         {
-            Debug.LogWarning(
-                $"[DodgeItPlayer] PlayerNetwork를 찾을 수 없습니다. " +
-                $"InputAuthority={Object.InputAuthority}"
-            );
+            Debug.LogError("[Dodge It!] DodgeItManager 참조가 null입니다!");
             return;
         }
 
-        PlayerNetwork player =
-            playerNetworkObject.GetComponent<PlayerNetwork>();
+        dodgeItManager.RecordElimination(Object.InputAuthority);
 
-        if (player == null)
-        {
-            Debug.LogWarning(
-                "[DodgeItPlayer] PlayerNetwork 컴포넌트가 없습니다."
-            );
-            return;
-        }
+        IsEliminated = true;
 
-        SetPlayerNetwork(player);
+        Vector3 eliminatePosition = transform.position;
+
+        Debug.Log($"[VFX] 플레이어 탈락! 위치: {eliminatePosition}");
+
+        dodgeItManager.SpawnEliminateVFX(eliminatePosition);
+
+        dodgeItManager.CheckAllPlayersEliminated();
+
+        Runner.Despawn(Object);
     }
 
-    private void UpdateName()
-    {
-        if (playerNetwork == null || nameText == null)
-            return;
 
-        nameText.text = playerNetwork.Nickname.ToString();
+    public override void Render()
+    {
+        if (IsEliminated)
+        {
+            if (characterRenderer != null)
+                characterRenderer.enabled = false;
+
+            if (nameText != null)
+                nameText.gameObject.SetActive(false);
+        }
     }
 
     #endregion
 
-    #region < Character >
-
-    private void OnCharacterIndexChanged()
-    {
-        ApplyCharacter();
-    }
-
-    private void ApplyCharacter()
-    {
-        if (characterDatabase == null)
-        {
-            Debug.LogError(
-                "[DodgeItPlayer] CharacterDatabase가 연결되지 않았습니다."
-            );
-            return;
-        }
-
-        if (CharacterIndex < 0 ||
-            CharacterIndex >= characterDatabase.characters.Length)
-        {
-            Debug.LogWarning(
-                $"[DodgeItPlayer] 유효하지 않은 CharacterIndex: {CharacterIndex}"
-            );
-            return;
-        }
-
-        CharacterData characterData =
-            characterDatabase.characters[CharacterIndex];
-
-        if (characterData == null)
-        {
-            Debug.LogError(
-                $"[DodgeItPlayer] CharacterData가 비어 있습니다. " +
-                $"Index={CharacterIndex}"
-            );
-            return;
-        }
-
-        if (characterRenderer == null)
-        {
-            Debug.LogError(
-                "[DodgeItPlayer] Character Renderer가 연결되지 않았습니다."
-            );
-            return;
-        }
-
-        if (characterData.characterMaterial == null)
-        {
-            Debug.LogError(
-                $"[DodgeItPlayer] 캐릭터 머티리얼이 없습니다. " +
-                $"Index={CharacterIndex}"
-            );
-            return;
-        }
-
-        Material[] materials = characterRenderer.materials;
-
-        if (materials.Length < 2)
-        {
-            Debug.LogError(
-                "[DodgeItPlayer] Renderer의 머티리얼 슬롯이 2개 미만입니다."
-            );
-            return;
-        }
-
-        materials[0] = characterData.characterMaterial;
-        characterRenderer.materials = materials;
-
-        Debug.Log(
-            $"[DodgeItPlayer] 캐릭터 외형 적용 완료: " +
-            $"{characterData.characterName}"
-        );
-    }
-
-    #endregion
 }

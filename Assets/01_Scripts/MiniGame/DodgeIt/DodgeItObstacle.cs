@@ -9,15 +9,13 @@ public class DodgeItObstacle : NetworkBehaviour
     private Rigidbody rb;
     private Collider[] obstacleColliders;
 
-    // 투하 상태 네트워크 동기화
     [Networked]
     private NetworkBool IsDropped { get; set; }
 
-    // State Authority에서만 참조하는 대기 위치
     private Transform followTarget;
 
-    #region < Unity >
 
+    #region < Unity >
     private void Awake()
     {
         rb = GetComponent<Rigidbody>();
@@ -25,27 +23,17 @@ public class DodgeItObstacle : NetworkBehaviour
 
         rb.useGravity = false;
         rb.isKinematic = true;
-        rb.linearVelocity = Vector3.zero;
-        if (rb != null && !rb.isKinematic)
-        {
-            rb.angularVelocity = Vector3.zero;
-        }
 
         SetColliders(false);
     }
 
+
     public override void Spawned()
     {
-        // 물리 계산은 State Authority에서만 수행
         rb.isKinematic = !Object.HasStateAuthority || !IsDropped;
         rb.useGravity = Object.HasStateAuthority && IsDropped;
 
-        ApplyDropState();
-
-        Debug.Log(
-            $"[DodgeItObstacle] Spawned | " +
-            $"StateAuthority={Object.HasStateAuthority}"
-        );
+        ApplyDropState();     
     }
 
     public override void FixedUpdateNetwork()
@@ -56,7 +44,6 @@ public class DodgeItObstacle : NetworkBehaviour
         if (IsDropped)
             return;
 
-        // 투하 전에는 Alien의 스폰 위치를 따라간다.
         if (followTarget != null)
         {
             transform.SetPositionAndRotation(
@@ -72,6 +59,7 @@ public class DodgeItObstacle : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Follow >
 
@@ -93,6 +81,7 @@ public class DodgeItObstacle : NetworkBehaviour
 
     #endregion
 
+
     #region < Drop >
 
     public void Drop()
@@ -108,18 +97,15 @@ public class DodgeItObstacle : NetworkBehaviour
         if (IsDropped)
             return;
 
-        // 따라다니기를 중단하고 투하 상태로 전환
         IsDropped = true;
         followTarget = null;
 
-        // Rigidbody 물리 시뮬레이션 시작
         rb.isKinematic = false;
         rb.useGravity = true;
 
         rb.linearVelocity = Vector3.zero;
         rb.angularVelocity = Vector3.zero;
 
-        // 모든 클라이언트에서 충돌 활성화
         SetColliders(true);
 
         Debug.Log("[DodgeItObstacle] 장애물 투하!");
@@ -130,7 +116,6 @@ public class DodgeItObstacle : NetworkBehaviour
         if (rb == null || Object == null)
             return;
 
-        // State Authority만 물리를 계산한다.
         rb.isKinematic = !Object.HasStateAuthority || !IsDropped;
         rb.useGravity = Object.HasStateAuthority && IsDropped;
 

@@ -31,7 +31,6 @@ public class BaseballManager : NetworkBehaviour
 
     #region < Local Data >
 
-    // State Authority에서 생성한 BaseballPlayer 목록
     private readonly Dictionary<PlayerRef, BaseballPlayer> spawnedPlayers = new();
 
     private bool isGameStarted;
@@ -365,8 +364,7 @@ public class BaseballManager : NetworkBehaviour
     {
         Dictionary<PlayerRef, int> scores = new();
 
-        List<PlayerNetwork> players =
-            GetActivePlayers();
+        List<PlayerNetwork> players = GetActivePlayers();
 
         if (players.Count == 0)
             return scores;
@@ -430,11 +428,9 @@ public class BaseballManager : NetworkBehaviour
 
     private void GiveGameScores()
     {
-        Dictionary<PlayerRef, int> scores =
-            CalculateGameScores();
+        Dictionary<PlayerRef, int> scores = CalculateGameScores();
 
-        List<PlayerNetwork> players =
-            GetActivePlayers();
+        List<PlayerNetwork> players = GetActivePlayers();
 
         foreach (KeyValuePair<PlayerRef, int> score in scores)
         {
@@ -475,11 +471,7 @@ public class BaseballManager : NetworkBehaviour
                 $"누적 Score : {player.Score}"
             );
         }
-    }
-
-    // =========================================================
-    // GAME RESULT
-    // =========================================================
+    }  
 
     public void StartGameResult()
     {

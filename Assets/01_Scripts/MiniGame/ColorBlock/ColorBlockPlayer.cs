@@ -26,7 +26,6 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     [Header("<< Jump >>")]
     [SerializeField] private float jumpForce = 8f;
-
     [SerializeField] private float gravity = -20f;
 
     [Header("<< Camera >>")]
@@ -34,6 +33,8 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     [Header("<< ColorBlock >>")]
     [SerializeField] private ColorBlockManager colorBlockManager;
+
+    private bool isLocalPlayer;
 
     public void SetColorBlockManager(ColorBlockManager manager)
     {
@@ -167,9 +168,10 @@ public class ColorBlockPlayer : NetworkBehaviour
         FindPlayerNetwork();
         UpdateName();
 
-        // 내 캐릭터만 카메라 연결 + InputActions 생성
         if (Object.HasInputAuthority)
         {
+            isLocalPlayer = true;
+
             SetupCamera();
 
             inputActions = new Player_InputActions();
@@ -307,7 +309,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
-        if (Object != null && Object.HasInputAuthority)
+        if (isLocalPlayer)
         {
             SetupSpectatorCamera();
         }

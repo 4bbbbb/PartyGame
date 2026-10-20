@@ -33,7 +33,7 @@ public class AlienCardUI : MonoBehaviour
         nicknameText.gameObject.SetActive(false);
     }
 
-    #region Setup
+    #region < Setup >
 
     public void SetPlayer(int index, PlayerRef player)
     {
@@ -78,26 +78,21 @@ public class AlienCardUI : MonoBehaviour
 
     #endregion
 
-    #region Card Click
+
+    #region < Card Click >
 
     public void OnClickCard()
     {
-        Debug.Log(
-            $"[ALIEN CARD CLICK] Index={cardIndex}, Player={playerRef}"
-        );
-
-        if (AlienManager.Instance == null)
-        {
-            Debug.LogError("AlienManager가 없습니다.");
+        if (AlienManager.Instance == null)      
             return;
-        }
 
         AlienManager.Instance.SelectCard(cardIndex);
     }
 
     #endregion
 
-    #region Selection
+
+    #region < Selection >
 
     public void SetSelected(string nickname, Color characterColor)
     {
@@ -106,8 +101,6 @@ public class AlienCardUI : MonoBehaviour
 
         profileImage.gameObject.SetActive(true);
         nicknameText.gameObject.SetActive(true);
-
-        Debug.Log($"Alien 카드 선택 정보 표시: {nickname}");
     }
 
     public void SetDisabled()
@@ -117,7 +110,8 @@ public class AlienCardUI : MonoBehaviour
 
     #endregion
 
-    #region Reveal
+
+    #region < Reveal >
 
     public void FlipCard()
     {
@@ -130,16 +124,13 @@ public class AlienCardUI : MonoBehaviour
     public void ShowResult(bool isAlien)
     {
         alienImage.SetActive(isAlien);
-        normalImage.SetActive(!isAlien);
-
-        Debug.Log(
-            $"Card {cardIndex} → {(isAlien ? "ALIEN" : "NORMAL")}"
-        );
+        normalImage.SetActive(!isAlien);      
     }
 
     #endregion
 
-    #region Reset
+
+    #region < Reset >
 
     public void ResetCard()
     {

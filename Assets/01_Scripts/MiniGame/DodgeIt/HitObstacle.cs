@@ -1,4 +1,3 @@
-
 using UnityEngine;
 
 public class HitObstacle : MonoBehaviour
@@ -10,6 +9,6 @@ public class HitObstacle : MonoBehaviour
         if (player == null)
             return;
 
-        Destroy(player.gameObject);
+        player.Eliminate();
     }
 }
