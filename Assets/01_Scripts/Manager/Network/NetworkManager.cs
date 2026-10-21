@@ -18,7 +18,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 {
     public static NetworkManager Instance { get; private set; }
 
-    [SerializeField] private NetworkPrefabRef playerPrefab;    
+    [SerializeField] private NetworkPrefabRef playerNetworkPrefab;
+    [SerializeField] private NetworkPrefabRef gameManagerPrefab;
 
     private const int TITLE_SCENE_INDEX = 1;
     private const int LOBBY_SCENE_INDEX = 2;
@@ -26,7 +27,9 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     private const string ROOM_NAME = "LobbyRoom";
 
-    private NetworkRunner runner;   
+    private NetworkRunner runner;
+
+    private bool gameManagerSpawned;
 
     public NetworkRunner GetRunner()
     {
@@ -61,9 +64,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             return;
 
         runner = gameObject.AddComponent<NetworkRunner>();
-        ////////////////////////
-        ////////////////////////
-        ////////////////////////
+       
         runner.ProvideInput = false;
 
         runner.AddCallbacks(this);
@@ -92,7 +93,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
             Debug.Log("Fusion 시작 성공");
             Debug.Log($"GameMode : {runner.GameMode}");
             Debug.Log($"IsServer : {runner.IsServer}");
-            Debug.Log($"IsClient : {runner.IsClient}");
+            Debug.Log($"IsClient : {runner.IsClient}");            
         }
         else
         {
@@ -144,7 +145,7 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         {
             // 플레이어 Spawn
             NetworkObject playerObject = runner.Spawn(
-                playerPrefab,
+                playerNetworkPrefab,
                 Vector3.zero,
                 Quaternion.identity,
                 player
@@ -294,12 +295,47 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadStart(NetworkRunner runner)
     {
+        Debug.Log(
+    $"[SceneLoadStart] " +
+    $"IsServer={runner.IsServer}, " +
+    $"IsRunning={runner.IsRunning}"
+);
+
         Debug.Log("Scene Load Start");
     }
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
+        Debug.Log(
+    $"[SceneLoadDone] " +
+    $"Scene={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}, " +
+    $"IsServer={runner.IsServer}, " +
+    $"IsRunning={runner.IsRunning}"
+);
+
         Debug.Log("Scene Load Done");
+
+        // 호스트이고, 로비 씬 로드가 완료되었을 때만 생성
+        if (runner.IsServer &&
+            SceneManager.GetActiveScene().buildIndex == LOBBY_SCENE_INDEX &&
+            !gameManagerSpawned)
+        {
+            NetworkObject gameManagerObject = runner.Spawn(
+                gameManagerPrefab,
+                Vector3.zero,
+                Quaternion.identity
+            );
+
+            if (gameManagerObject != null)
+            {
+                gameManagerSpawned = true;
+                Debug.Log("[NetworkManager] Lobby에서 GameManager 생성 완료");
+            }
+            else
+            {
+                Debug.LogError("[NetworkManager] GameManager 생성 실패");
+            }
+        }
 
         if (TagManager.Instance != null)
         {

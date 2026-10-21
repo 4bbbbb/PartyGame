@@ -142,7 +142,8 @@ public class AlienManager : NetworkBehaviour
 
     #endregion
 
-    #region Initialize Alien
+
+    #region < Initialize Alien >
 
     // Host가 Alien 카드를 무작위로 선정
     private void InitializeAlienCard()
@@ -171,7 +172,8 @@ public class AlienManager : NetworkBehaviour
 
     #endregion
 
-    #region Select Card
+
+    #region < Select Card >
 
     // 카드 버튼의 OnClick에서 호출
     public void SelectCard(int cardIndex)
@@ -239,7 +241,8 @@ public class AlienManager : NetworkBehaviour
 
     #endregion
 
-    #region Card UI
+
+    #region < Card UI >
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_UpdateCardUI(int cardIndex, PlayerRef selectingPlayer)
@@ -309,7 +312,8 @@ public class AlienManager : NetworkBehaviour
 
     #endregion
 
-    #region Selection Complete
+
+    #region < Selection Complete >
 
     private void CheckSelectionComplete(int playerCount)
     {
@@ -335,7 +339,8 @@ public class AlienManager : NetworkBehaviour
 
     #endregion
 
-    #region Reveal Alien
+
+    #region < Reveal Alien >
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_RevealCards()
@@ -405,12 +410,25 @@ public class AlienManager : NetworkBehaviour
             currentCards[i].ShowResult(i == alienCardIndex);
         }
 
+        Debug.Log(
+     $"[Alien UI 종료 전] " +
+     $"Panel={alienPanel.activeSelf}, " +
+     $"Cards={currentCards?.Length}, " +
+     $"Scene={gameObject.scene.name}"
+ );
+
         yield return new WaitForSeconds(1.5f);
 
         foreach (AlienCardUI card in currentCards)
             card.gameObject.SetActive(false);
 
         alienPanel.SetActive(false);
+
+        Debug.Log(
+            $"[Alien UI 종료 후] " +
+            $"Panel={alienPanel.activeSelf}, " +
+            $"Scene={gameObject.scene.name}"
+        );
 
         Debug.Log($"Alien 선정 완료: {alienPlayer}");
 
@@ -419,6 +437,7 @@ public class AlienManager : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Reset >
 

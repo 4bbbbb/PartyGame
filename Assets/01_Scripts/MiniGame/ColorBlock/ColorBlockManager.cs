@@ -679,7 +679,7 @@ public class ColorBlockManager : NetworkBehaviour
 
             yield return new WaitForSecondsRealtime(1.5f);
 
-            const int SCORE_SCENE_INDEX = 4;
+            const int SCORE_SCENE_INDEX = 3;
 
             Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
         }

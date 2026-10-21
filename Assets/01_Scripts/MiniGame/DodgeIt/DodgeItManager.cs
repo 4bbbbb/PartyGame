@@ -360,7 +360,7 @@ public class DodgeItManager : NetworkBehaviour
 
         yield return new WaitForSecondsRealtime(1.5f);
 
-        const int SCORE_SCENE_INDEX = 4;
+        const int SCORE_SCENE_INDEX = 3;
 
         Time.timeScale = 1f;
 
@@ -406,6 +406,11 @@ public class DodgeItManager : NetworkBehaviour
             if (player == null)
                 continue;
 
+            // Fusion에서 아직 Spawn되지 않았거나
+            // 이미 Despawn된 플레이어는 건너뛴다.
+            if (player.Object == null || !player.Object.IsValid)
+                continue;
+
             if (!player.IsEliminated)
                 aliveCount++;
         }
@@ -426,7 +431,6 @@ public class DodgeItManager : NetworkBehaviour
             StartCoroutine(EndGameAfterDelay());
         }
     }
-
 
     private IEnumerator EndGameAfterDelay()
     {

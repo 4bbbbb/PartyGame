@@ -79,9 +79,38 @@ public class LobbyUIManager : MonoBehaviour
 
 
     #region < Start >
+
+
     public void OnClickStart()
     {
-        Debug.Log("Start 버튼 클릭");
+        Debug.Log(
+    $"GameManager Instance: " +
+    $"{(GameManager.Instance == null ? "NULL" : "존재")}"
+);
+
+        Debug.Log(
+            $"Hierarchy GameManager: " +
+            $"{(FindFirstObjectByType<GameManager>() == null ? "NULL" : "존재")}"
+        );
+
+        Debug.Log("===== Start 버튼 클릭 =====");
+
+        Debug.Log(
+            $"[확인] GameManager.Instance: " +
+            $"{(GameManager.Instance == null ? "NULL" : "존재")}"
+        );
+
+        GameManager foundManager = FindFirstObjectByType<GameManager>();
+
+        Debug.Log(
+            $"[확인] 씬에서 찾은 GameManager: " +
+            $"{(foundManager == null ? "NULL" : "존재")}"
+        );
+
+        Debug.Log(
+            $"[확인] NetworkManager.Instance: " +
+            $"{(NetworkManager.Instance == null ? "NULL" : "존재")}"
+        );
 
         if (NetworkManager.Instance == null)
             return;
@@ -95,8 +124,16 @@ public class LobbyUIManager : MonoBehaviour
             return;
         }
 
-        NetworkManager.Instance.StartGameCountdown();
+        if (GameManager.Instance == null)
+        {
+            Debug.LogError("GameManager를 찾을 수 없습니다.");
+            return;
+        }
+
+        GameManager.Instance.StartMiniGames();
     }
+
+
 
     public void UpdateStartButton()
     {

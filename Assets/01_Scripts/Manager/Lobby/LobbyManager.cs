@@ -43,16 +43,22 @@ public class LobbyManager : MonoBehaviour
         Instance = this;
     }
 
+
     private void Start()
     {
         ClearAllSlots();
 
         if (NetworkManager.Instance != null)
         {
-            // Lobby 진입 직후에는 기존 PlayerNetwork를 기준으로 한 번 갱신
-            // 실제 PlayerJoined에서 다시 갱신됨
+            NetworkRunner runner = NetworkManager.Instance.GetRunner();
+
+            if (runner != null)
+            {
+                RefreshPlayerList(runner);
+            }
         }
     }
+
 
     public void PlayerJoined(NetworkRunner runner, PlayerRef player)
     {

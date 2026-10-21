@@ -456,8 +456,7 @@ public class BaseballManager : NetworkBehaviour
 
             if (playerIndex >= 0)
             {
-                baseballCount =
-                    PlayerBaseballCounts[playerIndex];
+                baseballCount = PlayerBaseballCounts[playerIndex];
             }
 
             player.AddScore(score.Value);
@@ -502,15 +501,13 @@ public class BaseballManager : NetworkBehaviour
 
         yield return new WaitForSeconds(3f);
 
-        const int SCORE_SCENE_INDEX = 4;
+        const int SCORE_SCENE_INDEX = 3;
 
         Debug.Log(
             $"[BaseballManager] Score æ¿ ¿Ãµø | SceneIndex={SCORE_SCENE_INDEX}"
         );
 
-        Runner.LoadScene(
-            SceneRef.FromIndex(SCORE_SCENE_INDEX)
-        );
+        Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
     }
 
     #endregion

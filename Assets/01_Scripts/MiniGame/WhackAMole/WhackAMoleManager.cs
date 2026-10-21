@@ -1022,7 +1022,7 @@ public class WhackAMoleManager : NetworkBehaviour
         // End UI 보여주는 시간
         yield return new WaitForSeconds(2f);
 
-        const int SCORE_SCENE_INDEX = 4;
+        const int SCORE_SCENE_INDEX = 3;
 
         Runner.LoadScene(SceneRef.FromIndex(SCORE_SCENE_INDEX));
     }
