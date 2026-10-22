@@ -64,6 +64,13 @@ public class ColorBlockManager : NetworkBehaviour
     {
         Debug.Log("===== ColorBlockManager Spawned =====");
 
+        Debug.Log(
+    $"[ColorBlock Spawned] " +
+    $"TimeScale={Time.timeScale}, " +
+    $"IsServer={Runner.IsServer}, " +
+    $"IsClient={Runner.IsClient}"
+);
+
         // 모든 플레이어가 ColorBlock 입력을 제공할 수 있도록 설정
         if (Runner != null)
         {

@@ -121,11 +121,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         if (!runner.IsServer)
             return;
 
-        Debug.Log("게임 시작 카운트다운 시작");
-
         await System.Threading.Tasks.Task.Delay(3000);
 
-        Debug.Log("게임 씬 이동");
 
         SceneRef scene = SceneRef.FromIndex(GAME_SCENE_INDEX);
 
@@ -143,7 +140,6 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
         if (runner.IsServer)
         {
-            // 플레이어 Spawn
             NetworkObject playerObject = runner.Spawn(
                 playerNetworkPrefab,
                 Vector3.zero,
@@ -162,13 +158,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
     {
-        Debug.Log("===== OnPlayerLeft 호출 =====");
-        Debug.Log($"Player Left : {player}");
-
         if (LobbyManager.Instance != null)
         {
-            Debug.Log("LobbyManager.PlayerLeft 호출");
-
             LobbyManager.Instance.PlayerLeft(runner, player);
         }
     }
@@ -177,13 +168,9 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
     {
         if (runner == null)
         {
-            Debug.Log("나갈 Fusion 방이 없습니다.");
-
             SceneManager.LoadScene(TITLE_SCENE_INDEX);
             return;
         }
-
-        Debug.Log("방 나가기 시작");
 
         NetworkRunner currentRunner = runner;
 
@@ -191,23 +178,13 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
         await currentRunner.Shutdown();
 
-        Debug.Log("Fusion 방 나가기 완료");
-
         Destroy(currentRunner);
 
         SceneManager.LoadScene(TITLE_SCENE_INDEX);
-
-        Debug.Log("Title 씬 이동");
     }
 
     public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason)
-    {
-        Debug.Log("===== OnShutdown 호출 =====");
-        Debug.Log($"Shutdown Reason : {shutdownReason}");
-        Debug.Log($"Runner GameMode : {runner.GameMode}");
-        Debug.Log($"Runner IsServer : {runner.IsServer}");
-        Debug.Log($"Runner IsClient : {runner.IsClient}");
-
+    { 
         this.runner = null;
     }
 
@@ -236,17 +213,25 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         if (!runner.ProvideInput)
             return;
 
-        ColorBlockManager colorBlockManager = FindFirstObjectByType<ColorBlockManager>();
+        ColorBlockManager colorBlockManager =
+            FindFirstObjectByType<ColorBlockManager>();
 
         if (colorBlockManager == null)
+        {
+            Debug.LogWarning("[OnInput] ColorBlockManager 없음");
             return;
+        }
 
-        ColorBlockPlayer localPlayer = colorBlockManager.GetLocalPlayer();
+        ColorBlockPlayer localPlayer =
+            colorBlockManager.GetLocalPlayer();
 
         if (localPlayer == null)
+        {
+            Debug.LogWarning("[OnInput] LocalPlayer 없음");
             return;
+        }
 
-        ColorBlockInputData data = new ColorBlockInputData
+        ColorBlockInputData data = new()
         {
             Move = localPlayer.GetMoveInput(),
             Jump = localPlayer.GetJumpInput()
@@ -306,16 +291,8 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
 
     public void OnSceneLoadDone(NetworkRunner runner)
     {
-        Debug.Log(
-    $"[SceneLoadDone] " +
-    $"Scene={UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}, " +
-    $"IsServer={runner.IsServer}, " +
-    $"IsRunning={runner.IsRunning}"
-);
-
         Debug.Log("Scene Load Done");
 
-        // 호스트이고, 로비 씬 로드가 완료되었을 때만 생성
         if (runner.IsServer &&
             SceneManager.GetActiveScene().buildIndex == LOBBY_SCENE_INDEX &&
             !gameManagerSpawned)

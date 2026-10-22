@@ -164,6 +164,7 @@ public class GameManager : NetworkBehaviour
         StartCoroutine(ScoreSceneRoutine());
     }
 
+
     private IEnumerator ScoreSceneRoutine()
     {
         scoreRoutineRunning = true;
@@ -175,22 +176,15 @@ public class GameManager : NetworkBehaviour
 
         yield return new WaitForSeconds(scoreWaitSeconds);
 
-        // 이번 순서에서 아직 플레이하지 않은 게임이 남아 있음
-        if (remainingMiniGames.Count > 0)
-        {
-            scoreRoutineRunning = false;
-            StartNextMiniGame();
-            yield break;
-        }
-
-        // 미니게임 4개를 모두 플레이한 시점에만 우승 점수 확인
+        // 매 미니게임 종료 후 현재 최고 점수 확인
         int highestScore = GetHighestPlayerScore();
 
         Debug.Log(
-            $"[GameManager] 한 사이클 종료. " +
-            $"최고 점수: {highestScore}"
+            $"[GameManager] 현재 최고 점수: {highestScore} / " +
+            $"목표 점수: {winningScore}"
         );
 
+        // 목표 점수 달성 시 즉시 게임 종료
         if (highestScore >= winningScore)
         {
             gameFinished = true;
@@ -200,12 +194,19 @@ public class GameManager : NetworkBehaviour
                 $"최고 점수 {highestScore}점"
             );
 
-            // 최종 결과를 보여 주기 위해 Score 씬에 머무름
             scoreRoutineRunning = false;
             yield break;
         }
 
-        // 목표 점수에 도달하지 못했으면 새 사이클 시작
+        // 아직 플레이하지 않은 미니게임이 남아 있음
+        if (remainingMiniGames.Count > 0)
+        {
+            scoreRoutineRunning = false;
+            StartNextMiniGame();
+            yield break;
+        }
+
+        // 모든 미니게임을 플레이했지만 목표 점수 미달
         Debug.Log("[GameManager] 목표 점수 미달. 다음 사이클 시작");
 
         RefillMiniGames();
@@ -213,6 +214,7 @@ public class GameManager : NetworkBehaviour
         scoreRoutineRunning = false;
         StartNextMiniGame();
     }
+
 
     // 현재 접속 중인 플레이어 중 최고 누적 점수 반환
     private int GetHighestPlayerScore()

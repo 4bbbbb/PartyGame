@@ -219,6 +219,15 @@ public class BaseballPlayer : NetworkBehaviour
     [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
     private void RPC_PlayHit()
     {
+        Debug.Log(
+            $"[RPC_PlayHit 실행] " +
+            $"Player={Object.InputAuthority}, " +
+            $"LocalPlayer={Runner.LocalPlayer}, " +
+            $"IsInputAuthority={Object.HasInputAuthority}, " +
+            $"TimeScale={Time.timeScale}, " +
+            $"AnimatorNull={animator == null}"
+        );
+
         if (animator == null)
             return;
 

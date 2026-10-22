@@ -376,6 +376,8 @@ public class DodgeItManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_ShowGameEnd()
     {
+        Time.timeScale = 1f;
+
         if (gameEnd != null)
             gameEnd.SetActive(true);
     }
