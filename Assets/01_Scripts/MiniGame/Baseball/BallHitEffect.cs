@@ -91,125 +91,77 @@ public class BallHitEffect : NetworkBehaviour
     // Hit Motion
     // --------------------------------------------------
 
+
     private void PlayMotion()
     {
         float distance;
         float height;
-        float depthDistance;
         float duration;
-
+        float depthDistance;
         Vector3 horizontalDirection;
         Vector3 rotation;
 
         if (Result == HitResult.Excellent)
         {
+            // 홈런: 왼쪽으로 높고 멀리
             distance = excellentDistance;
             height = excellentHeight;
-            depthDistance = excellentDepthDistance;
             duration = excellentDuration;
+            depthDistance = excellentDepthDistance;
 
             horizontalDirection = Vector3.left;
-
-            rotation = new Vector3(
-                720f,
-                0f,
-                0f
-            );
+            rotation = new Vector3(720f, 0f, 0f);
         }
         else
         {
+            // 안타: 오른쪽으로 낮고 빠르게
             distance = goodDistance;
             height = goodHeight;
-            depthDistance = goodDepthDistance;
             duration = goodDuration;
+            depthDistance = goodDepthDistance;
 
             horizontalDirection = Vector3.right;
-
-            rotation = new Vector3(
-                180f,
-                0f,
-                0f
-            );
+            rotation = new Vector3(180f, 0f, 0f);
         }
 
+        Vector3 startPosition = SpawnPosition;
 
-        // --------------------------------------------------
-        // 시작 위치
-        // --------------------------------------------------
-
-        Vector3 startPosition =
-            SpawnPosition;
-
-
-        // --------------------------------------------------
-        // 이동 방향
-        // --------------------------------------------------
-
-        Vector3 depthDirection =
-            HitDirection * depthDistance;
-
+        // 깊이 이동은 공이 날아오던 방향과 분리
+        // 카메라의 앞뒤 방향을 기준으로 설정
+        Vector3 depthDirection = Vector3.forward;
 
         Vector3 targetPosition =
-            startPosition +
-            horizontalDirection * distance +
-            depthDirection;
+            startPosition
+            + horizontalDirection * distance
+            + depthDirection * depthDistance;
 
         targetPosition.y += height;
 
-
-        // --------------------------------------------------
-        // 초기값
-        // --------------------------------------------------
-
         transform.position = startPosition;
-
         transform.localScale = hitScale;
-
-        transform.rotation =
-            Quaternion.identity;
+        transform.rotation = Quaternion.identity;
 
         transform.DOKill();
 
-
-        // --------------------------------------------------
-        // DOTween
-        // --------------------------------------------------
-
-        Sequence sequence =
-            DOTween.Sequence();
-
+        Sequence sequence = DOTween.Sequence();
 
         sequence.Append(
-            transform.DOMove(
-                targetPosition,
-                duration
-            )
-            .SetEase(Ease.OutQuad)
+            transform.DOMove(targetPosition, duration)
+                .SetEase(Ease.OutQuad)
         );
-
 
         sequence.Join(
-            transform.DOScale(
-                endScale,
-                duration
-            )
-            .SetEase(Ease.InQuad)
+            transform.DOScale(endScale, duration)
+                .SetEase(Ease.InQuad)
         );
-
 
         sequence.Join(
-            transform.DORotate(
-                rotation,
-                duration,
-                RotateMode.FastBeyond360
-            )
+            transform.DORotate(rotation, duration, RotateMode.FastBeyond360)
         );
 
-
-        sequence.OnComplete(
-            DespawnEffect
-        );
+        sequence.OnComplete(DespawnEffect);
     }
+
 
 
     // --------------------------------------------------
@@ -240,9 +192,7 @@ public class BallHitEffect : NetworkBehaviour
     // Despawned
     // --------------------------------------------------
 
-    public override void Despawned(
-        NetworkRunner runner,
-        bool hasState)
+    public override void Despawned(NetworkRunner runner, bool hasState)
     {
         transform.DOKill();
     }

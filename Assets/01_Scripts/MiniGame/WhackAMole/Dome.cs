@@ -1,3 +1,4 @@
+
 using DG.Tweening;
 using UnityEngine;
 
@@ -27,7 +28,8 @@ public class Dome : MonoBehaviour
     {
         transform.DOKill();
 
-        transform.DOLocalMoveY(startPosition.y + moveHeight, duration).SetEase(Ease.OutCubic);
+        transform.DOLocalMoveY(startPosition.y + moveHeight, duration)
+            .SetEase(Ease.OutCubic);
 
         foreach (Renderer renderer in renderers)
         {
@@ -35,7 +37,10 @@ public class Dome : MonoBehaviour
             material.DOFade(0f, duration * 0.8f);
         }
 
-        DOVirtual.DelayedCall(duration * 0.8f, () => gameObject.SetActive(false));
+        DOVirtual.DelayedCall(
+            duration * 0.8f,
+            () => gameObject.SetActive(false)
+        );
     }
 
     public void Reset()
@@ -59,11 +64,10 @@ public class Dome : MonoBehaviour
     public void MovePlayer(WhackAMolePlayer player)
     {
         if (player == null || characterPoint == null)
-            return;        
+            return;
 
         player.transform.position = characterPoint.position;
         player.transform.rotation = characterPoint.rotation;
         player.transform.localScale = characterPoint.lossyScale;
-        
     }
 }

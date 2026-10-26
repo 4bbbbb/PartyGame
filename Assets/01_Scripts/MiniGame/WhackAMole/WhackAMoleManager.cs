@@ -82,7 +82,6 @@ public class WhackAMoleManager : NetworkBehaviour
 
     #region < Local Data >
 
-    // 실제 게임에 Spawn된 캐릭터
     private readonly Dictionary<PlayerRef, WhackAMolePlayer> spawnedPlayers = new();
    
     #endregion
@@ -98,19 +97,15 @@ public class WhackAMoleManager : NetworkBehaviour
         {
             NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
 
-            if (playerObject == null)
-            {
-                Debug.LogWarning($"PlayerObject를 찾을 수 없습니다. PlayerRef = {playerRef}");
+            if (playerObject == null)            
                 continue;
-            }
+            
 
             PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
-            if (playerNetwork == null)
-            {
-                Debug.LogError($"PlayerObject에 PlayerNetwork가 없습니다. PlayerRef = {playerRef}");
+            if (playerNetwork == null)           
                 continue;
-            }
+           
 
             players.Add(playerNetwork);
         }
@@ -136,32 +131,23 @@ public class WhackAMoleManager : NetworkBehaviour
 
     private void SpawnPlayers()
     {
-        if (Runner == null)
-        {
-            Debug.LogError("Runner가 없습니다.");
+        if (Runner == null)        
             return;
-        }
+        
 
-        if (playerPrefab == null)
-        {
-            Debug.LogError("WhackAMole Player Prefab이 연결되지 않았습니다.");
+        if (playerPrefab == null)        
             return;
-        }
+        
 
-        if (characterDatabase == null)
-        {
-            Debug.LogError("CharacterDatabase가 연결되지 않았습니다.");
+        if (characterDatabase == null)        
             return;
-        }
+        
 
         List<PlayerNetwork> players = GetActivePlayers();
 
         if (players.Count == 0)
-        {
-            Debug.LogError("PlayerNetwork를 하나도 찾지 못했습니다.");
             return;
-        }
-
+        
         for (int i = 0; i < players.Count; i++)
         {
             PlayerNetwork player = players[i];
@@ -179,13 +165,8 @@ public class WhackAMoleManager : NetworkBehaviour
             {
                 int normalPlayerIndex = GetNormalPlayerIndex(players, player);
 
-                if (normalPlayerIndex < 0 ||
-                    normalPlayerIndex >= playerSpawnPoints.Length)
-                {
-                    Debug.LogError($"일반 플레이어 Spawn Point가 부족합니다. Player = {player.PlayerRef}");
-
-                    continue;
-                }
+                if (normalPlayerIndex < 0 || normalPlayerIndex >= playerSpawnPoints.Length)    
+                    continue;                
 
                 spawnPoint = playerSpawnPoints[normalPlayerIndex];
             }
@@ -197,27 +178,21 @@ public class WhackAMoleManager : NetworkBehaviour
                 player.PlayerRef
             );
 
-            if (playerObject == null)
-            {
-                Debug.LogError($"게임 플레이어 Spawn 실패 : {player.PlayerRef}");
+            if (playerObject == null)            
                 continue;
-            }
+            
 
             playerObject.transform.localScale = spawnPoint.lossyScale;
 
             WhackAMolePlayer whackAMolePlayer = playerObject.GetComponent<WhackAMolePlayer>();
 
-            if (whackAMolePlayer == null)
-            {
-                Debug.LogError("WhackAMolePlayer 컴포넌트를 찾을 수 없습니다.");
-                continue;
-            }
+            if (whackAMolePlayer == null)            
+                continue;            
 
             whackAMolePlayer.SetCharacterIndex(player.CharacterIndex);
             spawnedPlayers.Add(player.PlayerRef, whackAMolePlayer);
         }
     }
-
 
     private int GetNormalPlayerIndex(List<PlayerNetwork> players, PlayerNetwork targetPlayer)
     {
@@ -244,11 +219,9 @@ public class WhackAMoleManager : NetworkBehaviour
 
     private void InitializeGame()
     {
-        if (gameData == null)
-        {
-            Debug.LogError("WhackAMoleData가 연결되지 않았습니다.");
+        if (gameData == null)       
             return;
-        }
+        
 
         CurrentRound = 1;
         TagHP = gameData.TagHP;
@@ -280,11 +253,8 @@ public class WhackAMoleManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (TagPlayer == default)
-        {
-            Debug.LogWarning("TagPlayer가 설정되지 않았습니다.");
-            return;
-        }
+        if (TagPlayer == default) 
+            return;        
 
         State = WhackAMoleState.Waiting;
 
@@ -308,7 +278,6 @@ public class WhackAMoleManager : NetworkBehaviour
         RPC_HideTagAnnouncement();    
 
         StartCoroutine(StartRoundSequence());
-
     }
 
 
@@ -320,19 +289,14 @@ public class WhackAMoleManager : NetworkBehaviour
 
         NetworkObject playerObject = Runner.GetPlayerObject(TagPlayer);
 
-        if (playerObject == null)
-        {
-            Debug.LogWarning($"TAG PlayerObject를 찾을 수 없습니다. PlayerRef = {TagPlayer}");
+        if (playerObject == null)        
             return;
-        }
+        
 
         PlayerNetwork tagPlayer = playerObject.GetComponent<PlayerNetwork>();
 
-        if (tagPlayer == null)
-        {
-            Debug.LogWarning("TAG PlayerObject에 PlayerNetwork가 없습니다.");
-            return;
-        }
+        if (tagPlayer == null)        
+            return;        
 
         tagAnnouncementText.text = $"두더지는 {tagPlayer.Nickname} 입니다";
         tagAnnouncementText.gameObject.SetActive(true);
@@ -351,35 +315,26 @@ public class WhackAMoleManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_ShowTagProfile()
     {
-        if (tagProfileUI == null)
-        {
-            Debug.LogWarning("TagProfileUI가 연결되지 않았습니다.");
+        if (tagProfileUI == null)        
             return;
-        }
+        
 
         NetworkObject playerObject = Runner.GetPlayerObject(TagPlayer);
 
-        if (playerObject == null)
-        {
-            Debug.LogWarning($"TAG PlayerObject를 찾을 수 없습니다. PlayerRef = {TagPlayer}");
+        if (playerObject == null)       
             return;
-        }
+        
 
         PlayerNetwork tagPlayer = playerObject.GetComponent<PlayerNetwork>();
 
-        if (tagPlayer == null)
-        {
-            Debug.LogWarning("TAG PlayerObject에 PlayerNetwork가 없습니다.");
+        if (tagPlayer == null)        
             return;
-        }
+        
 
         int characterIndex = tagPlayer.CharacterIndex;
 
-        if (characterIndex < 0 || characterIndex >= characterDatabase.characters.Length)
-        {
-            Debug.LogWarning($"잘못된 CharacterIndex : {characterIndex}");
-            return;
-        }
+        if (characterIndex < 0 || characterIndex >= characterDatabase.characters.Length)        
+            return;        
 
         CharacterData characterData = characterDatabase.characters[characterIndex];
 
@@ -395,12 +350,8 @@ public class WhackAMoleManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (!spawnedPlayers.TryGetValue(TagPlayer, out WhackAMolePlayer tagPlayer))
-        {
-            Debug.LogWarning( $"TAG 캐릭터를 찾을 수 없습니다. PlayerRef = {TagPlayer}");
-
-            return;
-        }
+        if (!spawnedPlayers.TryGetValue(TagPlayer, out WhackAMolePlayer tagPlayer))       
+            return;        
 
         tagPlayer.RPC_PlayGreetingAnimation();
     }
@@ -585,45 +536,40 @@ public class WhackAMoleManager : NetworkBehaviour
     }
 
 
+
     private void MoveTagToSelectedHole()
     {
+        Debug.Log($"[TAG 이동] 시작 / TagPlayer: {TagPlayer}");
+
         if (!spawnedPlayers.TryGetValue(TagPlayer, out WhackAMolePlayer tagPlayer))
         {
-            Debug.LogWarning($"TAG 캐릭터를 찾을 수 없습니다. PlayerRef = {TagPlayer}");
+            Debug.LogWarning($"[TAG 이동 실패] 캐릭터를 찾을 수 없음: {TagPlayer}");
             return;
         }
+
+        Debug.Log($"[TAG 이동] 캐릭터 찾음: {tagPlayer.name}");
 
         int domeIndex = (int)TagHole - 1;
 
-        if (domes == null || domes.Length == 0)
+        if (domes == null || domeIndex < 0 || domeIndex >= domes.Length)
         {
-            Debug.LogError("Dome이 없습니다.");
-            return;
-        }
-
-        if (domeIndex < 0 || domeIndex >= domes.Length)
-        {
-            Debug.LogError($"잘못된 Dome Index : {domeIndex}");
+            Debug.LogError($"[TAG 이동 실패] 잘못된 Dome Index: {domeIndex}");
             return;
         }
 
         Dome dome = domes[domeIndex];
 
-        if (dome == null)
+        if (dome == null || dome.CharacterPoint == null)
         {
-            Debug.LogError($"Dome[{domeIndex}]가 null입니다.");
+            Debug.LogError($"[TAG 이동 실패] Dome 또는 CharacterPoint가 없음: {domeIndex}");
             return;
         }
 
-        if (dome.CharacterPoint == null)
-        {
-            Debug.LogError($"Dome[{domeIndex}]의 CharacterPoint가 없습니다.");
-            return;
-        }        
+        dome.MovePlayer(tagPlayer);
 
-        dome.MovePlayer(tagPlayer);    
-        
+        Debug.Log($"[TAG 이동 후] 실제 위치: {tagPlayer.transform.position}");
     }
+
 
 
     private IEnumerator TagSelectionCompleteSequence()
@@ -643,11 +589,8 @@ public class WhackAMoleManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_ShowTagHoleSelectUI()
     {
-        if (tagHoleSelectUI == null)
-        {
-            Debug.LogWarning("TagHoleSelectUI가 연결되지 않았습니다.");
-            return;
-        }
+        if (tagHoleSelectUI == null)        
+            return;        
 
         tagHoleSelectUI.Show();
     }
@@ -718,12 +661,9 @@ public class WhackAMoleManager : NetworkBehaviour
         if (playerIndex < 0)
             return;
 
-        if (PlayerChoiceCompleted[playerIndex])
-        {
-            Debug.Log($"이미 선택을 완료한 플레이어입니다. Player = {info.Source}");
-
+        if (PlayerChoiceCompleted[playerIndex])        
             return;
-        }
+        
 
         PlayerChoices.Set(playerIndex, hole);
         PlayerChoiceCompleted.Set(playerIndex, true);
@@ -899,11 +839,9 @@ public class WhackAMoleManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_UpdateTagProfileHP(int hp)
     {
-        if (tagProfileUI == null)
-        {
-            Debug.LogWarning("TagProfileUI가 연결되지 않았습니다.");
+        if (tagProfileUI == null)        
             return;
-        }
+       
 
         tagProfileUI.UpdateHP(hp);
     }
@@ -951,28 +889,20 @@ public class WhackAMoleManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_PlayResultVFX(HoleType hole)
     {
-        if (resultVFX == null)
-        {
-            Debug.LogWarning("Result VFX가 연결되지 않았습니다.");
+        if (resultVFX == null)        
             return;
-        }
+       
 
         int domeIndex = (int)hole - 1;
 
-        if (domeIndex < 0 || domeIndex >= domes.Length)
-        {
-            Debug.LogWarning($"잘못된 VFX Dome Index : {domeIndex}");
+        if (domeIndex < 0 || domeIndex >= domes.Length)        
             return;
-        }
+        
 
         Transform vfxPoint = domes[domeIndex].CharacterPoint;
 
         if (vfxPoint == null)
-        {
-            Debug.LogWarning($"Dome {domeIndex + 1}의 CharacterPoint가 연결되지 않았습니다.");
-
-            return;
-        }
+            return;        
 
         GameObject vfx = Instantiate(resultVFX, vfxPoint.position, vfxPoint.rotation);
 
@@ -1019,7 +949,6 @@ public class WhackAMoleManager : NetworkBehaviour
         if (!Object.HasStateAuthority)
             yield break;
 
-        // End UI 보여주는 시간
         yield return new WaitForSeconds(2f);
 
         const int SCORE_SCENE_INDEX = 3;
@@ -1103,12 +1032,8 @@ public class WhackAMoleManager : NetworkBehaviour
             PlayerNetwork player = players
                 .FirstOrDefault(p => p.PlayerRef == score.Key);
 
-            if (player == null)
-            {
-                Debug.LogWarning($"점수를 지급할 PlayerNetwork를 찾을 수 없습니다. PlayerRef = {score.Key}");
-
-                continue;
-            }
+            if (player == null)   
+                continue;            
 
             player.AddScore(score.Value);
 

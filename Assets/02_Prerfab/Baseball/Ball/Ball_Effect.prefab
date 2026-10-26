@@ -122,12 +122,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   excellentDistance: 12
   excellentHeight: 8
-  excellentDepthDistance: 12
+  excellentDepthDistance: 2
   excellentDuration: 1.2
-  goodDistance: 8
+  goodDistance: 7
   goodHeight: 4
-  goodDepthDistance: 5
-  goodDuration: 1
+  goodDepthDistance: 0.8
+  goodDuration: 2
   hitScale: {x: 8, y: 8, z: 8}
   endScale: {x: 4, y: 4, z: 4}
   _PlayerIndex: 0

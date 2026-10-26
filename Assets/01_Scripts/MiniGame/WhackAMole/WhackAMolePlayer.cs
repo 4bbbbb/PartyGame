@@ -1,3 +1,4 @@
+
 using Fusion;
 using UnityEngine;
 
@@ -11,21 +12,18 @@ public class WhackAMolePlayer : NetworkBehaviour
     [SerializeField] private Material face2Material;
 
     [Header("<< Animation >>")]
-    [SerializeField] private Animator animator; 
+    [SerializeField] private Animator animator;
 
     [SerializeField] private CharacterDatabase characterDatabase;
 
     [Networked, OnChangedRender(nameof(OnCharacterIndexChanged))]
     public int CharacterIndex { get; private set; }
 
-      
-
     public override void Spawned()
-    {        
+    {
         ApplyCharacter();
         SetFace(face1Material);
     }
-
 
     public void SetCharacterIndex(int characterIndex)
     {
@@ -37,12 +35,10 @@ public class WhackAMolePlayer : NetworkBehaviour
         ApplyCharacter();
     }
 
-
     private void OnCharacterIndexChanged()
     {
         ApplyCharacter();
     }
-
 
     private void ApplyCharacter()
     {
@@ -98,9 +94,9 @@ public class WhackAMolePlayer : NetworkBehaviour
     public void RPC_PlayGreetingAnimation()
     {
         if (animator == null)
-            return;        
+            return;
 
-        animator.SetTrigger("Greeting");       
+        animator.SetTrigger("Greeting");
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]

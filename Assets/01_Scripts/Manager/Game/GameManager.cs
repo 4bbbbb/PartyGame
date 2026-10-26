@@ -1,8 +1,9 @@
 
+using Fusion;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using Fusion;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -19,6 +20,16 @@ public class GameManager : NetworkBehaviour
         "02_DodgeIt",
         "02_WhackaMole"
     };
+
+    [Header("<< Mini Game Settings >>")]
+    [SerializeField]
+    private List<string> enabledMiniGames = new()
+{
+    "02_Baseball",
+    "02_ColorBlock",
+    "02_DodgeIt",
+    "02_WhackaMole"
+};
 
     [Header("<< Game Rules >>")]
     [SerializeField] private string scoreSceneName = "03_Score";
@@ -72,7 +83,39 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    // 로비의 게임 시작 버튼에서 호출할 함수
+    // 호스트가 미니게임 실행 여부 설정
+    public void SetMiniGameEnabled(string sceneName, bool isEnabled)
+    {
+        if (Object == null || !Object.HasStateAuthority)
+            return;
+
+        if (!miniGameSceneNames.Contains(sceneName))
+        {
+            Debug.LogWarning($"등록되지 않은 미니게임: {sceneName}");
+            return;
+        }
+
+        if (isEnabled)
+        {
+            if (!enabledMiniGames.Contains(sceneName))
+                enabledMiniGames.Add(sceneName);
+        }
+        else
+        {
+            enabledMiniGames.Remove(sceneName);
+        }
+
+        Debug.Log(
+            $"[GameManager] {sceneName} : " +
+            $"{(isEnabled ? "On" : "Off")}"
+        );
+    }
+
+    public bool IsMiniGameEnabled(string sceneName)
+    {
+        return enabledMiniGames.Contains(sceneName);
+    }
+
     public void StartMiniGames()
     {
         if (!Object.HasStateAuthority)
@@ -99,18 +142,27 @@ public class GameManager : NetworkBehaviour
     {
         remainingMiniGames.Clear();
 
-        foreach (string sceneName in miniGameSceneNames)
+        foreach (string sceneName in enabledMiniGames)
         {
-            if (!string.IsNullOrWhiteSpace(sceneName))
+            if (!string.IsNullOrWhiteSpace(sceneName) &&
+                miniGameSceneNames.Contains(sceneName))
             {
                 remainingMiniGames.Add(sceneName);
             }
         }
 
         Debug.Log(
-            $"[GameManager] 미니게임 목록 초기화: " +
-            $"{remainingMiniGames.Count}개"
+            $"[GameManager] 선택된 미니게임: " +
+            $"{string.Join(", ", remainingMiniGames)}"
         );
+
+        if (remainingMiniGames.Count == 0)
+        {
+            Debug.LogWarning(
+                "[GameManager] 선택된 미니게임이 없습니다. " +
+                "최소 하나 이상의 게임을 On으로 설정해 주세요."
+            );
+        }
     }
 
     // 남은 미니게임 중 하나를 랜덤으로 실행
