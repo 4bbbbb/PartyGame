@@ -1,4 +1,7 @@
+
 using Fusion;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class ScoreUIManager : MonoBehaviour
@@ -11,9 +14,14 @@ public class ScoreUIManager : MonoBehaviour
 
     private NetworkRunner runner;
 
-
     private void Start()
     {
+        if (NetworkManager.Instance == null)
+        {
+            Debug.LogError("NetworkManager를 찾을 수 없습니다.");
+            return;
+        }
+
         runner = NetworkManager.Instance.GetRunner();
 
         if (runner == null)
@@ -25,40 +33,47 @@ public class ScoreUIManager : MonoBehaviour
         SetupScoreBoard();
     }
 
-
     private void SetupScoreBoard()
     {
-        int index = 0;
+        List<PlayerNetwork> players = new List<PlayerNetwork>();
 
         foreach (PlayerRef playerRef in runner.ActivePlayers)
         {
-            if (index >= scoreBars.Length)
-                break;
+            PlayerNetwork player = FindPlayerNetwork(playerRef);
 
-            PlayerNetwork playerNetwork = FindPlayerNetwork(playerRef);
-
-            if (playerNetwork == null)
+            if (player == null)
             {
-                Debug.LogWarning(
-                    $"PlayerNetwork를 찾을 수 없습니다. PlayerRef = {playerRef}"
-                );
+                Debug.LogWarning($"PlayerNetwork를 찾을 수 없습니다. PlayerRef = {playerRef}");
 
                 continue;
             }
 
-            scoreBars[index].SetPlayer(playerNetwork, characterDatabase);
-
-            scoreBars[index].SetScore(playerNetwork.Score);
-
-            index++;
+            players.Add(player);
         }
 
-        for (int i = index; i < scoreBars.Length; i++)
+        players = players
+            .OrderByDescending(player => player.Score)
+            .ToList();
+
+        int count = Mathf.Min(players.Count, scoreBars.Length);
+
+        for (int i = 0; i < count; i++)
         {
-            scoreBars[i].gameObject.SetActive(false);
-        }
-    }
+            PlayerNetwork player = players[i];
 
+            bool isLocalPlayer = player.Object.InputAuthority == runner.LocalPlayer;
+
+            scoreBars[i].gameObject.SetActive(true);
+
+            scoreBars[i].SetPlayer(
+                player,
+                characterDatabase,
+                isLocalPlayer
+            );
+
+            scoreBars[i].SetScore(player.Score);
+        }    
+    }
 
     private PlayerNetwork FindPlayerNetwork(PlayerRef playerRef)
     {
@@ -70,8 +85,11 @@ public class ScoreUIManager : MonoBehaviour
 
         foreach (PlayerNetwork player in players)
         {
-            if (player.Object.InputAuthority == playerRef)
+            if (player.Object != null &&
+                player.Object.InputAuthority == playerRef)
+            {
                 return player;
+            }
         }
 
         return null;
