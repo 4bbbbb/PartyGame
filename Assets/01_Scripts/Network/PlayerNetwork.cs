@@ -18,6 +18,8 @@ public class PlayerNetwork : NetworkBehaviour
     [Networked]
     public int Score { get; set; }
 
+    [Networked] 
+    public int PreviousScore { get; set; }
 
     #region < Spawn >
 
@@ -200,6 +202,7 @@ public class PlayerNetwork : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
+        PreviousScore = Score;
         Score += score;
     }
     #endregion

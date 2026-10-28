@@ -8,6 +8,8 @@ using UnityEngine.UI;
 
 public class ColorBlockManager : NetworkBehaviour
 {
+    #region < Data >
+
     [Header("<< ColorBlock Player >>")]
     [SerializeField] private NetworkPrefabRef colorBlockPlayerPrefab;
 
@@ -38,6 +40,9 @@ public class ColorBlockManager : NetworkBehaviour
     [SerializeField] private GameObject gameEndText;
     [SerializeField] private RawImage freezeFrame;
     public float FallDeathY => fallDeathY;
+
+    #endregion
+
 
     #region < Local Data >
 
@@ -143,6 +148,162 @@ public class ColorBlockManager : NetworkBehaviour
         Runner.ProvideInput = false;
 
         Debug.Log("[ColorBlockManager] ColorBlock Network Input 비활성화");
+    }
+
+    #endregion
+
+
+    #region < Game >
+
+    private void StartGame()
+    {
+        if (isGameRunning)
+        {
+            return;
+        }
+
+        StartCoroutine(GameRoutine());
+    }
+
+    private IEnumerator GameRoutine()
+    {
+        isGameRunning = true;
+        roundIndex = 0;
+
+        EnableColorBlockInput();
+
+        RPC_StartCountdown();
+
+        yield return new WaitForSeconds(countdownTime * 3f + 1.5f);
+
+        while (true)
+        {
+            int conditionCount = GetConditionCount();
+
+            currentConditions = GetRandomConditions(conditionCount);
+
+            ShowConditionsToAll(currentConditions);
+
+            yield return new WaitForSeconds(GetCurrentMoveTime());
+            if (IsGameEnding)
+                yield break;
+
+            CheckBlocks();
+
+            yield return new WaitForSeconds(1.7f);
+
+            if (IsGameEnding)
+                yield break;
+
+            roundIndex++;
+        }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_StartCountdown()
+    {
+        StartCoroutine(CountdownCoroutine());
+    }
+
+    private IEnumerator CountdownCoroutine()
+    {
+        if (countdownText == null)
+            yield break;
+
+        countdownText.gameObject.SetActive(true);
+
+        countdownText.text = "3";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "2";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "1";
+        yield return new WaitForSeconds(countdownTime);
+
+        countdownText.text = "START";
+        yield return new WaitForSeconds(1.5f);
+
+        countdownText.gameObject.SetActive(false);
+    }
+
+    private void ShowConditionsToAll(List<BlockCondition> conditions)
+    {
+        if (!Object.HasStateAuthority)
+            return;
+
+        int count = conditions.Count;
+
+        int type1 = count > 0 ? (int)conditions[0].type : 0;
+        int group1 = count > 0 ? conditions[0].groupIndex : 0;
+
+        int type2 = count > 1 ? (int)conditions[1].type : 0;
+        int group2 = count > 1 ? conditions[1].groupIndex : 0;
+
+        int type3 = count > 2 ? (int)conditions[2].type : 0;
+        int group3 = count > 2 ? conditions[2].groupIndex : 0;
+
+        RPC_ShowConditions(
+            count,
+            type1, group1,
+            type2, group2,
+            type3, group3
+        );
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowConditions(
+        int count,
+        int type1, int group1,
+        int type2, int group2,
+        int type3, int group3)
+    {
+        List<BlockCondition> conditions = new List<BlockCondition>();
+
+        if (count >= 1)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type1,
+                    group1
+                )
+            );
+        }
+
+        if (count >= 2)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type2,
+                    group2
+                )
+            );
+        }
+
+        if (count >= 3)
+        {
+            conditions.Add(
+                new BlockCondition(
+                    (ConditionType)type3,
+                    group3
+                )
+            );
+        }
+
+        if (monitorUI != null)
+        {
+            monitorUI.ShowConditions(conditions);
+        }
+    }
+
+    private float GetCurrentMoveTime()
+    {
+        int eliminatedCount = eliminatedRounds.Count;
+
+        float currentTime =
+            moveTime - eliminatedCount * moveTimeDecrease;
+
+        return Mathf.Max(currentTime, minimumMoveTime);
     }
 
     #endregion
@@ -339,163 +500,7 @@ public class ColorBlockManager : NetworkBehaviour
     }
 
     #endregion
-
-
-    #region < Game >
-
-    private void StartGame()
-    {
-        if (isGameRunning)
-        {
-            return;
-        }
-
-        StartCoroutine(GameRoutine());
-    }
-
-    private IEnumerator GameRoutine()
-    {
-        isGameRunning = true;
-        roundIndex = 0;
-
-        EnableColorBlockInput();
-
-        RPC_StartCountdown();
-
-        yield return new WaitForSeconds(countdownTime * 3f + 1.5f);
-
-        while (true)
-        {
-            int conditionCount = GetConditionCount();
-
-            currentConditions = GetRandomConditions(conditionCount);
-
-            ShowConditionsToAll(currentConditions);
-
-            yield return new WaitForSeconds(GetCurrentMoveTime());
-            if (IsGameEnding)
-                yield break;
-
-            CheckBlocks();
-
-            yield return new WaitForSeconds(1.7f);
-
-            if (IsGameEnding)
-                yield break;
-
-            roundIndex++;
-        }
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_StartCountdown()
-    {
-        StartCoroutine(CountdownCoroutine());
-    }
-
-    private IEnumerator CountdownCoroutine()
-    {
-        if (countdownText == null)
-            yield break;
-
-        countdownText.gameObject.SetActive(true);
-
-        countdownText.text = "3";
-        yield return new WaitForSeconds(countdownTime);
-
-        countdownText.text = "2";
-        yield return new WaitForSeconds(countdownTime);
-
-        countdownText.text = "1";
-        yield return new WaitForSeconds(countdownTime);
-
-        countdownText.text = "START";
-        yield return new WaitForSeconds(1.5f);
-
-        countdownText.gameObject.SetActive(false);
-    }
-
-    private void ShowConditionsToAll(List<BlockCondition> conditions)
-    {
-        if (!Object.HasStateAuthority)
-            return;
-
-        int count = conditions.Count;
-
-        int type1 = count > 0 ? (int)conditions[0].type : 0;
-        int group1 = count > 0 ? conditions[0].groupIndex : 0;
-
-        int type2 = count > 1 ? (int)conditions[1].type : 0;
-        int group2 = count > 1 ? conditions[1].groupIndex : 0;
-
-        int type3 = count > 2 ? (int)conditions[2].type : 0;
-        int group3 = count > 2 ? conditions[2].groupIndex : 0;
-
-        RPC_ShowConditions(
-            count,
-            type1, group1,
-            type2, group2,
-            type3, group3
-        );
-    }
-
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_ShowConditions(
-        int count,
-        int type1, int group1,
-        int type2, int group2,
-        int type3, int group3)
-    {
-        List<BlockCondition> conditions = new List<BlockCondition>();
-
-        if (count >= 1)
-        {
-            conditions.Add(
-                new BlockCondition(
-                    (ConditionType)type1,
-                    group1
-                )
-            );
-        }
-
-        if (count >= 2)
-        {
-            conditions.Add(
-                new BlockCondition(
-                    (ConditionType)type2,
-                    group2
-                )
-            );
-        }
-
-        if (count >= 3)
-        {
-            conditions.Add(
-                new BlockCondition(
-                    (ConditionType)type3,
-                    group3
-                )
-            );
-        }
-
-        if (monitorUI != null)
-        {
-            monitorUI.ShowConditions(conditions);
-        }
-    }
-
-    private float GetCurrentMoveTime()
-    {
-        int eliminatedCount = eliminatedRounds.Count;
-
-        float currentTime =
-            moveTime - eliminatedCount * moveTimeDecrease;
-
-        return Mathf.Max(currentTime, minimumMoveTime);
-    }
-
-    #endregion
-
+   
 
     #region < Condition >
 

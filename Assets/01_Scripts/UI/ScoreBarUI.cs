@@ -25,8 +25,6 @@ public class ScoreBarUI : MonoBehaviour
 
     private Coroutine scoreRoutine;
 
-    private int currentScore = 0;
-
     public void SetPlayer(
         PlayerNetwork player,
         CharacterDatabase characterDatabase,
@@ -50,18 +48,18 @@ public class ScoreBarUI : MonoBehaviour
     }
 
 
-    public void SetScore(int score)
+    public void SetScore(int previousScore, int targetScore)
     {
         if (scoreRoutine != null)
         {
             StopCoroutine(scoreRoutine);
         }
 
-        score = Mathf.Clamp(score, 0, MAX_SCORE);
+        previousScore = Mathf.Clamp(previousScore, 0, MAX_SCORE);
+        targetScore = Mathf.Clamp(targetScore, 0, MAX_SCORE);
 
-        // 이전 점수에서 새 누적 점수까지 애니메이션
         scoreRoutine = StartCoroutine(
-            AnimateScore(currentScore, score)
+            AnimateScore(previousScore, targetScore)
         );
     }
 
@@ -81,11 +79,7 @@ public class ScoreBarUI : MonoBehaviour
             float t = Mathf.Clamp01(elapsed / animationDuration);
             float smoothT = Mathf.SmoothStep(0f, 1f, t);
 
-            float scoreValue = Mathf.Lerp(
-                startScore,
-                targetScore,
-                smoothT
-            );
+            float scoreValue = Mathf.Lerp(startScore, targetScore, smoothT);
 
             slider.value = scoreValue + MIN_VALUE;
             scoreText.text = Mathf.RoundToInt(scoreValue).ToString();
@@ -96,7 +90,6 @@ public class ScoreBarUI : MonoBehaviour
         slider.value = targetScore + MIN_VALUE;
         scoreText.text = targetScore.ToString();
 
-        currentScore = targetScore;
         scoreRoutine = null;
     }
 

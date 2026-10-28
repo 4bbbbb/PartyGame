@@ -7,6 +7,8 @@ using UnityEngine;
 
 public class DodgeItManager : NetworkBehaviour
 {
+    #region < Data >
+
     [Header("<< Character Database >>")]
     [SerializeField] private CharacterDatabase characterDatabase;
 
@@ -37,14 +39,15 @@ public class DodgeItManager : NetworkBehaviour
     private NetworkBool IsGameEnding { get; set; }
 
     private bool isEndGameScheduled;
-
     private Coroutine timerCoroutine;
 
     private readonly Dictionary<PlayerRef, NetworkObject> spawnedPlayers = new();
-
     private readonly Dictionary<PlayerRef, int> eliminatedTicks = new();
 
+    #endregion
 
+
+    #region < Game > 
 
     public void SetAlienPlayer(PlayerRef alienPlayer)
     {
@@ -54,10 +57,7 @@ public class DodgeItManager : NetworkBehaviour
         if (!Runner.ActivePlayers.Contains(alienPlayer))        
             return;
         
-
         AlienPlayer = alienPlayer;
-
-        Debug.Log($"Dodge It! Alien 선정 완료: {AlienPlayer}");
     }
 
    
@@ -122,6 +122,45 @@ public class DodgeItManager : NetworkBehaviour
         if (AlienManager.Instance != null)
             AlienManager.Instance.OnAlienSelected -= HandleAlienSelected;
     }
+
+    #endregion
+
+
+    #region < Player > 
+
+    public DodgeItPlayer GetLocalDodgeItPlayer()
+    {
+        if (Runner == null)
+            return null;
+
+        PlayerRef localPlayer = Runner.LocalPlayer;
+
+        if (!spawnedPlayers.TryGetValue(localPlayer, out NetworkObject playerObject))
+            return null;
+
+        if (playerObject == null || !playerObject.IsValid)
+            return null;
+
+        return playerObject.GetComponent<DodgeItPlayer>();
+    }
+
+    public AlienPlayer GetLocalAlienPlayer()
+    {
+        if (Runner == null)
+            return null;
+
+        PlayerRef localPlayer = Runner.LocalPlayer;
+
+        if (!spawnedPlayers.TryGetValue(localPlayer, out NetworkObject playerObject))
+            return null;
+
+        if (playerObject == null || !playerObject.IsValid)
+            return null;
+
+        return playerObject.GetComponent<AlienPlayer>();
+    }
+
+    #endregion
 
 
     #region < Spawn >
@@ -382,7 +421,6 @@ public class DodgeItManager : NetworkBehaviour
             gameEnd.SetActive(true);
     }
 
-
     public void CheckAllPlayersEliminated()
     {
         if (Object == null)
@@ -407,9 +445,7 @@ public class DodgeItManager : NetworkBehaviour
 
             if (player == null)
                 continue;
-
-            // Fusion에서 아직 Spawn되지 않았거나
-            // 이미 Despawn된 플레이어는 건너뛴다.
+            
             if (player.Object == null || !player.Object.IsValid)
                 continue;
 
@@ -421,7 +457,6 @@ public class DodgeItManager : NetworkBehaviour
         {
             isEndGameScheduled = true;
 
-            // 타이머를 즉시 멈춘다.
             if (timerCoroutine != null)
             {
                 StopCoroutine(timerCoroutine);
@@ -449,11 +484,7 @@ public class DodgeItManager : NetworkBehaviour
         if (eliminatedTicks.ContainsKey(player))
             return;
 
-        eliminatedTicks[player] = Runner.Tick.Raw;
-
-        Debug.Log(
-            $"[Dodge It!] 탈락 기록 저장 완료: {player} | Tick={Runner.Tick.Raw}"
-        );
+        eliminatedTicks[player] = Runner.Tick.Raw;       
     }
 
     #endregion
@@ -465,8 +496,6 @@ public class DodgeItManager : NetworkBehaviour
     {
         if (!Object.HasStateAuthority)
             return;
-
-        Debug.Log("===== Dodge It! 점수 계산 시작 =====");
 
         List<PlayerRef> players = Runner.ActivePlayers
             .OrderBy(player => player.RawEncoded)
@@ -486,7 +515,6 @@ public class DodgeItManager : NetworkBehaviour
 
             Debug.Log("[Dodge It!] 전원 탈락! Alien +3점");
 
-            Debug.Log("===== Dodge It! 점수 계산 완료 =====");
             return;
         }
 
@@ -520,23 +548,16 @@ public class DodgeItManager : NetworkBehaviour
             else
             {
                 eliminationOrder++;
-
                 score = eliminationOrder;
             }
 
             foreach (PlayerRef player in group)
             {
-                AddPlayerScore(player, score);
-
-                Debug.Log(
-                    $"[Dodge It! Score] 탈락: {player} | " +
-                    $"Tick={group.Key} | +{score}점"
-                );
+                AddPlayerScore(player, score);               
             }
         }
 
         Debug.Log($"[Dodge It! Score] Alien: {AlienPlayer} | +0점");
-        Debug.Log("===== Dodge It! 점수 계산 완료 =====");
     }
 
     private void AddPlayerScore(PlayerRef playerRef, int score)
@@ -544,24 +565,15 @@ public class DodgeItManager : NetworkBehaviour
         NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
 
         if (playerObject == null)
-        {
-            Debug.LogWarning(
-                $"[Dodge It!] PlayerNetwork를 찾을 수 없습니다: {playerRef}"
-            );
             return;
-        }
+       
 
         PlayerNetwork playerNetwork =
             playerObject.GetComponent<PlayerNetwork>();
 
         if (playerNetwork == null)
-        {
-            Debug.LogWarning(
-                $"[Dodge It!] PlayerNetwork 컴포넌트가 없습니다: {playerRef}"
-            );
             return;
-        }
-
+        
         playerNetwork.AddScore(score);
     }
 

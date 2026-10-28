@@ -213,31 +213,29 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         if (!runner.ProvideInput)
             return;
 
-        ColorBlockManager colorBlockManager =
-            FindFirstObjectByType<ColorBlockManager>();
+        #region << ColorBlock >>
 
-        if (colorBlockManager == null)
+        ColorBlockManager colorBlockManager = FindFirstObjectByType<ColorBlockManager>();
+
+        if (colorBlockManager != null)
         {
-            Debug.LogWarning("[OnInput] ColorBlockManager 없음");
+            ColorBlockPlayer localPlayer = colorBlockManager.GetLocalPlayer();
+
+            if (localPlayer == null)
+                return;
+
+            MiniGameInputData data = new()
+            {
+                Move = localPlayer.GetMoveInput(),
+                Jump = localPlayer.GetJumpInput(),
+                DropObstacle = false
+            };
+
+            input.Set(data);
             return;
         }
 
-        ColorBlockPlayer localPlayer =
-            colorBlockManager.GetLocalPlayer();
-
-        if (localPlayer == null)
-        {
-            Debug.LogWarning("[OnInput] LocalPlayer 없음");
-            return;
-        }
-
-        ColorBlockInputData data = new()
-        {
-            Move = localPlayer.GetMoveInput(),
-            Jump = localPlayer.GetJumpInput()
-        };
-
-        input.Set(data);
+        #endregion
     }
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player,NetworkInput input)

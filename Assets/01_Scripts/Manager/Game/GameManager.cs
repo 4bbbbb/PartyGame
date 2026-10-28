@@ -201,7 +201,9 @@ public class GameManager : NetworkBehaviour
         Runner.LoadScene(SceneRef.FromIndex(sceneBuildIndex));
     }
 
-    // Score 씬에 도착하면 호스트가 다음 진행을 관리
+# region < Score >
+
+    
     private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
         if (!Object.HasStateAuthority ||
@@ -219,22 +221,13 @@ public class GameManager : NetworkBehaviour
 
     private IEnumerator ScoreSceneRoutine()
     {
-        scoreRoutineRunning = true;
-
-        Debug.Log(
-            $"[GameManager] {scoreSceneName} 진입. " +
-            $"{scoreWaitSeconds}초 대기"
-        );
+        scoreRoutineRunning = true;      
 
         yield return new WaitForSeconds(scoreWaitSeconds);
 
         // 매 미니게임 종료 후 현재 최고 점수 확인
         int highestScore = GetHighestPlayerScore();
-
-        Debug.Log(
-            $"[GameManager] 현재 최고 점수: {highestScore} / " +
-            $"목표 점수: {winningScore}"
-        );
+       
 
         // 목표 점수 달성 시 즉시 게임 종료
         if (highestScore >= winningScore)
@@ -259,7 +252,6 @@ public class GameManager : NetworkBehaviour
         }
 
         // 모든 미니게임을 플레이했지만 목표 점수 미달
-        Debug.Log("[GameManager] 목표 점수 미달. 다음 사이클 시작");
 
         RefillMiniGames();
 
@@ -268,19 +260,15 @@ public class GameManager : NetworkBehaviour
     }
 
 
-    // 현재 접속 중인 플레이어 중 최고 누적 점수 반환
     private int GetHighestPlayerScore()
     {
         int highestScore = 0;
 
         foreach (PlayerRef playerRef in Runner.ActivePlayers)
         {
-            if (Runner.TryGetPlayerObject(
-                playerRef,
-                out NetworkObject playerObject))
+            if (Runner.TryGetPlayerObject(playerRef, out NetworkObject playerObject))
             {
-                PlayerNetwork playerNetwork =
-                    playerObject.GetComponent<PlayerNetwork>();
+                PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
                 if (playerNetwork != null)
                 {
@@ -312,4 +300,6 @@ public class GameManager : NetworkBehaviour
 
         return -1;
     }
+
+    #endregion
 }

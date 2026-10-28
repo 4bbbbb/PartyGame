@@ -960,6 +960,7 @@ GameObject:
   - component: {fileID: 405004311}
   - component: {fileID: 405004312}
   - component: {fileID: 405004310}
+  - component: {fileID: 405004313}
   m_Layer: 5
   m_Name: ScoreBar_2
   m_TagString: Untagged
@@ -1044,8 +1045,23 @@ MonoBehaviour:
   nicknameText: {fileID: 1439888099}
   scoreText: {fileID: 1672392086}
   fillImage: {fileID: 1872713605}
-  outline: {fileID: 0}
+  outline: {fileID: 405004313}
   animationDuration: 1.5
+--- !u!114 &405004313
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 405004308}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 5, y: 5}
+  m_UseGraphicAlpha: 1
 --- !u!1 &441548234
 GameObject:
   m_ObjectHideFlags: 0
@@ -2218,7 +2234,7 @@ MonoBehaviour:
   nicknameText: {fileID: 939822483}
   scoreText: {fileID: 631806336}
   fillImage: {fileID: 968313961}
-  outline: {fileID: 0}
+  outline: {fileID: 1268719615}
   animationDuration: 1.5
 --- !u!114 &1268719615
 MonoBehaviour:
@@ -2233,7 +2249,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
-  m_EffectDistance: {x: 3, y: 3}
+  m_EffectDistance: {x: 5, y: 5}
   m_UseGraphicAlpha: 1
 --- !u!1 &1339206614
 GameObject:
@@ -2642,6 +2658,7 @@ GameObject:
   - component: {fileID: 1440823687}
   - component: {fileID: 1440823684}
   - component: {fileID: 1440823686}
+  - component: {fileID: 1440823688}
   m_Layer: 5
   m_Name: ScoreBar_4
   m_TagString: Untagged
@@ -2665,7 +2682,7 @@ MonoBehaviour:
   nicknameText: {fileID: 2077210731}
   scoreText: {fileID: 1602660661}
   fillImage: {fileID: 1339206615}
-  outline: {fileID: 0}
+  outline: {fileID: 1440823688}
   animationDuration: 1.5
 --- !u!224 &1440823685
 RectTransform:
@@ -2728,6 +2745,21 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1440823683}
   m_CullTransparentMesh: 1
+--- !u!114 &1440823688
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1440823683}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 5, y: 5}
+  m_UseGraphicAlpha: 1
 --- !u!1 &1445644473
 GameObject:
   m_ObjectHideFlags: 0
@@ -3668,6 +3700,7 @@ GameObject:
   - component: {fileID: 1829088744}
   - component: {fileID: 1829088745}
   - component: {fileID: 1829088743}
+  - component: {fileID: 1829088746}
   m_Layer: 5
   m_Name: ScoreBar_3
   m_TagString: Untagged
@@ -3752,8 +3785,23 @@ MonoBehaviour:
   nicknameText: {fileID: 1999590963}
   scoreText: {fileID: 441548236}
   fillImage: {fileID: 390808942}
-  outline: {fileID: 0}
+  outline: {fileID: 1829088746}
   animationDuration: 1.5
+--- !u!114 &1829088746
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1829088741}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: 5, y: 5}
+  m_UseGraphicAlpha: 1
 --- !u!1 &1855478899
 GameObject:
   m_ObjectHideFlags: 0

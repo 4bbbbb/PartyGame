@@ -448,7 +448,7 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        if (GetInput(out ColorBlockInputData inputData))
+        if (GetInput(out MiniGameInputData inputData))
         {
             moveInput = inputData.Move;
 

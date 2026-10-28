@@ -16,19 +16,14 @@ public class ScoreUIManager : MonoBehaviour
 
     private void Start()
     {
-        if (NetworkManager.Instance == null)
-        {
-            Debug.LogError("NetworkManager를 찾을 수 없습니다.");
+        if (NetworkManager.Instance == null)        
             return;
-        }
+        
 
         runner = NetworkManager.Instance.GetRunner();
 
-        if (runner == null)
-        {
-            Debug.LogError("NetworkRunner를 찾을 수 없습니다.");
-            return;
-        }
+        if (runner == null)       
+            return;        
 
         SetupScoreBoard();
     }
@@ -42,11 +37,7 @@ public class ScoreUIManager : MonoBehaviour
             PlayerNetwork player = FindPlayerNetwork(playerRef);
 
             if (player == null)
-            {
-                Debug.LogWarning($"PlayerNetwork를 찾을 수 없습니다. PlayerRef = {playerRef}");
-
-                continue;
-            }
+                continue;            
 
             players.Add(player);
         }
@@ -71,7 +62,10 @@ public class ScoreUIManager : MonoBehaviour
                 isLocalPlayer
             );
 
-            scoreBars[i].SetScore(player.Score);
+            scoreBars[i].SetScore(
+                player.PreviousScore,
+                player.Score
+                );
         }    
     }
 
