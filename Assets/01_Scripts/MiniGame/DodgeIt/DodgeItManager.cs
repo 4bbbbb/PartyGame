@@ -98,6 +98,17 @@ public class DodgeItManager : NetworkBehaviour
 
     public override void Spawned()
     {
+        // 입력 활성화
+        if (Runner != null)
+        {
+            Runner.ProvideInput = true;
+
+            Debug.Log(
+                $"[DodgeItManager] ProvideInput = true | " +
+                $"LocalPlayer = {Runner.LocalPlayer}"
+            );
+        }
+
         if (AlienManager.Instance != null)
         {
             AlienManager.Instance.OnAlienSelected += HandleAlienSelected;
@@ -133,15 +144,19 @@ public class DodgeItManager : NetworkBehaviour
         if (Runner == null)
             return null;
 
-        PlayerRef localPlayer = Runner.LocalPlayer;
+        DodgeItPlayer[] players = FindObjectsByType<DodgeItPlayer>(FindObjectsSortMode.None);
 
-        if (!spawnedPlayers.TryGetValue(localPlayer, out NetworkObject playerObject))
-            return null;
+        foreach (DodgeItPlayer player in players)
+        {
+            if (player.Object != null &&
+                player.Object.IsValid &&
+                player.Object.HasInputAuthority)
+            {
+                return player;
+            }
+        }
 
-        if (playerObject == null || !playerObject.IsValid)
-            return null;
-
-        return playerObject.GetComponent<DodgeItPlayer>();
+        return null;
     }
 
     public AlienPlayer GetLocalAlienPlayer()
@@ -149,15 +164,19 @@ public class DodgeItManager : NetworkBehaviour
         if (Runner == null)
             return null;
 
-        PlayerRef localPlayer = Runner.LocalPlayer;
+        AlienPlayer[] players = FindObjectsByType<AlienPlayer>(FindObjectsSortMode.None);
 
-        if (!spawnedPlayers.TryGetValue(localPlayer, out NetworkObject playerObject))
-            return null;
+        foreach (AlienPlayer player in players)
+        {
+            if (player.Object != null &&
+                player.Object.IsValid &&
+                player.Object.HasInputAuthority)
+            {
+                return player;
+            }
+        }
 
-        if (playerObject == null || !playerObject.IsValid)
-            return null;
-
-        return playerObject.GetComponent<AlienPlayer>();
+        return null;
     }
 
     #endregion

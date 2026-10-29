@@ -208,35 +208,66 @@ public class NetworkManager : MonoBehaviour, INetworkRunnerCallbacks
         request.Accept();
     }
 
+
     public void OnInput(NetworkRunner runner, NetworkInput input)
     {
         if (!runner.ProvideInput)
             return;
 
-        #region << ColorBlock >>
+        MiniGameInputData data = default;
 
-        ColorBlockManager colorBlockManager = FindFirstObjectByType<ColorBlockManager>();
+        #region << ColorBlock >>
+        ColorBlockManager colorBlockManager =
+            FindFirstObjectByType<ColorBlockManager>();
 
         if (colorBlockManager != null)
         {
-            ColorBlockPlayer localPlayer = colorBlockManager.GetLocalPlayer();
+            ColorBlockPlayer localPlayer =
+                colorBlockManager.GetLocalPlayer();
 
-            if (localPlayer == null)
-                return;
-
-            MiniGameInputData data = new()
+            if (localPlayer != null)
             {
-                Move = localPlayer.GetMoveInput(),
-                Jump = localPlayer.GetJumpInput(),
-                DropObstacle = false
-            };
+                data.Move = localPlayer.GetMoveInput();
+                data.Jump = localPlayer.GetJumpInput();
+            }
 
             input.Set(data);
             return;
         }
 
         #endregion
+
+        #region << Dodge It >>
+        DodgeItManager dodgeItManager =
+            FindFirstObjectByType<DodgeItManager>();
+
+        if (dodgeItManager != null)
+        {
+            DodgeItPlayer localPlayer =
+                dodgeItManager.GetLocalDodgeItPlayer();
+
+            AlienPlayer alienPlayer =
+                dodgeItManager.GetLocalAlienPlayer();
+
+            if (localPlayer != null)
+            {
+                data.Move = localPlayer.GetMoveInput();
+                data.Jump = localPlayer.GetJumpInput();
+            }
+            else if (alienPlayer != null)
+            {
+                data.Move = alienPlayer.GetMoveInput();
+                data.DropObstacle = alienPlayer.GetDropObstacleInput();
+            }
+
+            input.Set(data);
+            return;
+        }
+        #endregion
+
+        input.Set(data);
     }
+
 
     public void OnInputMissing(NetworkRunner runner, PlayerRef player,NetworkInput input)
     {

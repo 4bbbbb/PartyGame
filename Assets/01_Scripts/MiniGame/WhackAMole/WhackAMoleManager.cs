@@ -542,12 +542,10 @@ public class WhackAMoleManager : NetworkBehaviour
         Debug.Log($"[TAG 이동] 시작 / TagPlayer: {TagPlayer}");
 
         if (!spawnedPlayers.TryGetValue(TagPlayer, out WhackAMolePlayer tagPlayer))
-        {
-            Debug.LogWarning($"[TAG 이동 실패] 캐릭터를 찾을 수 없음: {TagPlayer}");
+        
             return;
-        }
+        
 
-        Debug.Log($"[TAG 이동] 캐릭터 찾음: {tagPlayer.name}");
 
         int domeIndex = (int)TagHole - 1;
 
@@ -567,7 +565,7 @@ public class WhackAMoleManager : NetworkBehaviour
 
         dome.MovePlayer(tagPlayer);
 
-        Debug.Log($"[TAG 이동 후] 실제 위치: {tagPlayer.transform.position}");
+        StartCoroutine(CheckTagPositionNextFrame(tagPlayer));
     }
 
 
@@ -1047,4 +1045,5 @@ public class WhackAMoleManager : NetworkBehaviour
     }
 
     #endregion
+
 }

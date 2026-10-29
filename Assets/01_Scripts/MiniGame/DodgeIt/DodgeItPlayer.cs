@@ -37,7 +37,6 @@ public class DodgeItPlayer : NetworkBehaviour
     private CharacterController controller;
     private Player_InputActions inputActions;
 
-
     [Networked]
     private Vector2 NetworkMoveInput { get; set; }
 
@@ -46,6 +45,12 @@ public class DodgeItPlayer : NetworkBehaviour
 
     [Networked]
     public NetworkBool IsEliminated { get; private set; }
+
+    [Networked]
+    private float NetworkSpeed { get; set; }
+
+    [Networked]
+    private NetworkBool NetworkIsJumping { get; set; }
 
     private float verticalVelocity;
     private bool isJumping;
@@ -101,34 +106,43 @@ public class DodgeItPlayer : NetworkBehaviour
         inputActions.DodgeIt.Disable();
     }
 
+    #endregion
+
+
+    #region < Input >
+
     private void Update()
     {
         if (Object == null || !Object.HasInputAuthority)
             return;
+    }
 
-        Vector2 moveInput = inputActions.DodgeIt.Move.ReadValue<Vector2>();
+    public Vector2 GetMoveInput()
+    {
+        if (inputActions == null)
+            return Vector2.zero;
 
-        bool jumpPressed = jumpInput;
+        return inputActions.DodgeIt.Move.ReadValue<Vector2>();
+    }
+
+    public bool GetJumpInput()
+    {
+        bool pressed = jumpInput;
         jumpInput = false;
 
-        RPC_SendInput(moveInput, jumpPressed);
+        return pressed;
     }
 
-    #endregion
+    //[Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Unreliable)]
+    //private void RPC_SendInput(Vector2 moveInput, NetworkBool jumpPressed)
+    //{
+    //    NetworkMoveInput = Vector2.ClampMagnitude(moveInput, 1f);
 
-
-    #region < Network Input >
-
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Unreliable)]
-    private void RPC_SendInput(Vector2 moveInput, NetworkBool jumpPressed)
-    {
-        NetworkMoveInput = Vector2.ClampMagnitude(moveInput, 1f);
-
-        if (jumpPressed)
-        {
-            NetworkJumpRequested = true;
-        }
-    }
+    //    if (jumpPressed)
+    //    {
+    //        NetworkJumpRequested = true;
+    //    }
+    //}
 
     #endregion
 
@@ -245,11 +259,22 @@ public class DodgeItPlayer : NetworkBehaviour
         if (controller == null)
             return;
 
-        Vector2 moveInput = NetworkMoveInput;
+        Vector2 moveInput = Vector2.zero;
+
+        if (GetInput(out MiniGameInputData inputData))
+        {
+            moveInput = Vector2.ClampMagnitude(inputData.Move, 1f);
+
+            if (inputData.Jump)
+            {
+                NetworkJumpRequested = true;
+            }
+        }
 
         HandleJump();
         Move(moveInput);
-        UpdateSpeedAnimation(moveInput);
+
+        NetworkSpeed = moveInput.magnitude;
     }
 
     private void Move(Vector2 moveInput)
@@ -302,7 +327,7 @@ public class DodgeItPlayer : NetworkBehaviour
                 verticalVelocity = jumpForce;
                 isJumping = true;
 
-                UpdateJumpAnimation();
+                NetworkIsJumping = true;
             }
         }
         else
@@ -315,24 +340,11 @@ public class DodgeItPlayer : NetworkBehaviour
 
     public void EndJump()
     {
+        if (!Object.HasStateAuthority)
+            return;
+
         isJumping = false;
-    }
-
-    #endregion
-
-
-    #region < Animation >
-
-    private void UpdateJumpAnimation()
-    {
-        if (isJumping && animator != null)
-            animator.SetTrigger("Jump");
-    }
-
-    private void UpdateSpeedAnimation(Vector2 moveInput)
-    {
-        if (animator != null)
-            animator.SetFloat("Speed", moveInput.magnitude);
+        NetworkIsJumping = false;
     }
 
     #endregion
@@ -370,6 +382,21 @@ public class DodgeItPlayer : NetworkBehaviour
 
     public override void Render()
     {
+        if (animator != null)
+        {
+            animator.SetFloat("Speed", NetworkSpeed);
+
+            if (NetworkIsJumping && !isJumping)
+            {
+                animator.SetTrigger("Jump");
+                isJumping = true;
+            }
+            else if (!NetworkIsJumping)
+            {
+                isJumping = false;
+            }
+        }
+
         if (IsEliminated)
         {
             if (characterRenderer != null)

@@ -41,6 +41,7 @@ public class AlienPlayer : NetworkBehaviour
     private Vector2 NetworkMoveInput { get; set; }
 
     private bool dropRequested;
+    private bool dropInputRequested;
     private bool waitingForNextObstacle;
     private bool isSpawning;
 
@@ -97,17 +98,8 @@ public class AlienPlayer : NetworkBehaviour
         inputActions.DodgeIt_Alien.Disable();
     }
 
-    private void Update()
-    {
-        if (Object == null || !Object.HasInputAuthority)
-            return;
-
-        Vector2 moveInput = inputActions.DodgeIt_Alien.Move.ReadValue<Vector2>();
-
-        RPC_SendMoveInput(moveInput);
-    }
-
     #endregion
+
 
     #region < Input >
 
@@ -116,22 +108,27 @@ public class AlienPlayer : NetworkBehaviour
         if (Object == null || !Object.HasInputAuthority)
             return;
 
-        RPC_RequestDropObstacle();
+        dropInputRequested = true;
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority, Channel = RpcChannel.Unreliable)]
-    private void RPC_SendMoveInput(Vector2 moveInput)
+    public Vector2 GetMoveInput()
     {
-        NetworkMoveInput = Vector2.ClampMagnitude(moveInput, 1f);
+        if (inputActions == null)
+            return Vector2.zero;
+
+        return inputActions.DodgeIt_Alien.Move.ReadValue<Vector2>();
     }
 
-    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
-    private void RPC_RequestDropObstacle()
+    public bool GetDropObstacleInput()
     {
-        dropRequested = true;
+        bool requested = dropInputRequested;
+        dropInputRequested = false;
+
+        return requested;
     }
 
     #endregion
+
 
     #region < Move >
 
@@ -140,12 +137,20 @@ public class AlienPlayer : NetworkBehaviour
         if (!Object.HasStateAuthority)
             return;
 
-        Vector3 movement = Vector3.right * NetworkMoveInput.x * moveSpeed;
+        Vector2 moveInput = Vector2.zero;
 
+        if (GetInput(out MiniGameInputData inputData))
+        {
+            moveInput = Vector2.ClampMagnitude(inputData.Move, 1f);
+
+            if (inputData.DropObstacle)
+                dropRequested = true;
+        }
+
+        Vector3 movement = Vector3.right * moveInput.x * moveSpeed;
         Vector3 nextPosition = transform.position + movement * Runner.DeltaTime;
 
         nextPosition.x = Mathf.Clamp(nextPosition.x, -7f, 7f);
-
         transform.position = nextPosition;
 
         if (dropRequested)
@@ -156,6 +161,7 @@ public class AlienPlayer : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Obstacle >
 
@@ -245,6 +251,7 @@ public class AlienPlayer : NetworkBehaviour
 
     #endregion
 
+
     #region < Player Network >
 
     public void SetPlayerNetwork(PlayerNetwork player)
@@ -300,6 +307,7 @@ public class AlienPlayer : NetworkBehaviour
     }
 
     #endregion
+
 
     #region < Character >
 

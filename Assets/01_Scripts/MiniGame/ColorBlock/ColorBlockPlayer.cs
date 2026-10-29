@@ -29,7 +29,7 @@ public class ColorBlockPlayer : NetworkBehaviour
     [SerializeField] private float gravity = -20f;
 
     [Header("<< Camera >>")]
-    [SerializeField] private Transform camPos;
+    [SerializeField] public Transform camPos;
 
     [Header("<< ColorBlock >>")]
     [SerializeField] private ColorBlockManager colorBlockManager;
@@ -154,16 +154,7 @@ public class ColorBlockPlayer : NetworkBehaviour
     #region < Spawn >
 
     public override void Spawned()
-    {
-        Debug.Log(
-            $"[ColorBlockPlayer Spawned] " +
-            $"Object={Object.Id}, " +
-            $"InputAuthority={Object.InputAuthority}, " +
-            $"HasInputAuthority={Object.HasInputAuthority}, " +
-            $"PlayerIndex={PlayerIndex}, " +
-            $"CharacterIndex={CharacterIndex}"
-        );
-
+    {       
         ApplyCharacter();
         FindPlayerNetwork();
         UpdateName();
@@ -179,11 +170,6 @@ public class ColorBlockPlayer : NetworkBehaviour
             inputActions.ColorBlock.Enable();
 
             inputActions.ColorBlock.Jump.performed += OnJump;
-
-            Debug.Log(
-                "[ColorBlockPlayer] " +
-                "InputActions 활성화 완료"
-            );
         }
 
         UpdateJumpAnimation();
@@ -210,15 +196,8 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void SetupCamera()
     {
-        if (Camera.main == null)
-        {
-            Debug.LogWarning(
-                "[ColorBlockPlayer] " +
-                "Main Camera를 찾을 수 없습니다."
-            );
-
-            return;
-        }
+        if (Camera.main == null)        
+            return;        
 
         ColorBlockCamera cameraController = Camera.main.GetComponent<ColorBlockCamera>();
 
@@ -309,22 +288,24 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     public override void Despawned(NetworkRunner runner, bool hasState)
     {
+        if (Camera.main != null)
+        {
+            ColorBlockCamera cameraController =
+                Camera.main.GetComponent<ColorBlockCamera>();
+
+            if (cameraController != null)
+            {
+                cameraController.OnPlayerDespawned(this);
+            }
+        }
+
+        // 내 캐릭터가 탈락했다면 관전 시작
         if (isLocalPlayer)
         {
             SetupSpectatorCamera();
         }
-
-        if (inputActions == null)
-            return;
-
-        inputActions.ColorBlock.Jump.performed -= OnJump;
-
-        inputActions.ColorBlock.Disable();
-
-        inputActions.Dispose();
-
-        inputActions = null;
     }
+
 
     private void SetupSpectatorCamera()
     {
@@ -334,24 +315,27 @@ public class ColorBlockPlayer : NetworkBehaviour
             return;
         }
 
-        ColorBlockCamera cameraController = Camera.main.GetComponent<ColorBlockCamera>();
+        ColorBlockCamera cameraController =
+            Camera.main.GetComponent<ColorBlockCamera>();
 
         if (cameraController == null)
         {
-            Debug.LogError("[ColorBlockPlayer] Main Camera에 ColorBlockCamera가 없습니다.");
+            Debug.LogError("[ColorBlockPlayer] ColorBlockCamera가 없습니다.");
             return;
         }
 
-        ColorBlockPlayer[] alivePlayers = FindObjectsByType<ColorBlockPlayer>(FindObjectsSortMode.None);
+        ColorBlockPlayer[] players =
+            FindObjectsByType<ColorBlockPlayer>(FindObjectsSortMode.InstanceID);
 
-        List<ColorBlockPlayer> candidates = new List<ColorBlockPlayer>();
+        List<ColorBlockPlayer> candidates =
+            new List<ColorBlockPlayer>();
 
-        foreach (ColorBlockPlayer player in alivePlayers)
+        foreach (ColorBlockPlayer player in players)
         {
-            if (player == null)
+            if (player == null || player == this)
                 continue;
 
-            if (player.Object == null)
+            if (player.Object == null || player.camPos == null)
                 continue;
 
             candidates.Add(player);
@@ -359,33 +343,16 @@ public class ColorBlockPlayer : NetworkBehaviour
 
         if (candidates.Count == 0)
         {
-            Debug.Log("[ColorBlockPlayer] 관전할 생존 플레이어가 없습니다.");
+            Debug.LogWarning("[ColorBlockPlayer] 관전할 플레이어가 없습니다.");
             return;
         }
 
-        int randomIndex = Random.Range(0, candidates.Count);
+        ColorBlockPlayer targetPlayer =
+            candidates[Random.Range(0, candidates.Count)];
 
-        ColorBlockPlayer targetPlayer = candidates[randomIndex];
-
-        if (targetPlayer.camPos == null)
-        {
-            Debug.LogWarning(
-                $"[ColorBlockPlayer] 관전 대상 CamPos가 없습니다. " +
-                $"PlayerRef={targetPlayer.Object.InputAuthority}"
-            );
-            return;
-        }
-
-        cameraController.SetTarget(targetPlayer.camPos);
-
-        Debug.Log(
-            $"[ColorBlockPlayer] 관전 시작 | " +
-            $"Target={targetPlayer.Object.InputAuthority}"
-        );
-
-
-
+        cameraController.StartSpectating(targetPlayer);
     }
+
 
     #endregion
 
@@ -394,11 +361,9 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void Update()
     {
-        // 아직 Spawn되지 않은 상태
         if (!Object)
             return;
 
-        // 내 플레이어가 아니면 입력하지 않음
         if (!Object.HasInputAuthority)
             return;
 
@@ -429,7 +394,7 @@ public class ColorBlockPlayer : NetworkBehaviour
 
     private void OnJump(UnityEngine.InputSystem.InputAction.CallbackContext context)
     {
-        if (!Object.HasInputAuthority)
+        if (Object == null || !Object.HasInputAuthority)
             return;
 
         if (IsJumping)
@@ -523,7 +488,6 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (!controller.isGrounded)
             return;
 
-        // 바닥에 있을 때 아래로 계속 떨어지는 것을 방지
         if (verticalVelocity < 0f)
         {
             verticalVelocity = -2f;
@@ -552,10 +516,8 @@ public class ColorBlockPlayer : NetworkBehaviour
         if (controller == null)
             return;
 
-        // 점프 중 또는 공중
         verticalVelocity += gravity * Runner.DeltaTime;
 
-        // 착지했으면 점프 상태 종료
         if (controller.isGrounded && verticalVelocity < 0f)
         {
             verticalVelocity = -2f;

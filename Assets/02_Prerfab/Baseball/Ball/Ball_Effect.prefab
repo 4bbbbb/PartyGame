@@ -120,14 +120,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3fd244b3d97037b479e4d3aa4fc2d527, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  excellentDistance: 12
+  excellentDistance: 8
   excellentHeight: 8
   excellentDepthDistance: 2
-  excellentDuration: 1.2
-  goodDistance: 7
-  goodHeight: 4
-  goodDepthDistance: 0.8
-  goodDuration: 2
+  excellentDuration: 1.6
+  goodDistance: 3
+  goodHeight: 5
+  goodDepthDistance: 0
+  goodDuration: 1
   hitScale: {x: 8, y: 8, z: 8}
   endScale: {x: 4, y: 4, z: 4}
   _PlayerIndex: 0

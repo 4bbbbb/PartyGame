@@ -67,24 +67,10 @@ public class ColorBlockManager : NetworkBehaviour
 
     public override void Spawned()
     {
-        Debug.Log("===== ColorBlockManager Spawned =====");
-
-        Debug.Log(
-    $"[ColorBlock Spawned] " +
-    $"TimeScale={Time.timeScale}, " +
-    $"IsServer={Runner.IsServer}, " +
-    $"IsClient={Runner.IsClient}"
-);
-
         // 모든 플레이어가 ColorBlock 입력을 제공할 수 있도록 설정
         if (Runner != null)
         {
             Runner.ProvideInput = true;
-
-            Debug.Log(
-                $"[ColorBlockManager] ProvideInput = true | " +
-                $"LocalPlayer = {Runner.LocalPlayer}"
-            );
         }
 
         // 아래부터는 기존대로 State Authority만 게임을 진행
@@ -105,21 +91,14 @@ public class ColorBlockManager : NetworkBehaviour
 
     private IEnumerator InitializeColorBlockGameRoutine()
     {
-        // Runner 준비 대기
         yield return new WaitUntil(() => Runner != null);
 
-        // PlayerNetwork가 생성될 때까지 대기
         yield return new WaitUntil(() => GetActivePlayers().Count > 0);
 
-        Debug.Log("===== PlayerNetwork 확인 완료 =====");
-
-        // ColorBlock 전용 플레이어 생성
         SpawnPlayers();
 
-        // Spawn 직후 한 프레임 대기
         yield return null;
 
-        // 게임 시작
         StartGame();
 
         isInitializing = false;
@@ -136,8 +115,6 @@ public class ColorBlockManager : NetworkBehaviour
             return;
 
         Runner.ProvideInput = true;
-
-        Debug.Log("[ColorBlockManager] ColorBlock Network Input 활성화");
     }
 
     private void DisableColorBlockInput()
@@ -325,26 +302,12 @@ public class ColorBlockManager : NetworkBehaviour
             NetworkObject playerObject = Runner.GetPlayerObject(playerRef);
 
             if (playerObject == null)
-            {
-                Debug.LogWarning(
-                    $"PlayerObject를 찾을 수 없습니다. " +
-                    $"PlayerRef = {playerRef}"
-                );
-
-                continue;
-            }
+                continue;            
 
             PlayerNetwork playerNetwork = playerObject.GetComponent<PlayerNetwork>();
 
             if (playerNetwork == null)
-            {
-                Debug.LogError(
-                    $"PlayerObject에 PlayerNetwork가 없습니다. " +
-                    $"PlayerRef = {playerRef}"
-                );
-
-                continue;
-            }
+                continue;            
 
             players.Add(playerNetwork);
         }
@@ -380,34 +343,23 @@ public class ColorBlockManager : NetworkBehaviour
 
     private void SpawnPlayers()
     {
-        if (Runner == null)
-        {
-            Debug.LogError(" Runner가 없습니다.");
+        if (Runner == null)        
             return;
-        }
+        
 
-        if (!colorBlockPlayerPrefab.IsValid)
-        {
-            Debug.LogError(" ColorBlockPlayer Prefab이 연결되지 않았습니다.");
-
+        if (!colorBlockPlayerPrefab.IsValid)       
             return;
-        }
+        
 
-        if (playerSpawnPoints == null || playerSpawnPoints.Length < 4)
-        {
-            Debug.LogError(" ColorBlock Player Spawn Point가 4개 필요합니다.");
-
+        if (playerSpawnPoints == null || playerSpawnPoints.Length < 4)       
             return;
-        }
+        
 
         List<PlayerNetwork> players = GetActivePlayers();
 
-        if (players.Count == 0)
-        {
-            Debug.LogError(" PlayerNetwork를 하나도 찾지 못했습니다.");
-
+        if (players.Count == 0)        
             return;
-        }
+       
 
         int spawnCount = Mathf.Min(players.Count, playerSpawnPoints.Length);
 
@@ -430,18 +382,6 @@ public class ColorBlockManager : NetworkBehaviour
 
             Transform spawnPoint = playerSpawnPoints[i];
 
-            Debug.Log(
-                $"===== ColorBlock Spawn =====\n" +
-                $"Index = {i}\n" +
-                $"PlayerRef = {playerRef}\n" +
-                $"Nickname = {player.Nickname}\n" +
-                $"CharacterIndex = {player.CharacterIndex}"
-            );
-
-            // --------------------------------------------------
-            // ColorBlockPlayer 네트워크 생성
-            // --------------------------------------------------
-
             NetworkObject playerObject = Runner.Spawn(
                 colorBlockPlayerPrefab,
                 spawnPoint.position,
@@ -449,21 +389,14 @@ public class ColorBlockManager : NetworkBehaviour
                 playerRef
             );
 
-            if (playerObject == null)
-            {
-                Debug.LogError($" ColorBlockPlayer Spawn 실패 : {playerRef}");
-
+            if (playerObject == null)        
                 continue;
-            }
+            
 
             ColorBlockPlayer colorBlockPlayer = playerObject.GetComponent<ColorBlockPlayer>();
 
             if (colorBlockPlayer == null)
-            {
-                Debug.LogError(
-                    " ColorBlockPlayer 프리팹에 ColorBlockPlayer 컴포넌트가 없습니다."
-                );
-
+            {               
                 Runner.Despawn(playerObject);
 
                 continue;
@@ -488,14 +421,7 @@ public class ColorBlockManager : NetworkBehaviour
             // 등록
             // --------------------------------------------------
 
-            spawnedPlayers.Add(playerRef, colorBlockPlayer);
-
-            Debug.Log(
-                $" ColorBlockPlayer 생성 완료\n" +
-                $"PlayerRef = {playerRef}\n" +
-                $"PlayerIndex = {i}\n" +
-                $"CharacterIndex = {player.CharacterIndex}"
-            );
+            spawnedPlayers.Add(playerRef, colorBlockPlayer);            
         }
     }
 
@@ -533,7 +459,6 @@ public class ColorBlockManager : NetworkBehaviour
             0, 1, 2, 3
         };
 
-        // 그룹 섞기
         for (int i = 0; i < groups.Count; i++)
         {
             int randomIndex =  Random.Range(i, groups.Count);
@@ -661,18 +586,11 @@ public class ColorBlockManager : NetworkBehaviour
         if (IsGameEnding)
             return;
 
-        int aliveCount = spawnedPlayers.Count - eliminatedRounds.Count;
-
-        Debug.Log(
-            $"[ColorBlock] 현재 생존자 수 = {aliveCount} " +
-            $"| 전체 플레이어 = {spawnedPlayers.Count} " +
-            $"| 탈락자 = {eliminatedRounds.Count}"
-        );
+        int aliveCount = spawnedPlayers.Count - eliminatedRounds.Count;       
 
         if (aliveCount <= 1)
         {
             IsGameEnding = true;
-            Debug.Log("[ColorBlock] 게임 종료 조건 충족!");
 
             StartCoroutine(GameEndRoutine());
         }
@@ -729,9 +647,9 @@ public class ColorBlockManager : NetworkBehaviour
 
         freezeFrame.texture = screenshot;
 
-        freezeFrame.gameObject.SetActive(true);
+        Debug.Log("[확인] CaptureFreezeFrame 실행됨");
 
-        Debug.Log("[ColorBlock] Freeze Frame 적용 완료");
+        freezeFrame.gameObject.SetActive(true);
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -752,8 +670,6 @@ public class ColorBlockManager : NetworkBehaviour
     {
         if (!Object.HasStateAuthority)
             return;
-
-        Debug.Log("===== ColorBlock 점수 계산 시작 =====");
 
         List<PlayerNetwork> players = GetActivePlayers();
         
@@ -837,8 +753,6 @@ public class ColorBlockManager : NetworkBehaviour
             currentRank += groupSize;
             index += groupSize;
         }
-
-        Debug.Log("===== ColorBlock 점수 계산 완료 =====");
     }
 
     #endregion
