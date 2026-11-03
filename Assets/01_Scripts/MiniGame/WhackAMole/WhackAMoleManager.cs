@@ -564,8 +564,6 @@ public class WhackAMoleManager : NetworkBehaviour
         }
 
         dome.MovePlayer(tagPlayer);
-
-        StartCoroutine(CheckTagPositionNextFrame(tagPlayer));
     }
 
 
