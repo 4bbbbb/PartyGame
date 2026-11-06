@@ -4,11 +4,11 @@ using UnityEngine.UI;
 
 public class MiniGameSettingUI : MonoBehaviour
 {
-    [Header("<< Mini Game Toggles >>")]
+    [Header("<< Mini Game Toggles >>")]    
+    [SerializeField] private Toggle whackAMoleToggle;
     [SerializeField] private Toggle baseballToggle;
     [SerializeField] private Toggle colorBlockToggle;
     [SerializeField] private Toggle dodgeItToggle;
-    [SerializeField] private Toggle whackAMoleToggle;
 
     private GameManager gameManager;
 
@@ -16,39 +16,27 @@ public class MiniGameSettingUI : MonoBehaviour
     {
         gameManager = GameManager.Instance;
 
-        if (gameManager == null)
-        {
-            Debug.LogError(
-                "[MiniGameSettingUI] GameManager를 찾을 수 없습니다."
-            );
+        if (gameManager == null)        
             return;
-        }
+        
 
         // 현재 설정을 토글 UI에 반영
-        baseballToggle.SetIsOnWithoutNotify(
-            gameManager.IsMiniGameEnabled("02_Baseball"));
+        baseballToggle.SetIsOnWithoutNotify(gameManager.IsMiniGameEnabled("02_Baseball"));
 
-        colorBlockToggle.SetIsOnWithoutNotify(
-            gameManager.IsMiniGameEnabled("02_ColorBlock"));
+        colorBlockToggle.SetIsOnWithoutNotify(gameManager.IsMiniGameEnabled("02_ColorBlock"));
 
-        dodgeItToggle.SetIsOnWithoutNotify(
-            gameManager.IsMiniGameEnabled("02_DodgeIt"));
+        dodgeItToggle.SetIsOnWithoutNotify(gameManager.IsMiniGameEnabled("02_DodgeIt"));
 
-        whackAMoleToggle.SetIsOnWithoutNotify(
-            gameManager.IsMiniGameEnabled("02_WhackaMole"));
+        whackAMoleToggle.SetIsOnWithoutNotify(gameManager.IsMiniGameEnabled("02_WhackaMole"));
 
         // 토글 변경 이벤트 등록
-        baseballToggle.onValueChanged.AddListener(
-            value => SetMiniGame("02_Baseball", value));
+        baseballToggle.onValueChanged.AddListener(value => SetMiniGame("02_Baseball", value));
 
-        colorBlockToggle.onValueChanged.AddListener(
-            value => SetMiniGame("02_ColorBlock", value));
+        colorBlockToggle.onValueChanged.AddListener(value => SetMiniGame("02_ColorBlock", value));
 
-        dodgeItToggle.onValueChanged.AddListener(
-            value => SetMiniGame("02_DodgeIt", value));
+        dodgeItToggle.onValueChanged.AddListener(value => SetMiniGame("02_DodgeIt", value));
 
-        whackAMoleToggle.onValueChanged.AddListener(
-            value => SetMiniGame("02_WhackaMole", value));
+        whackAMoleToggle.onValueChanged.AddListener(value => SetMiniGame("02_WhackaMole", value));
     }
 
     private void SetMiniGame(string sceneName, bool isEnabled)
